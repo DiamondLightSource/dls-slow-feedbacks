@@ -34,10 +34,11 @@ def entry():
     supplies = []
     for i, n in enumerate(names):
         supplies.append(Supply(n, i))
-    
+
+    device = "SR-CS-PC-01"
     records = {}
-    for n in waveforms + ["I_PERCENT", "SETI_PERCENT"]:
-        records[n] = Record(n, len(supplies))
+    for n in waveforms + ["I_R", "SETI_R"]:
+        records[n] = Record("%s:%s" % (device, n), len(supplies))
     
     # optimization
     DBF_DOUBLE = epics.DBF_DOUBLE
@@ -59,8 +60,8 @@ def entry():
         for (record, buf) in gets:
             dbGetField(record, DBF_DOUBLE, buf, 0, 0, 0)
             
-        records["I_PERCENT"].data = (ic - minc) / (maxc - minc)
-        records["SETI_PERCENT"].data = (seti - minc) / (maxc - minc)
+        records["I_R"].data = (ic - minc) / (maxc - minc)
+        records["SETI_R"].data = (seti - minc) / (maxc - minc)
         
         for r in records.values():
             epics.dbPutField(byref(r.addr), DBF_DOUBLE,

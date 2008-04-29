@@ -42,7 +42,7 @@ def plotme(args):
     s.waveform = args.dbr.value
     s.update()
 
-camonitor("I_PERCENT", plotme)
+camonitor("SR-CS-PC-01:I_R", plotme)
 
 qApp.setMainWidget(s)
 qApp.exec_loop()

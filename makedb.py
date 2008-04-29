@@ -22,27 +22,27 @@ for n in names:
     print r % {"name": n}
 
 print """
-record(waveform, "SETI_C") {
+record(waveform, "SR-CS-PC-01:SETI_C") {
   field(NELM, "%(length)d")
   field(FTVL, "DOUBLE")
 }
-record(waveform, "I_C") {
+record(waveform, "SR-CS-PC-01:I_C") {
   field(NELM, "%(length)d")
   field(FTVL, "DOUBLE")
 }
-record(waveform, "MIN_C") {
+record(waveform, "SR-CS-PC-01:MIN_C") {
   field(NELM, "%(length)d")
   field(FTVL, "DOUBLE")
 }
-record(waveform, "MAX_C") {
+record(waveform, "SR-CS-PC-01:MAX_C") {
   field(NELM, "%(length)d")
   field(FTVL, "DOUBLE")
 }
-record(waveform, "I_PERCENT") {
+record(waveform, "SR-CS-PC-01:I_R") {
   field(NELM, "%(length)d")
   field(FTVL, "DOUBLE")
 }
-record(waveform, "SETI_PERCENT") {
+record(waveform, "SR-CS-PC-01:SETI_R") {
   field(NELM, "%(length)d")
   field(FTVL, "DOUBLE")
 }
