@@ -1,5 +1,5 @@
 #!/bin/env python2.4
-
+import Queue
 from ctypes import *
 
 libdbIoc = CDLL("/dls_sw/epics/R3.14.8.2/base/lib/linux-x86/libdbIoc.so")
@@ -9,19 +9,22 @@ libca = CDLL("/dls_sw/epics/R3.14.8.2/base/lib/linux-x86/libca.so")
 libca.ca_name.restype = c_char_p
 libca.ca_message.restype = c_char_p
 
+EPICS_CA_MAX_ARRAY_SIZE = 1024 * 1024 * 16
+
 # only for DOUBLE
 class event_handler_args(Structure):
     _fields_ = (("usr",    c_int),
                 ("chid",   c_int),
                 ("type",   c_int),
                 ("count",  c_int),
-                ("dbr",    POINTER(c_double)),
+                ("dbr",    POINTER(c_double * (EPICS_CA_MAX_ARRAY_SIZE / 4))),
                 ("status", c_int))
 
 event_handler = CFUNCTYPE(None, event_handler_args)
 
 ECA_NORMAL = 1
 DBR_DOUBLE = 6
+DBR_FLOAT = 2
 
 (DBE_VALUE,
  DBE_LOG,
@@ -61,11 +64,12 @@ for f in fs:
     globals()[f] = getattr(libdbIoc, f)
 
 __all__ = fs + ["dbAddr", "ECA_NORMAL", "libca",
-                "DBR_DOUBLE", "DBE_VALUE", "event_handler"]
+                "DBR_DOUBLE", "DBR_FLOAT",
+                "DBE_VALUE", "event_handler", "DBF_FLOAT", "DBF_DOUBLE", "Record"]
 
 @event_handler
 def test_callback(args):
-    print "hello", args.dbr[0]
+    print "hello", args.count, args.dbr[0], args.usr
 
 def test():
     import time
@@ -80,6 +84,14 @@ def test():
     assert(libca.ca_create_subscription(DBR_DOUBLE, 0, chid, DBE_VALUE, test_callback, 0, byref(evid)) == ECA_NORMAL)
     time.sleep(5)
     
+class Record(object):
+    def __init__(self, name):
+        addr = dbAddr()
+        assert(dbNameToAddr(name, byref(addr)) == 0)
+        self.name = name
+        self.addr = addr
+        self.paddr = byref(addr)
+
 if __name__ == "__main__":
     test()
     

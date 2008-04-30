@@ -2,4 +2,4 @@
 dbLoadDatabase("magnets.db")
 iocInit()
 epicsEnvSet("PYTHONPATH", ".")
-Python("import magnets")
+Python("import ioc")
