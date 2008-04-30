@@ -30,4 +30,4 @@ record(waveform, "%(device)s:SETI_R") {
   field(NELM, "%(size)d")
   field(FTVL, "DOUBLE")
 }
-""" % ({"device": "TS-CS-PC-01", "size": 1000})
+""" % ({"device": "SR-CS-PC-01", "size": 1000})

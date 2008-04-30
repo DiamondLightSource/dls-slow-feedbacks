@@ -8,7 +8,7 @@ import time, threading, re
 from numpy import *
 from epics import *
 
-device      = "TS-CS-PC-01"
+device      = "SR-CS-PC-01"
 recordnames = ["SETI_C", "I_C", "MIN_C", "MAX_C", "I_R", "SETI_R"]
 wavenames   = ["SETI", "I", "SETI.LOPR", "SETI.HOPR"]
 
