@@ -174,10 +174,12 @@ class rffb_database(object):
 
         rffb = rffb_service()
 
-        builder.SetDeviceName('SR-CS-RFFB-01')
+        builder.SetDeviceName('CS-DI-IOC-09')
         
         builder.stringIn('WHOAMI', VAL = 'RF Feedback Server')
         builder.stringIn('HOSTNAME', VAL = os.uname()[1])
+
+        builder.SetDeviceName('SR-CS-RFFB-01')
         
         power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                   RVAL = rffb.power,
@@ -203,6 +205,9 @@ class rffb_database(object):
         rffb.set_power_pv(power_pv)
         rffb.set_valid_pv(valid_pv)
         rffb.set_message_pv(message_pv)
+        
+        builder.SetDeviceName('SR-CS-RING-01')
+        builder.mbbIn("MODE", ("SR", 0), ("MINIBETA", 1), ("LOWALPHA", 2), RVAL = 0)
         
         builder.LoadDatabase()
         
