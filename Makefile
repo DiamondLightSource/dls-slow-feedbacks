@@ -1,8 +1,2 @@
-all: install
-
-install:
-	./magnets.py > magnets.db
-
-clean:
-	-rm *.pyc *~ magnets.db
-
+# Dummy makefile so that automated install is happy.
+default:
