@@ -13,8 +13,8 @@ cache = {}
 
 def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp, rad_over_A):
     "get the dispersion corrector vector and cache"
-
-    # ok looking good
+    
+    # pad out the 13S bpms
     xr = range(170)
     xr.remove(12*7+0)
     xr.remove(12*7+1)
@@ -24,18 +24,25 @@ def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp, rad_over_A):
         return cache[key]
     
     dispx0 = disp["BPMxDisp"]["Data"][0,0]
-    # pad the dispersion
-    dispx = zeros(170)
-    dispx[xr] = dispx0[:, 0]
-    dispx = dispx[enabled_bpm]
+    if dispx0.shape != (170, 1):
+        # pad the dispersion
+        dispx = zeros(170)
+        dispx[xr] = dispx0[:, 0]
+    else:
+        dispx = dispx0
+        
     # pad the response matrix
     rmx0 = bpmresp["Rmat"][0,0]["Data"]
-    if rmx0.shape != (168, 170):
+    if rmx0.shape != (170, 170):
         rmx = zeros((170, 170))
         rmx[ix_(xr, xr)] = rmx0
     else:
         rmx = rmx0
+    
+    # disable bpms
+    dispx = dispx[enabled_bpm]
     rmx = rmx[ix_(enabled_bpm, enabled_cor)] / rad_over_A[enabled_cor]
+    
     dispcor = dot(pinv(rmx), dispx)
     cache[key] = dispcor
     return dispcor
@@ -48,25 +55,6 @@ def calc_rffb(bpmresp, disp, enabled_bpm, enabled_cor, hcm, rad_over_A):
     # pinv([v])[0] = v / sum(v**2)
     drf = dot(hcm * rad_over_A[enabled_cor], dispcor / sum(dispcor**2))
     return drf
-
-##     hcm2 = hcm * rad_over_A - drf * dispcor
-##     # print "residual", dot(hcm2, dispcor)
-##     # print drf
-##     rf0 = caget("LI-RF-MOSC-01:FREQ_SET")
-##     rf1 = rf0 + drf
-##     # print "rf target", round(rf1 * 10) / 10
-##     def limit(a, b):
-##         if abs(a) > b:
-##             a = sign(a) * b
-##         return a
-## ##     for n in range(1, 30):
-## ##         rf_step_limit = n
-## ##         drf1 = limit(drf, rf_step_limit)
-## ##         print drf1
-##     rf_step_limit = 0.1
-##     drf1 = limit(drf, rf_step_limit)
-##     rf2 = rf0 + drf1
-##     # print "new rf setpoint", rf2
 
 def test_subset(badbpm, mdrf, hcm, bpmresp, disp, rad_over_A):
     CLIGHT = 299792458

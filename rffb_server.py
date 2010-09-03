@@ -45,7 +45,7 @@ class rffb_service(object):
         correctors = ["SR%02dA-PC-HSTR-%02d:I" % (c + 1, i + 1)
                            for c in range(24) for i in range(7)]
 
-        cell13 = ["SR13S-PC-HSTR-01", "SR13S-PC-HSTR-02"]
+        cell13 = ["SR13S-PC-HSTR-01:I", "SR13S-PC-HSTR-02:I"]
         self.correctors = numpy.array(correctors[:7*12] + cell13 + correctors[7*12:])
         
     def start(self):
