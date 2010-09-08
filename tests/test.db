@@ -1,3 +1,8 @@
+record(ai, "SR13S-PC-HSTR-01:I") { field(SCAN, "1 second") field(VAL, "-0.731271511775") }
+record(ai, "SR13S-PC-HSTR-02:I") { field(SCAN, "1 second") field(VAL, "0.694867473874") }
+record(ai, "SR13S-PC-VSTR-01:I") { field(SCAN, "1 second") field(VAL, "0.527549237953") }
+record(ai, "SR13S-PC-VSTR-02:I") { field(SCAN, "1 second") field(VAL, "-0.489861948521") }
+
 record(ai, "SR01A-PC-HSTR-01:I") { field(SCAN, "1 second") field(VAL, "-0.731271511775") }
 record(ai, "SR01A-PC-HSTR-02:I") { field(SCAN, "1 second") field(VAL, "0.694867473874") }
 record(ai, "SR01A-PC-HSTR-03:I") { field(SCAN, "1 second") field(VAL, "0.527549237953") }
@@ -670,8 +675,8 @@ record(ai, "SR24A-PC-VSTR-04:SETI") { field(SCAN, "1 second") field(VAL, "-0.200
 record(ai, "SR24A-PC-VSTR-05:SETI") { field(SCAN, "1 second") field(VAL, "0.760060337547") }
 record(ai, "SR24A-PC-VSTR-06:SETI") { field(SCAN, "1 second") field(VAL, "0.517121056408") }
 record(ai, "SR24A-PC-VSTR-07:SETI") { field(SCAN, "1 second") field(VAL, "-0.695453840588") }
-record(ai, "LI-RF-MOSC-01:FREQ") { field(SCAN, "1 second") field(VAL, "499654000.0") }
-record(ai, "LI-RF-MOSC-01:FREQ_SET") { field(SCAN, "1 second") field(VAL, "499654000.0") }
+record(ai, "LI-RF-MOSC-01:FREQ") { field(SCAN, "1 second") field(VAL, "499654000.0") field(EGU, "Hz") field(PREC, "1") }
+record(ai, "LI-RF-MOSC-01:FREQ_SET") { field(SCAN, "1 second") field(VAL, "499654000.0") field(EGU, "Hz") field(PREC, "1") }
 record(ai, "CS-CS-MSTAT-01:FBSTAT") { field(SCAN, "1 second") field(VAL, "1") }
 record(ai, "SR21C-DI-DCCT-01:SIGNAL") { field(SCAN, "1 second") field(VAL, "150") }
 record(waveform, "SR-DI-EBPM-01:ENABLED") {

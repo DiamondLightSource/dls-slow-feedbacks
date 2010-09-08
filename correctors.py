@@ -2,7 +2,7 @@
 
 import builder
 from numpy import *
-from mml import ao
+import mml
 
 def SetDevice(d):
     builder.SetAddressPrefix(d)
@@ -35,14 +35,14 @@ class correctors(object):
             f = fams[p]
 
             # build concentrator vector
-            NC = len(ao[f].devices)
+            NC = len(mml.ao[f].devices)
             envec = zeros(NC)
             envec[12*7+0:12*7+2] = 1
             SetDevice("SR-PC-%sSTR-01" % "HV"[p])
             self.cenabled[p] = builder.WaveformIn("ENABLED", 
                                                   initial_value = envec)
             # build individual controls
-            for n, c in enumerate(ao[f].devices):
+            for n, c in enumerate(mml.ao[f].devices):
                 SetDevice(c)
                 r = builder.mbbOut('DISABLED', ("Enabled", 0), ("Disabled", 1),
                                    on_update = bind1st((p, n), self.update))

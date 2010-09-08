@@ -4,7 +4,7 @@ import os, sys
 from pkg_resources import require
 require('cothread==1.16')
 require('scipy==0.8.0b1')
-require('iocbuilder==3.0')
+require('iocbuilder==3.3')
 
 import cothread
 from cothread import catools
@@ -16,6 +16,9 @@ import numpy
 
 import rffb_calc
 import correctors
+import mml
+
+ring_modes = ["SR", "SRI13", "SRLE3ps", "SRLEm3ps"]
 
 class rffb_service(object):
     
@@ -29,25 +32,10 @@ class rffb_service(object):
         self.target = 0
         self.datadir = "SR"
         self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
-        
-        # [rad A^-1] values from middlelayer
-        rad_over_A = [
-            0.219088331921733,
-            0.219088331921733,
-            0.163286961340012,
-            0.219088331921733,
-            0.161008538618683,
-            0.219088331921733,
-            0.219088331921733] * 24
 
-        # add 13S correctors
-        self.rad_over_A = numpy.array(rad_over_A[:12*7] + [1, 1] + rad_over_A[12*7:]) * 1e-3
-
-        correctors = ["SR%02dA-PC-HSTR-%02d:I" % (c + 1, i + 1)
-                           for c in range(24) for i in range(7)]
-
-        cell13 = ["SR13S-PC-HSTR-01:I", "SR13S-PC-HSTR-02:I"]
-        self.correctors = numpy.array(correctors[:7*12] + cell13 + correctors[7*12:])
+        # use MML database
+        self.rad_over_A = mml.ao["hcm"].hw2physics
+        self.correctors = mml.ao["hcm"].readback
         
     def start(self):
         cothread.Spawn(self.timer)
@@ -67,7 +55,7 @@ class rffb_service(object):
                     self.feedback()
                 except:
                     traceback.print_exc()
-                    self.set_message("ERROR IN CALCULATION")
+                    self.set_message("CALC FAILED")
 
     def set_message(self, s):
         self.message_pv.set(s)
@@ -79,26 +67,23 @@ class rffb_service(object):
         disp = self.disp.copy()
         rfstep = self.rfstep
 
-        # for testing ignore 13S
-        enabled_cor = range(170)
-        enabled_cor.remove(7*12+0)
-        enabled_cor.remove(7*12+1)
-
         # channel access read
         fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
-        enabled_bpm = numpy.nonzero(catools.caget("SR-DI-EBPM-01:ENABLED") == 0)[0]
+        enabled_cor = catools.caget("SR-PC-HSTR-01:ENABLED") == 0
+        enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
-
+        
         if fbstat == 0:
-            self.set_message("NO ORBIT FEEDBACK")
+            self.set_message("ORBIT FB")
             self.power_pv.set(0)
             return
         
         drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
                                   enabled_bpm, enabled_cor,
                                   hcm, self.rad_over_A)
-        print "delta RF", drf
+        self.delta_pv.set(drf)
+        
         def round10(x):
             return round(x * 10.0) / 10.0
         
@@ -112,10 +97,12 @@ class rffb_service(object):
         
         # update status
         self.set_target(target)
-        self.set_message("RUNNING")
+        self.set_message("NO ERRORS")
+
+    def set_mode(self, mode):
+        self.set_datadir(ring_modes[mode])
         
     def set_power(self, power):
-        print "set power", power, self.valid
         self.power = power
         self.event.Signal()
         if power and not self.valid:
@@ -131,7 +118,6 @@ class rffb_service(object):
     
     def set_valid(self, valid):
         self.valid = valid
-        self.valid_pv.set(valid)
 
     def set_target(self, target):
         self.target = target
@@ -141,7 +127,6 @@ class rffb_service(object):
         self.power_pv.set(0)
         self.datadir = datadir
         path = os.path.join(self.dataroot, self.datadir)
-        print "path", path
         self.set_valid(0)
         rffb_calc.cache.clear()
         try:
@@ -150,10 +135,10 @@ class rffb_service(object):
             assert(self.bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             assert(self.disp["BPMxDisp"]["Units"] == "Hardware")
             self.set_valid(1)
-            self.set_message("LOADED RESPONSE MATRIX")
+            self.set_message("MATRIX OK")
         except:
             traceback.print_exc()
-            self.set_message("BAD RESPONSE MATRIX")
+            self.set_message("MATRIX BAD")
             
     # PV connection
     def set_target_pv(self, target_pv):
@@ -162,12 +147,15 @@ class rffb_service(object):
     def set_power_pv(self, power_pv):
         self.power_pv = power_pv
 
-    def set_valid_pv(self, valid_pv):
-        self.valid_pv = valid_pv
+    def set_delta_pv(self, delta_pv):
+        self.delta_pv = delta_pv
 
     def set_message_pv(self, message_pv):
         self.message_pv = message_pv
 
+def SetDevice(d):
+    builder.SetAddressPrefix(d)
+    builder.SetDeviceName(d)
         
 class rffb_database(object):
     
@@ -175,12 +163,12 @@ class rffb_database(object):
 
         rffb = rffb_service()
 
-        builder.SetDeviceName('CS-DI-IOC-09')
+        SetDevice('CS-DI-IOC-09')
         
         builder.stringIn('WHOAMI', VAL = 'RF Feedback Server')
         builder.stringIn('HOSTNAME', VAL = os.uname()[1])
 
-        builder.SetDeviceName('SR-CS-RFFB-01')
+        SetDevice('SR-CS-RFFB-01')
         
         power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                   initial_value = rffb.power,
@@ -194,23 +182,22 @@ class rffb_database(object):
                      on_update = rffb.set_period,
                      DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "s")
 
-        valid_pv = builder.mbbIn("MATRIX", ("INVALID", 0), ("VALID", 1),
-                                 initial_value = rffb.valid)
+        delta_pv = builder.aIn("DELTARF")
 
-        builder.stringOut("DATADIR", initial_value = rffb.datadir, on_update = rffb.set_datadir)
         message_pv = builder.stringIn("MESSAGE")
                 
         target_pv = builder.aIn("TARGET", initial_value = rffb.target, PREC = 1, EGU = "Hz")
         
         rffb.set_target_pv(target_pv)
         rffb.set_power_pv(power_pv)
-        rffb.set_valid_pv(valid_pv)
+        rffb.set_delta_pv(delta_pv)
         rffb.set_message_pv(message_pv)
         
-        builder.SetDeviceName('SR-CS-RING-01')
-        builder.mbbIn("MODE", ("SR", 0), ("MINIBETA", 1), ("LOWALPHA", 2), initial_value = 0)
+        SetDevice('SR-CS-RING-01')
 
-
+        mode = builder.mbbOut("MODE", on_update = rffb.set_mode,
+                              *(zip(ring_modes, range(len(ring_modes)))))
+        
         cor = correctors.correctors()
 
         builder.LoadDatabase()
@@ -218,7 +205,10 @@ class rffb_database(object):
 
         cor.init()
         rffb.start()
-        
+
+        # set mode and push response matrix
+        mode.set(0)
+
         interactive_ioc(globals())
         
 mydb = rffb_database()
