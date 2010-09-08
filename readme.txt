@@ -25,4 +25,5 @@ PVs are SR-CS-RFFB-01:XXX
 
 Corrects orbit, single correction or feedback
 
+Need SOFB position display for new correctiors, get s pos out of MML...
 
