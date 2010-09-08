@@ -15,6 +15,7 @@ from scipy.io import loadmat
 import numpy
 
 import rffb_calc
+import correctors
 
 class rffb_service(object):
     
@@ -208,10 +209,14 @@ class rffb_database(object):
         
         builder.SetDeviceName('SR-CS-RING-01')
         builder.mbbIn("MODE", ("SR", 0), ("MINIBETA", 1), ("LOWALPHA", 2), RVAL = 0)
-        
+
+
+        cor = correctors.correctors()
+
         builder.LoadDatabase()
-        
         iocInit()
+
+        cor.init()
         rffb.start()
         
         interactive_ioc(globals())
