@@ -183,24 +183,24 @@ class rffb_database(object):
         builder.SetDeviceName('SR-CS-RFFB-01')
         
         power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
-                                  RVAL = rffb.power,
+                                  initial_value = rffb.power,
                                   on_update = rffb.set_power)
         
-        builder.aOut("RFSTEP", VAL = rffb.rfstep,
+        builder.aOut("RFSTEP", initial_value = rffb.rfstep,
                      on_update = rffb.set_rfstep,
                      DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "Hz")
         
-        builder.aOut("PERIOD", VAL = rffb.period,
+        builder.aOut("PERIOD", initial_value = rffb.period,
                      on_update = rffb.set_period,
                      DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "s")
 
         valid_pv = builder.mbbIn("MATRIX", ("INVALID", 0), ("VALID", 1),
-                                 RVAL = rffb.valid)
+                                 initial_value = rffb.valid)
 
-        builder.stringOut("DATADIR", VAL = rffb.datadir, on_update = rffb.set_datadir)
+        builder.stringOut("DATADIR", initial_value = rffb.datadir, on_update = rffb.set_datadir)
         message_pv = builder.stringIn("MESSAGE")
                 
-        target_pv = builder.aIn("TARGET", VAL = rffb.target, PREC = 1, EGU = "Hz")
+        target_pv = builder.aIn("TARGET", initial_value = rffb.target, PREC = 1, EGU = "Hz")
         
         rffb.set_target_pv(target_pv)
         rffb.set_power_pv(power_pv)
@@ -208,7 +208,7 @@ class rffb_database(object):
         rffb.set_message_pv(message_pv)
         
         builder.SetDeviceName('SR-CS-RING-01')
-        builder.mbbIn("MODE", ("SR", 0), ("MINIBETA", 1), ("LOWALPHA", 2), RVAL = 0)
+        builder.mbbIn("MODE", ("SR", 0), ("MINIBETA", 1), ("LOWALPHA", 2), initial_value = 0)
 
 
         cor = correctors.correctors()
