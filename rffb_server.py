@@ -218,10 +218,3 @@ class rffb_database(object):
         
 mydb = rffb_database()
 
-# now add new BPMs (what are the locations and names? check mml)
-
-# SR13S-DI-EBPM-01
-# SR13S-DI-EBPM-02
-
-# so the HCM have nice names too? fine.
-

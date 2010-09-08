@@ -23,21 +23,8 @@ def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp, rad_over_A):
     if key in cache:
         return cache[key]
     
-    dispx0 = disp["BPMxDisp"]["Data"][0,0]
-    if dispx0.shape != (170, 1):
-        # pad the dispersion
-        dispx = zeros(170)
-        dispx[xr] = dispx0[:, 0]
-    else:
-        dispx = dispx0
-        
-    # pad the response matrix
-    rmx0 = bpmresp["Rmat"][0,0]["Data"]
-    if rmx0.shape != (170, 170):
-        rmx = zeros((170, 170))
-        rmx[ix_(xr, xr)] = rmx0
-    else:
-        rmx = rmx0
+    dispx = disp["BPMxDisp"]["Data"][0,0]
+    rmx = bpmresp["Rmat"][0,0]["Data"]
     
     # disable bpms
     dispx = dispx[enabled_bpm]
