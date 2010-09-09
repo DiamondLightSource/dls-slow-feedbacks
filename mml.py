@@ -2,7 +2,21 @@
 
 "MML for RFFB and SOFB"
 
+import dls1225
 from numpy import *
+
+def getspos():
+    # positions at the entrance of the element
+    pos = []
+    names = []
+    s = 0
+    for r in dls1225.RING:
+        pos.append(s)
+        s += dls1225.families[r].L
+        names.append(r)
+    pos.append(s)
+    names.append("END")
+    return (array(names), array(pos))
 
 def many(xs, i):
     return array([x + i for x in xs])
@@ -13,6 +27,12 @@ class family(object):
             setattr(self, k, v)
 
 def make_families():
+
+    (names, pos) = getspos()
+    
+    # build these into position vectors
+    # what about the simulator?
+    
 
     # [rad A^-1] values from middlelayer
 
@@ -78,6 +98,12 @@ def make_families():
                          access    = "vector")
           
           }
+
+    # connect to lattice positions
+    setattr(ao["bpmx"], "s", pos[names == "BPM"])
+    setattr(ao["bpmy"], "s", pos[names == "BPM"])
+    setattr(ao["hcm"],  "s", pos[names == "HSTR"])
+    setattr(ao["vcm"],  "s", pos[names == "VSTR"])
     
     return ao
 
@@ -90,27 +116,34 @@ def disable_i13(ao):
 ao = make_families()
 disable_i13(ao)
 
-def getrb(fam):
-    if fam.access == "vector":
-        return array(caget(fam.readback)[fam.enabled])
-    else:
-        return array(caget(fam.readback[fam.enabled]))
+## def getrb(fam):
+##     if fam.access == "vector":
+##         return array(caget(fam.readback)[fam.enabled])
+##     else:
+##         return array(caget(fam.readback[fam.enabled]))
         
 if __name__ == "__main__":
 
-    import sys
-    from pkg_resources import require
-    require("cothread")
-    from cothread.catools import *
+    print len(ao["hcm"].s)
+    print len(ao["vcm"].s)
+    print len(ao["bpmx"].s)
+    print len(ao["bpmy"].s)
 
-    caput(ao["hcm"].setpoint, 1)
-    caput(ao["vcm"].setpoint, 1)
-    
-    print getrb(ao["hcm"])
-    print getrb(ao["bpmx"])
-    
-    # ok ready for test server?
-    # test server has forward response matrix...
-    
+    # need to make nice plots of corrector and bpm positions - OK put in CS-DI-IOC-09 server...
 
     
+
+##     import sys
+##     from pkg_resources import require
+##     require("cothread")
+##     from cothread.catools import *
+
+##     caput(ao["hcm"].setpoint, 1)
+##     caput(ao["vcm"].setpoint, 1)
+    
+##     print getrb(ao["hcm"])
+##     print getrb(ao["bpmx"])
+    
+##     # ok ready for test server?
+##     # test server has forward response matrix...
+

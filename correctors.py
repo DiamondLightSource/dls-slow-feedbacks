@@ -3,10 +3,7 @@
 import builder
 from numpy import *
 import mml
-
-def SetDevice(d):
-    builder.SetAddressPrefix(d)
-    builder.SetDeviceName(d)
+import iochelper
 
 def bind1st(x, f):
     def g(*args, **kw):
@@ -17,6 +14,7 @@ class correctors(object):
 
     def __init__(self):
         self.create()
+        iochelper.on_init.append(self.init)
 
     def update(self, key, value):
         (k, i) = key
@@ -38,12 +36,12 @@ class correctors(object):
             NC = len(mml.ao[f].devices)
             envec = zeros(NC)
             envec[12*7+0:12*7+2] = 1
-            SetDevice("SR-PC-%sSTR-01" % "HV"[p])
+            iochelper.SetDevice("SR-PC-%sSTR-01" % "HV"[p])
             self.cenabled[p] = builder.WaveformIn("ENABLED", 
                                                   initial_value = envec)
             # build individual controls
             for n, c in enumerate(mml.ao[f].devices):
-                SetDevice(c)
+                iochelper.SetDevice(c)
                 r = builder.mbbOut('DISABLED', ("Enabled", 0), ("Disabled", 1),
                                    on_update = bind1st((p, n), self.update))
                 records[p].append(r)

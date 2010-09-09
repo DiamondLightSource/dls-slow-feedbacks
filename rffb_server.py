@@ -17,6 +17,7 @@ import numpy
 import rffb_calc
 import correctors
 import mml
+import iochelper
 
 ring_modes = ["SR", "SRI13", "SRLE3ps", "SRLEm3ps"]
 
@@ -36,6 +37,8 @@ class rffb_service(object):
         # use MML database
         self.rad_over_A = mml.ao["hcm"].hw2physics
         self.correctors = mml.ao["hcm"].readback
+
+        iochelper.on_init.append(self.start)
         
     def start(self):
         cothread.Spawn(self.timer)
@@ -153,22 +156,18 @@ class rffb_service(object):
     def set_message_pv(self, message_pv):
         self.message_pv = message_pv
 
-def SetDevice(d):
-    builder.SetAddressPrefix(d)
-    builder.SetDeviceName(d)
-        
 class rffb_database(object):
     
     def __init__(self):
 
         rffb = rffb_service()
 
-        SetDevice('CS-DI-IOC-09')
+        iochelper.SetDevice('CS-DI-IOC-09')
         
         builder.stringIn('WHOAMI', VAL = 'RF Feedback Server')
         builder.stringIn('HOSTNAME', VAL = os.uname()[1])
 
-        SetDevice('SR-CS-RFFB-01')
+        iochelper.SetDevice('SR-CS-RFFB-01')
         
         power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                   initial_value = rffb.power,
@@ -193,23 +192,15 @@ class rffb_database(object):
         rffb.set_delta_pv(delta_pv)
         rffb.set_message_pv(message_pv)
         
-        SetDevice('SR-CS-RING-01')
+        iochelper.SetDevice('SR-CS-RING-01')
 
         mode = builder.mbbOut("MODE", on_update = rffb.set_mode,
                               *(zip(ring_modes, range(len(ring_modes)))))
-        
+
         cor = correctors.correctors()
 
-        builder.LoadDatabase()
-        iocInit()
-
-        cor.init()
-        rffb.start()
-
-        # set mode and push response matrix
-        mode.set(0)
-
-        interactive_ioc(globals())
+        iochelper.on_init.append(lambda : mode.set(0))
+        iochelper.start_ioc()
         
 mydb = rffb_database()
 
