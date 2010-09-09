@@ -38,14 +38,15 @@ builder.Waveform("CF:ATTEN", initial_value = zeros(NB))
 builder.Waveform("CF:AUTOSW", initial_value = zeros(NB))
 
 SetDevice("LI-RF-MOSC-01")
-builder.aOut("FREQ_SET", initial_value = 0)
+builder.aOut("FREQ_SET", initial_value = 4.99654e8)
+builder.aOut("FREQ", initial_value = 4.99654e8)
 
 SetDevice("SR21C-DI-DCCT-01")
 builder.aOut("SIGNAL", initial_value = 150)
 
 SetDevice("CS-CS-MSTAT-01")
 builder.aOut("FBHEART", initial_value = 0)
-builder.aOut("FBSTAT", initial_value = 0)
+builder.aOut("FBSTAT", initial_value = 1)
 
 for p in range(2):
     f = ["hcm", "vcm"][p]
@@ -75,9 +76,9 @@ class server(object):
             caput(ao["vcm"].setpoint, vcm)
             
             # little error to correct here...
-            hcm[5*7+0] += 1
-            hcm[1*7+3] -= 2
-            hcm[22*7+4] -= 3
+            hcm[5*7+0] += 0.5
+            hcm[1*7+3] -= 1
+            hcm[22*7+4] -= 1.5
             ox = dot(rmx, hcm)
             oy = dot(rmy, vcm)
             sax.set(ox)

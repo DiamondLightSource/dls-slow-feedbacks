@@ -14,10 +14,11 @@ from softioc import *
 from scipy.io import loadmat
 import numpy
 
-import rffb_calc
-import correctors
 import mml
 import iochelper
+import rffb_calc
+import correctors
+import magnets
 
 ring_modes = ["SR", "SRI13", "SRLE3ps", "SRLEm3ps"]
 
@@ -198,6 +199,7 @@ class rffb_database(object):
                               *(zip(ring_modes, range(len(ring_modes)))))
 
         cor = correctors.correctors()
+        mag = magnets.s_server()
 
         iochelper.on_init.append(lambda : mode.set(0))
         iochelper.start_ioc()
