@@ -14,4 +14,5 @@ def start_ioc():
     iocInit()
     for o in on_init:
         o()
+    del on_init[:]
     interactive_ioc(globals())

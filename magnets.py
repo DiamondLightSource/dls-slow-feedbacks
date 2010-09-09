@@ -15,10 +15,17 @@ import cothread
 from cothread.catools import caget
 from numpy import *
 
+def bind1st(x, f):
+    def g(*args, **kw):
+        f(x, *args, **kw)
+    return g
+
 class s_server(object):
     
     def __init__(self):
-
+        
+        self.bpmen = zeros(len(mml.ao["bpmx"].s)) == 0
+        
         self.wf = [None, None]
         
         iochelper.SetDevice("SR-DI-EBPM-01")
@@ -33,40 +40,88 @@ class s_server(object):
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
             self.wf[i] = w
         
+        self.create_controls()
+
         iochelper.on_init.append(self.init)
 
     def init(self):
+        self.write()
         cothread.Spawn(self.timer)
 
     def timer(self):
         while True:
             try:
                 cothread.Sleep(1.0)
-                self.calc()
+                self.tick()
             except:
                 traceback.print_exc()
             
-    def calc(self):
-        
-        en = array([True] * 170)
-        
-        hv = [None, None]
+    def tick(self):
+
+        "read from individual correctors, write to corrector vector"
+
         fam = ["hcm", "vcm"]
+        hv = [None, None]
+        en = [None, None]
 
-        # get readbacks
+        # get corrector enables
+        en[0] = caget("SR-PC-HSTR-01:ENABLED") == 0
+        en[1] = caget("SR-PC-VSTR-01:ENABLED") == 0
+        
+        # get bpm enables
+        bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
+        
+        # get corrector readbacks
         for p in range(2):
-            hv[p] = caget(mml.ao[fam[p]].readback[en])
+            hv[p] = caget(mml.ao[fam[p]].readback[en[p]])
 
-        # write to waveforms
+        # write to waveforms (disabled are set to zero)
         for p in range(2):
             w = self.wf[p].get()
-            w[en] = hv[p]
-            w[en == False] = 0
+            w[en[p]] = hv[p]
+            w[en[p] == False] = 0
             self.wf[p].set(w)
-            
+    
+    def update(self, key, value):
+        "update corrector enabled vector from individual records"
+        (k, i) = key
+        r = self.cenabled[k]
+        wf = r.get()
+        wf[i] = value
+        r.set(wf)
+
+    def create_controls(self):
+        
+        self.cenabled = [None, None]
+        fams = ["hcm", "vcm"]
+        records = [[], []]
+
+        for p in range(2):
+            f = fams[p]
+
+            # build concentrator vector
+            NC = len(mml.ao[f].devices)
+            envec = zeros(NC)
+            envec[12*7+0:12*7+2] = 1
+            iochelper.SetDevice("SR-PC-%sSTR-01" % "HV"[p])
+            self.cenabled[p] = builder.WaveformIn("ENABLED", 
+                                                  initial_value = envec)
+            # build individual controls
+            for n, c in enumerate(mml.ao[f].devices):
+                iochelper.SetDevice(c)
+                r = builder.mbbOut('DISABLED', ("Enabled", 0), ("Disabled", 1),
+                                   on_update = bind1st((p, n), self.update))
+                records[p].append(r)
+        self.records = records
+
+    def write(self):
+        # set initial control values
+        for p in range(2):
+            for n, r in enumerate(self.records[p]):
+                r.set(self.cenabled[p].get()[n])
+        
 if __name__ == "__main__":
     # standalone test
     s = s_server()
     iochelper.start_ioc()
-
-
+    

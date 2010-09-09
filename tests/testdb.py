@@ -74,7 +74,7 @@ class server(object):
             vcm = caget(ao["vcm"].setpoint)
 
             caput(ao["hcm"].readback, hcm)
-            caput(ao["vcm"].setpoint, vcm)
+            caput(ao["vcm"].readback, vcm)
             
             # little error to correct here...
             hcm[5*7+0] += 0.5
@@ -90,5 +90,10 @@ s = server()
 builder.LoadDatabase()
 iocInit()
 s.init()
+
+def reset():
+    cm = random.rand(170)
+    caput(ao["hcm"].setpoint, cm)
+    caput(ao["vcm"].setpoint, cm)
 
 interactive_ioc(globals())

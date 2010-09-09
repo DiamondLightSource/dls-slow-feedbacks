@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1003
-y 73
+x 316
+y 123
 w 1020
 h 763
 font "helvetica-medium-r-12.0"
@@ -100,48 +100,26 @@ yMax 1
 y2AxisSrc "AutoScale"
 y2Max 1
 # Trace Properties
-numTraces 6
+numTraces 2
 xPv {
   0 "SR-DI-EBPM-01:S"
   1 "SR-DI-EBPM-01:S"
-  2 "SR-DI-EBPM-01:S"
-  3 "SR-DI-EBPM-01:S"
-  4 "SR-DI-EBPM-01:S"
-  5 "SR-DI-EBPM-01:S"
 }
 yPv {
-  0 "$(xmin)"
-  1 "$(xmax)"
-  2 "$(ymin)"
-  3 "$(ymax)"
-  4 "SR-DI-EBPM-01:SA:X"
-  5 "SR-DI-EBPM-01:SA:Y"
-}
-lineStyle {
-  0 "dash"
-  1 "dash"
-  2 "dash"
-  3 "dash"
+  0 "SR-DI-EBPM-01:SA:X"
+  1 "SR-DI-EBPM-01:SA:Y"
 }
 plotUpdateMode {
   0 "y"
   1 "y"
-  2 "y"
-  3 "y"
-  4 "y"
-  5 "y"
 }
 plotSymbolType {
-  4 "circle"
-  5 "circle"
+  0 "circle"
+  1 "circle"
 }
 plotColor {
-  0 index 34
-  1 index 34
-  2 index 24
-  3 index 24
-  4 index 25
-  5 index 20
+  0 index 25
+  1 index 20
 }
 endObjectProperties
 

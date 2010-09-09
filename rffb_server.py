@@ -17,8 +17,8 @@ import numpy
 import mml
 import iochelper
 import rffb_calc
-import correctors
 import magnets
+import sofb_server
 
 ring_modes = ["SR", "SRI13", "SRLE3ps", "SRLEm3ps"]
 
@@ -105,6 +105,7 @@ class rffb_service(object):
 
     def set_mode(self, mode):
         self.set_datadir(ring_modes[mode])
+        self.sofb.set_datadir(ring_modes[mode])
         
     def set_power(self, power):
         self.power = power
@@ -198,8 +199,10 @@ class rffb_database(object):
         mode = builder.mbbOut("MODE", on_update = rffb.set_mode,
                               *(zip(ring_modes, range(len(ring_modes)))))
 
-        cor = correctors.correctors()
+        # cor = correctors.correctors()
         mag = magnets.s_server()
+        sofb = sofb_server.sofb_server()
+        rffb.sofb = sofb.sofb
 
         iochelper.on_init.append(lambda : mode.set(0))
         iochelper.start_ioc()

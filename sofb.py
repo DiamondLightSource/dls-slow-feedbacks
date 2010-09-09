@@ -1,10 +1,12 @@
 #!/bin/env dls-python2.6
 
-import sys, os
-from pkg_resources import require
+import sys, os, traceback
 
-require('cothread==1.16')
-require('scipy')
+if __name__ == "__main__":
+    from pkg_resources import require
+    require('cothread==1.16')
+    require('scipy')
+    
 from numpy import *
 from numpy.linalg import *
 from cothread.catools import *
@@ -15,60 +17,77 @@ from scipy.io import loadmat
 class sofb(object):
     
     def __init__(self):
-        self.step_limit = 0.1
+        self.step_limit = 0.05
         self.threshold = 0
         self.datadir = None
-        self.irm = None
+        self.cache = {}
+        self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
 
-    def set_enabled(self, enabled):
-        if self.enabled != enabled:
-            self.enabled = enabled
-            self.calc_irm()
-        
+    def set_step_limit(self, step_limit):
+        self.step_limit = step_limit
+    
     def set_threshold(self, threshold):
-        if self.threshold != threshold:
-            self.threshold = threshold
-            self.calc_irm()
+        self.threshold = threshold
     
     def set_datadir(self, datadir):
-        if self.datadir != datadir:
-            dirname = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata/%s" % datadir
-            bpmresp = loadmat(os.path.join(dirname, "GoldenBPMResp"))
+        self.datadir = datadir
+        self.cache.clear()
+        path = os.path.join(self.dataroot, self.datadir)
+        try:
+            bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
+            assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             self.rmx = bpmresp["Rmat"][0,0]["Data"]
             self.rmy = bpmresp["Rmat"][1,1]["Data"]
-            self.datadir = datadir
-            self.calc_irm()
+        except:
+            traceback.print_exc()
 
-    def calc_irm(self):
-        if self.rmx is None:
-            return
-        self.irm = [None, None]
-        rmx = self.rmx[ix_(ao["bpmx"].enabled, ao["hcm"].enabled)]
-        rmy = self.rmy[ix_(ao["bpmy"].enabled, ao["vcm"].enabled)]
-        self.irm = [pinv(rmx, self.threshold), pinv(rmy, self.threshold)]
-        print self.irm[0][ix_(range(4), range(4))]
-
+    def get_irm(self, hen, ven, bpmen, threshold):
+        key = (tuple(hen), tuple(ven), tuple(bpmen), threshold)
+        if key in self.cache:
+            return self.cache[key]
+        print "new response matrix"
+        irm = [None, None]
+        rmx = self.rmx[ix_(bpmen, hen)]
+        rmy = self.rmy[ix_(bpmen, ven)]
+        irm = [pinv(rmx, threshold),
+               pinv(rmy, threshold)]
+        self.cache.clear()
+        self.cache[key] = irm
+        return irm
+        
     def tick(self):
         while True:
             Sleep(1.0)
-            self.correction()
+            try:
+                self.correction()
+            except:
+                traceback.print_exc()
     
     def correction(self):
 
-        bpmx = caget(ao["bpmx"].readback)[ao["bpmx"].enabled]
-        hcm = caget(ao["hcm"].readback[ao["hcm"].enabled])
-        hdelta = dot(feedback.irm[0], bpmx)
+        # calculate inverse response matrix on demand
+
+        hen = caget("SR-PC-HSTR-01:ENABLED") == 0
+        ven = caget("SR-PC-VSTR-01:ENABLED") == 0
+        bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
+
+        irm = self.get_irm(hen, ven, bpmen, self.threshold)
+        
+        bpmx = caget(ao["bpmx"].readback)[bpmen]
+        hcm = caget(ao["hcm"].readback[hen])
+        
+        bpmy = caget(ao["bpmy"].readback)[bpmen]
+        vcm = caget(ao["vcm"].readback[ven])
+
+        hdelta = dot(irm[0], bpmx)
         hdelta = hdelta * self.scale(hdelta)
 
-        print hdelta
-
-        bpmy = caget(ao["bpmy"].readback)[ao["bpmy"].enabled]
-        vcm = caget(ao["vcm"].readback[ao["vcm"].enabled])
-        vdelta = dot(feedback.irm[1], bpmy)
+        vdelta = dot(irm[1], bpmy)
         vdelta = vdelta * self.scale(vdelta)
-
-        caput(ao["hcm"].setpoint[ao["hcm"].enabled], hcm - hdelta)
-        caput(ao["vcm"].setpoint[ao["vcm"].enabled], vcm - vdelta)
+        
+        caput(ao["hcm"].setpoint[hen], hcm - hdelta)
+        caput(ao["vcm"].setpoint[ven], vcm - vdelta)
+        caput("CS-CS-MSTAT-01:FBHEART", 10)
         
     def scale(self, xs):
         "greatest scale factor <= 1.0 such that max(abs(sf * xs)) < step_limit"
@@ -79,20 +98,21 @@ class sofb(object):
         else:
             sf = 1.0
         return sf
-        
-feedback = sofb()
-feedback.set_datadir("SR")
-feedback.set_threshold(0)
-feedback.correction()
-Spawn(feedback.tick)
-WaitForQuit()
 
-# ok very nice, just needs to be wrapped in a nice server
-# need a vector for disabled corrector magnets...
-# One control for each magnet? Yes really...
-# need a GUI for the enabled / disabled vector
-# used for sofb and fofb activation.
-# put FOFB parameters in PVs...
+if __name__ == "__main__":
 
-# 1 make GUIs
-
+    # need some PVs for activities:
+    
+    # 1) threshold
+    # 2) limit
+    # 3) power
+    # 4) single correction
+    
+    feedback = sofb()
+    feedback.set_datadir("SR")
+    feedback.correction()
+    Spawn(feedback.tick)
+    WaitForQuit()
+    
+    
+    

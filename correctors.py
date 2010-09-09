@@ -22,6 +22,7 @@ class correctors(object):
         wf = r.get()
         wf[i] = value
         r.set(wf)
+        print k
 
     def create(self):
         
@@ -53,3 +54,19 @@ class correctors(object):
             for n, r in enumerate(self.records[p]):
                 r.set(self.cenabled[p].get()[n])
                 
+
+
+"""
+
+Corrector enable controls are concatenated into the H/VSTR:ENABLED vectors
+
+At 1 Hz:
+caget correctors:I[enabled] -> concatenate to H/VSTR:I
+caget SR-DI-EBPM-01:ENABLED
+
+
+
+
+"""
+
+
