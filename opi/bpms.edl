@@ -1,0 +1,271 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 1003
+y 73
+w 1020
+h 763
+font "helvetica-medium-r-12.0"
+ctlFont "helvetica-medium-r-12.0"
+btnFont "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 14
+ctlFgColor2 index 0
+ctlBgColor1 index 3
+ctlBgColor2 index 14
+topShadowColor index 1
+botShadowColor index 11
+title "Diagnostics Storage Ring BPMs"
+showGrid
+snapToGrid
+gridSize 8
+disableScroll
+endScreenProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 48
+w 992
+h 32
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "Beam Position"
+}
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 952
+y 728
+w 48
+h 22
+fgColor index 46
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+label "EXIT"
+font "helvetica-medium-r-12.0"
+3d
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+# Geometry
+x 8
+y 88
+w 992
+h 280
+# Appearance
+xLabel "m"
+yLabel "mm"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 1
+# X axis properties
+showXAxis
+xAxisSrc "fromUser"
+xMin 1
+xMax 562
+xLabelIntervals 24
+xLablePrecision 1
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMin -1
+yMax 1
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 6
+xPv {
+  0 "SR-DI-EBPM-01:S"
+  1 "SR-DI-EBPM-01:S"
+  2 "SR-DI-EBPM-01:S"
+  3 "SR-DI-EBPM-01:S"
+  4 "SR-DI-EBPM-01:S"
+  5 "SR-DI-EBPM-01:S"
+}
+yPv {
+  0 "$(xmin)"
+  1 "$(xmax)"
+  2 "$(ymin)"
+  3 "$(ymax)"
+  4 "SR-DI-EBPM-01:SA:X"
+  5 "SR-DI-EBPM-01:SA:Y"
+}
+lineStyle {
+  0 "dash"
+  1 "dash"
+  2 "dash"
+  3 "dash"
+}
+plotUpdateMode {
+  0 "y"
+  1 "y"
+  2 "y"
+  3 "y"
+  4 "y"
+  5 "y"
+}
+plotSymbolType {
+  4 "circle"
+  5 "circle"
+}
+plotColor {
+  0 index 34
+  1 index 34
+  2 index 24
+  3 index 24
+  4 index 25
+  5 index 20
+}
+endObjectProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+# Geometry
+x 8
+y 416
+w 992
+h 272
+# Appearance
+xLabel "m"
+yLabel "A"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+nPts 1
+# X axis properties
+showXAxis
+xAxisSrc "fromUser"
+xMin 1
+xMax 562
+xLabelIntervals 24
+xLablePrecision 1
+# Y axis properties
+showYAxis
+yAxisSrc "AutoScale"
+yMin -5
+yMax 5
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 2
+xPv {
+  0 "SR-PC-HSTR-01:S"
+  1 "SR-PC-VSTR-01:S"
+}
+yPv {
+  0 "SR-PC-HSTR-01:I"
+  1 "SR-PC-VSTR-01:I"
+}
+plotStyle {
+  0 "point"
+  1 "point"
+}
+plotUpdateMode {
+  0 "y"
+  1 "y"
+}
+plotSymbolType {
+  0 "circle"
+  1 "circle"
+}
+plotColor {
+  0 index 25
+  1 index 20
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 376
+w 992
+h 32
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "Corrector Magnets"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 8
+w 992
+h 32
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "Slow Orbit Feedback"
+}
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 8
+y 696
+w 280
+h 14
+controlPv "SR-DI-EBPM-01:CF:AUTOSW"
+font "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+

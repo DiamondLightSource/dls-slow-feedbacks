@@ -15,7 +15,7 @@ from scipy.io import loadmat
 class sofb(object):
     
     def __init__(self):
-        self.step_limit = 5e-6
+        self.step_limit = 0.1
         self.threshold = 0
         self.datadir = None
         self.irm = None

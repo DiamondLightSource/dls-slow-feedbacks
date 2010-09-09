@@ -75,9 +75,9 @@ class server(object):
             caput(ao["vcm"].setpoint, vcm)
             
             # little error to correct here...
-            hcm[5*7+0] += 1e-4
-            hcm[1*7+3] -= 2e-4
-            hcm[22*7+4] -= 3e-4
+            hcm[5*7+0] += 1
+            hcm[1*7+3] -= 2
+            hcm[22*7+4] -= 3
             ox = dot(rmx, hcm)
             oy = dot(rmy, vcm)
             sax.set(ox)
