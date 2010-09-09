@@ -2,7 +2,8 @@
 
 "Test Database for SOFB"
 
-import os
+import os, sys
+sys.path.append("..")
 from pkg_resources import require
 require('cothread==1.16')
 require('iocbuilder==3.0')
@@ -12,7 +13,7 @@ from softioc import *
 from numpy import *
 from cothread.catools import *
 from cothread import Spawn, Sleep
-from mml import ao, getrb
+from mml import ao
 from scipy.io import loadmat
 
 dirname = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata/SR"
