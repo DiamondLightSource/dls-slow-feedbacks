@@ -1,3 +1,4 @@
+import os
 import traceback
 import mml
 import builder
@@ -5,6 +6,7 @@ import iochelper
 import cothread
 from cothread.catools import caget
 from numpy import *
+from scipy.io import loadmat
 import sofb
 
 class sofb_server(object):
@@ -13,7 +15,24 @@ class sofb_server(object):
         self.sofb = sofb.sofb()
         self.power = 0
         self.records()
+        self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
         iochelper.on_init.append(self.init)
+
+    def set_datadir(self, datadir):
+        self.sofb.cache.clear()
+        path = os.path.join(self.dataroot, datadir)
+        try:
+            bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
+            assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
+            self.sofb.rmx = bpmresp["Rmat"][0,0]["Data"]
+            self.sofb.rmy = bpmresp["Rmat"][1,1]["Data"]
+            print "SOFB loaded matrix %s" % datadir
+            self.matrix_error.set(0)
+        except:
+            traceback.print_exc()
+            self.sofb.rmx = None
+            self.sofb.rmy = None
+            self.matrix_error.set(1)
 
     def set_power(self, power):
         self.power = power
@@ -30,8 +49,10 @@ class sofb_server(object):
             try:
                 if self.power:
                     self.sofb.correction()
+                    self.calc_error.set(0)
             except:
                 traceback.print_exc()
+                self.calc_error.set(1)
 
     def single(self, value):
         self.sofb.correction()
@@ -51,7 +72,18 @@ class sofb_server(object):
                      on_update = self.single, always_update = True)
 
         builder.aOut("LIMIT", initial_value = self.sofb.step_limit,
-                     DRVH = 1, DRVL = 1e-2,
+                     DRVH = 0.5, DRVL = 1e-3,
                      on_update = self.set_limit, PREC = 3)
+
+        self.matrix_error = builder.boolIn(
+            "EMATRIX", DESC = "Matrix Error",
+            initial_value = 1, ZNAM = "OK",
+            ONAM = "SOFB MATRIX")
+        
+        self.calc_error = builder.boolIn(
+            "ECALC", DESC = "Calculation Error",
+            initial_value = 0, ZNAM = "OK",
+            ONAM = "SOFB CALC")
+
 
         

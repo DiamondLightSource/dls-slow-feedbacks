@@ -12,7 +12,6 @@ from numpy.linalg import *
 from cothread.catools import *
 from cothread import Spawn, Sleep, WaitForQuit
 from mml import ao
-from scipy.io import loadmat
 
 class sofb(object):
     
@@ -20,7 +19,6 @@ class sofb(object):
         self.step_limit = 0.05
         self.threshold = 0
         self.cache = {}
-        self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
@@ -28,20 +26,6 @@ class sofb(object):
     def set_threshold(self, threshold):
         self.threshold = threshold
     
-    def set_datadir(self, datadir):
-        self.cache.clear()
-        path = os.path.join(self.dataroot, datadir)
-        try:
-            bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
-            assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
-            self.rmx = bpmresp["Rmat"][0,0]["Data"]
-            self.rmy = bpmresp["Rmat"][1,1]["Data"]
-            print "SOFB loaded matrix %s" % datadir
-        except:
-            traceback.print_exc()
-            self.rmx = None
-            self.rmy = None
-
     def get_irm(self, hen, ven, bpmen, threshold):
         key = (tuple(hen), tuple(ven), tuple(bpmen), threshold)
         if key in self.cache:

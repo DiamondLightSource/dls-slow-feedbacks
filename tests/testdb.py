@@ -18,6 +18,9 @@ from scipy.io import loadmat
 
 dirname = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata/SR"
 bpmresp = loadmat(os.path.join(dirname, "GoldenBPMResp"))
+disp = loadmat(os.path.join(dirname, "GoldenDisp"))
+dispx = disp["BPMxDisp"]["Data"][0,0]
+
 rmx = bpmresp["Rmat"][0,0]["Data"]
 rmy = bpmresp["Rmat"][1,1]["Data"]
 
@@ -38,14 +41,16 @@ builder.Waveform("IL:ENABLE", initial_value = zeros(NB))
 builder.Waveform("CF:ATTEN", initial_value = zeros(NB))
 builder.Waveform("CF:AUTOSW", initial_value = zeros(NB))
 
+rf0 = 4.99654e8
+
 SetDevice("LI-RF-MOSC-01")
-builder.aOut("FREQ_SET", initial_value = 4.99654e8)
-builder.aOut("FREQ", initial_value = 4.99654e8)
+rfset = builder.aOut("FREQ_SET", initial_value = rf0, PREC = 1, EGU = "Hz")
+builder.aOut("FREQ", initial_value = rf0, PREC = 1, EGU = "Hz")
 
 SetDevice("SR21C-DI-DCCT-01")
-builder.aOut("SIGNAL", initial_value = 150)
+builder.aOut("SIGNAL", initial_value = 150, EGU = "mA", PREC = 2)
 SetDevice("SR-DI-DCCT-01")
-builder.aOut("SIGNAL", initial_value = 150)
+builder.aOut("SIGNAL", initial_value = 150, EGU = "mA", PREC = 2)
 
 SetDevice("CS-CS-MSTAT-01")
 builder.aOut("FBHEART", initial_value = 0)
@@ -82,8 +87,14 @@ class server(object):
             hcm[5*7+0] += 0.5
             hcm[1*7+3] -= 1
             hcm[22*7+4] -= 1.5
-            ox = dot(rmx, hcm)
+
+            drf = rfset.get() - rf0
+            dx = dispx[:,0] * drf
+            print sum(dx**2)
+
+            ox = dot(rmx, hcm) + dx
             oy = dot(rmy, vcm)
+            
             sax.set(ox)
             say.set(oy)
             # print ox
@@ -94,7 +105,7 @@ iocInit()
 s.init()
 
 def reset():
-    cm = random.rand(170)
+    cm = (random.rand(170) * 2 - 1)
     caput(ao["hcm"].setpoint, cm)
     caput(ao["vcm"].setpoint, cm)
 

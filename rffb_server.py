@@ -3,6 +3,7 @@
 import os, sys
 from pkg_resources import require
 require('cothread==1.16')
+# sys.path.append("/home/mga83/epics/cothread")
 require('scipy==0.8.0b1')
 require('iocbuilder==3.3')
 
@@ -49,7 +50,7 @@ class rffb_server(object):
         self.tick = 0
         self.power = 0
         self.rfstep = 0.1
-        self.period = 1
+        self.period = 10
         self.datadir = "SR"
         self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
 
@@ -69,6 +70,7 @@ class rffb_server(object):
         while True:
 
             cothread.Sleep(1.0)
+            self.tick = (self.tick + 1) % 10
 
             if self.period == 10 and self.tick != 0:
                 continue
@@ -80,8 +82,6 @@ class rffb_server(object):
                 traceback.print_exc()
                 self.calc_error.set(1)
                 
-            self.tick = (self.tick + 1) % 10
-            
 
     def feedback(self):
 
@@ -123,7 +123,6 @@ class rffb_server(object):
         self.rfstep = rfstep
 
     def set_period(self, period):
-        print period
         self.period = period
     
     def set_valid(self, valid):
@@ -152,12 +151,12 @@ class rffb_server(object):
         self.matrix_error = builder.boolIn(
             "EMATRIX", DESC = "Matrix Error",
             initial_value = 1, ZNAM = "OK",
-            ONAM = "MATRIX")
+            ONAM = "RFFB MATRIX")
         
         self.calc_error = builder.boolIn(
             "ECALC", DESC = "Calculation Error",
             initial_value = 0, ZNAM = "OK",
-            ONAM = "CALCULATION")
+            ONAM = "RFFB CALC")
 
         self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                   initial_value = self.power,
@@ -174,7 +173,7 @@ class rffb_server(object):
                      DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "Hz")
         
         builder.mbbOut('PERIOD', ("1 second", 1), ("10 seconds", 10),
-                       initial_value = 1,
+                       initial_value = self.period,
                        on_update = self.set_period)
         
 class status_server(object):
@@ -195,9 +194,9 @@ def startup():
         
     mode = ringmode()
     mode.listeners.append(rffb.set_datadir)
-    mode.listeners.append(sofb.sofb.set_datadir)
+    mode.listeners.append(sofb.set_datadir)
     
     iochelper.start_ioc()
-        
+
 startup()
 

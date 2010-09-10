@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PYIOC_VERSION=1-4
+PYIOC_VERSION=1-5
 PYIOC=/dls_sw/prod/R3.14.11/support/pythonSoftIoc/$PYIOC_VERSION/pythonIoc
 
 export EPICS_BASE=/dls_sw/epics/R3.14.11/base

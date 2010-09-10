@@ -1,9 +1,11 @@
 #!/usr/bin/env dls-python2.6
 
 import sys, os
-from pkg_resources import require
-require('cothread==1.16')
-require('scipy==0.8.0b1')
+
+if __name__ == "__main__":
+    from pkg_resources import require
+    require('cothread==1.16')
+    require('scipy==0.8.0b1')
 from scipy.io.matlab import *
 from numpy import *
 from numpy.linalg import svd, pinv
