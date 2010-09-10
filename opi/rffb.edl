@@ -689,7 +689,7 @@ fontAlign "center"
 fgColor index 0
 bgColor index 9
 value {
-  "SLOW ORBIT FEEBDACK"
+  "SLOW ORBIT FEEDBACK"
 }
 endObjectProperties
 

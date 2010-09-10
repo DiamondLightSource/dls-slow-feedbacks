@@ -55,6 +55,8 @@ class sofb(object):
         hen = caget("SR-PC-HSTR-01:ENABLED") == 0
         ven = caget("SR-PC-VSTR-01:ENABLED") == 0
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
+        # always turn off 16-6
+        bpmen[iochelper.BPM_16_6] = False
 
         irm = self.get_irm(hen, ven, bpmen, self.threshold)
         

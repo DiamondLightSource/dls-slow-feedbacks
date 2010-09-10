@@ -89,6 +89,10 @@ class rffb_server(object):
         fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
         enabled_cor = catools.caget("SR-PC-HSTR-01:ENABLED") == 0
         enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
+
+        # always turn off 16-6
+        enabled_bpm[iochelper.BPM_16_6] = False
+        
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
         
