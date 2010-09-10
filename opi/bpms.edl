@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 716
-y 201
-w 1020
-h 763
+x 759
+y 228
+w 1008
+h 732
 font "helvetica-medium-r-12.0"
 ctlFont "helvetica-medium-r-12.0"
 btnFont "helvetica-medium-r-12.0"
@@ -33,7 +33,7 @@ major 4
 minor 1
 release 0
 x 8
-y 48
+y 56
 w 992
 h 32
 font "helvetica-medium-r-18.0"
@@ -52,7 +52,7 @@ major 4
 minor 1
 release 0
 x 952
-y 728
+y 704
 w 48
 h 22
 fgColor index 46
@@ -72,7 +72,7 @@ minor 5
 release 0
 # Geometry
 x 8
-y 88
+y 96
 w 992
 h 280
 # Appearance
@@ -131,7 +131,7 @@ minor 5
 release 0
 # Geometry
 x 8
-y 416
+y 424
 w 992
 h 272
 # Appearance
@@ -193,7 +193,7 @@ major 4
 minor 1
 release 0
 x 8
-y 376
+y 384
 w 992
 h 32
 font "helvetica-medium-r-18.0"
@@ -214,7 +214,7 @@ release 0
 x 8
 y 8
 w 992
-h 32
+h 40
 font "helvetica-medium-r-18.0"
 fontAlign "center"
 fgColor index 14
@@ -222,93 +222,5 @@ bgColor index 73
 value {
   "Slow Orbit Feedback"
 }
-endObjectProperties
-
-# (Text Monitor)
-object activeXTextDspClass:noedit
-beginObjectProperties
-major 4
-minor 4
-release 0
-x 8
-y 696
-w 280
-h 14
-controlPv "SR-DI-EBPM-01:CF:AUTOSW"
-font "helvetica-medium-r-12.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-autoHeight
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "monitors"
-endObjectProperties
-
-# (Message Button)
-object activeMessageButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 720
-w 224
-h 32
-fgColor index 14
-onColor index 3
-offColor index 3
-topShadowColor index 1
-botShadowColor index 11
-controlPv "SR-CS-SOFB-01:CORRECT"
-pressValue "1"
-onLabel "CORRECTION"
-offLabel "CORRECTION"
-3d
-font "helvetica-medium-r-12.0"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 4
-release 0
-x 240
-y 720
-w 168
-h 32
-controlPv "SR-CS-SOFB-01:LIMIT"
-font "helvetica-medium-r-18.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 440
-y 704
-w 224
-h 32
-fgColor index 14
-bgColor index 3
-inconsistentColor index 14
-topShadowColor index 1
-botShadowColor index 11
-controlPv "SR-CS-SOFB-01:ONOFF"
-font "helvetica-medium-r-12.0"
 endObjectProperties
 
