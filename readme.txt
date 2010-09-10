@@ -25,5 +25,10 @@ PVs are SR-CS-RFFB-01:XXX
 
 Corrects orbit, single correction or feedback
 
-Need SOFB position display for new correctiors, get s pos out of MML...
+Algorithm is:
+
+delta_correctors = pinv(orbit_response_matrix) * orbit
+
+(pure integral control)
+
 
