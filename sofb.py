@@ -19,7 +19,6 @@ class sofb(object):
     def __init__(self):
         self.step_limit = 0.05
         self.threshold = 0
-        self.datadir = None
         self.cache = {}
         self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
 
@@ -30,16 +29,18 @@ class sofb(object):
         self.threshold = threshold
     
     def set_datadir(self, datadir):
-        self.datadir = datadir
         self.cache.clear()
-        path = os.path.join(self.dataroot, self.datadir)
+        path = os.path.join(self.dataroot, datadir)
         try:
             bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             self.rmx = bpmresp["Rmat"][0,0]["Data"]
             self.rmy = bpmresp["Rmat"][1,1]["Data"]
+            print "SOFB loaded matrix %s" % datadir
         except:
             traceback.print_exc()
+            self.rmx = None
+            self.rmy = None
 
     def get_irm(self, hen, ven, bpmen, threshold):
         key = (tuple(hen), tuple(ven), tuple(bpmen), threshold)
@@ -113,6 +114,3 @@ if __name__ == "__main__":
     feedback.correction()
     Spawn(feedback.tick)
     WaitForQuit()
-    
-    
-    

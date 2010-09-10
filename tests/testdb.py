@@ -44,6 +44,8 @@ builder.aOut("FREQ", initial_value = 4.99654e8)
 
 SetDevice("SR21C-DI-DCCT-01")
 builder.aOut("SIGNAL", initial_value = 150)
+SetDevice("SR-DI-DCCT-01")
+builder.aOut("SIGNAL", initial_value = 150)
 
 SetDevice("CS-CS-MSTAT-01")
 builder.aOut("FBHEART", initial_value = 0)

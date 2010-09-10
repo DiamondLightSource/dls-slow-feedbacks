@@ -20,18 +20,36 @@ import rffb_calc
 import magnets
 import sofb_server
 
-ring_modes = ["SR", "SRI13", "SRLE3ps", "SRLEm3ps"]
+class ringmode(object):
 
-class rffb_service(object):
+    ring_modes = ["SR", "SRI13", "SRLE3ps", "SRLEm3ps"]
+
+    def __init__(self):
+        self.records()
+        self.listeners = []
+        iochelper.on_init.append(self.init)
+        
+    def records(self):
+        iochelper.SetDevice('SR-CS-RING-01')
+        self.mode = builder.mbbOut("MODE", on_update = self.set_mode,
+                                   *(zip(self.ring_modes, range(len(self.ring_modes)))))
+
+    def init(self):
+        self.mode.set(0)
+        
+    def set_mode(self, mode):
+        for l in self.listeners:
+            l(self.ring_modes[mode])
+
+class rffb_server(object):
     
     def __init__(self):
         self.event = cothread.Event()
 
-        self.valid = 0
+        self.tick = 0
         self.power = 0
         self.rfstep = 0.1
         self.period = 1
-        self.target = 0
         self.datadir = "SR"
         self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
 
@@ -39,37 +57,33 @@ class rffb_service(object):
         self.rad_over_A = mml.ao["hcm"].hw2physics
         self.correctors = mml.ao["hcm"].readback
 
+        self.records()
+
         iochelper.on_init.append(self.start)
         
     def start(self):
         cothread.Spawn(self.timer)
         
     def timer(self):
+        
         while True:
-            # event is signalled if the period is changed
-            # so we don't have to wait for the next cycle
-            try:
-                self.event.Wait(timeout = self.period)
+
+            cothread.Sleep(1.0)
+
+            if self.period == 10 and self.tick != 0:
                 continue
-            except cothread.Timedout:
-                pass
-
-            if self.power and self.valid:
-                try:
+            
+            try:
+                if self.power:
                     self.feedback()
-                except:
-                    traceback.print_exc()
-                    self.set_message("CALC FAILED")
+            except:
+                traceback.print_exc()
+                self.calc_error.set(1)
+                
+            self.tick = (self.tick + 1) % 10
+            
 
-    def set_message(self, s):
-        self.message_pv.set(s)
-    
     def feedback(self):
-
-        # copy state to local thread
-        bpmresp = self.bpmresp.copy()
-        disp = self.disp.copy()
-        rfstep = self.rfstep
 
         # channel access read
         fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
@@ -79,8 +93,6 @@ class rffb_service(object):
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
         
         if fbstat == 0:
-            self.set_message("ORBIT FB")
-            self.power_pv.set(0)
             return
         
         drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
@@ -92,120 +104,100 @@ class rffb_service(object):
             return round(x * 10.0) / 10.0
         
         target = round10(rf + drf)
-        if abs(drf) > rfstep:
-            drf = numpy.sign(drf) * rfstep
+        if abs(drf) > self.rfstep:
+            drf = numpy.sign(drf) * self.rfstep
         target_limit = round10(rf + drf)
 
         # channel access write
         catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
         
         # update status
-        self.set_target(target)
-        self.set_message("NO ERRORS")
+        self.target_pv.set(target)
+        self.calc_error.set(0)
 
-    def set_mode(self, mode):
-        self.set_datadir(ring_modes[mode])
-        self.sofb.set_datadir(ring_modes[mode])
-        
     def set_power(self, power):
         self.power = power
         self.event.Signal()
-        if power and not self.valid:
-            self.power_pv.set(0)
 
     def set_rfstep(self, rfstep):
         self.rfstep = rfstep
-        self.power_pv.set(0)
 
     def set_period(self, period):
+        print period
         self.period = period
-        self.power_pv.set(0)
     
     def set_valid(self, valid):
         self.valid = valid
 
-    def set_target(self, target):
-        self.target = target
-        self.target_pv.set(target)
-
     def set_datadir(self, datadir):
-        self.power_pv.set(0)
-        self.datadir = datadir
-        path = os.path.join(self.dataroot, self.datadir)
-        self.set_valid(0)
         rffb_calc.cache.clear()
+        path = os.path.join(self.dataroot, datadir)
         try:
             self.bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             self.disp = loadmat(os.path.join(path, "GoldenDisp"))
             assert(self.bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             assert(self.disp["BPMxDisp"]["Units"] == "Hardware")
-            self.set_valid(1)
-            self.set_message("MATRIX OK")
+            self.matrix_error.set(0)
+            print "RFFB loaded matrix %s" % datadir
         except:
             traceback.print_exc()
-            self.set_message("MATRIX BAD")
+            self.bpmresp = None
+            self.disp = None
+            self.matrix_error.set(1)
             
-    # PV connection
-    def set_target_pv(self, target_pv):
-        self.target_pv = target_pv
+    def records(self):
 
-    def set_power_pv(self, power_pv):
-        self.power_pv = power_pv
+        iochelper.SetDevice("SR-CS-RFFB-01")
 
-    def set_delta_pv(self, delta_pv):
-        self.delta_pv = delta_pv
-
-    def set_message_pv(self, message_pv):
-        self.message_pv = message_pv
-
-class rffb_database(object):
-    
-    def __init__(self):
-
-        rffb = rffb_service()
-
-        iochelper.SetDevice('CS-DI-IOC-09')
+        self.matrix_error = builder.boolIn(
+            "EMATRIX", DESC = "Matrix Error",
+            initial_value = 1, ZNAM = "OK",
+            ONAM = "MATRIX")
         
+        self.calc_error = builder.boolIn(
+            "ECALC", DESC = "Calculation Error",
+            initial_value = 0, ZNAM = "OK",
+            ONAM = "CALCULATION")
+
+        self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
+                                  initial_value = self.power,
+                                  on_update = self.set_power)
+        
+        self.delta_pv = builder.aIn("DELTARF", initial_value = 0,
+                                    PREC = 1, EGU = "Hz")
+        
+        self.target_pv = builder.aIn("TARGET", initial_value = 0,
+                                PREC = 1, EGU = "Hz")
+        
+        builder.aOut("RFSTEP", initial_value = self.rfstep,
+                     on_update = self.set_rfstep,
+                     DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "Hz")
+        
+        builder.mbbOut('PERIOD', ("1 second", 1), ("10 seconds", 10),
+                       initial_value = 1,
+                       on_update = self.set_period)
+        
+class status_server(object):
+    def __init__(self):
+        iochelper.SetDevice('CS-DI-IOC-09')
         builder.stringIn('WHOAMI', VAL = 'RF Feedback Server')
         builder.stringIn('HOSTNAME', VAL = os.uname()[1])
 
-        iochelper.SetDevice('SR-CS-RFFB-01')
-        
-        power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
-                                  initial_value = rffb.power,
-                                  on_update = rffb.set_power)
-        
-        builder.aOut("RFSTEP", initial_value = rffb.rfstep,
-                     on_update = rffb.set_rfstep,
-                     DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "Hz")
-        
-        builder.aOut("PERIOD", initial_value = rffb.period,
-                     on_update = rffb.set_period,
-                     DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "s")
+def startup():
 
-        delta_pv = builder.aIn("DELTARF")
-
-        message_pv = builder.stringIn("MESSAGE")
-                
-        target_pv = builder.aIn("TARGET", initial_value = rffb.target, PREC = 1, EGU = "Hz")
+    "spawn the various servers on this IOC"
+    
+    status = status_server()
+    rffb = rffb_server()
         
-        rffb.set_target_pv(target_pv)
-        rffb.set_power_pv(power_pv)
-        rffb.set_delta_pv(delta_pv)
-        rffb.set_message_pv(message_pv)
+    mags = magnets.magnets_server()
+    sofb = sofb_server.sofb_server()
         
-        iochelper.SetDevice('SR-CS-RING-01')
-
-        mode = builder.mbbOut("MODE", on_update = rffb.set_mode,
-                              *(zip(ring_modes, range(len(ring_modes)))))
-
-        # cor = correctors.correctors()
-        mag = magnets.s_server()
-        sofb = sofb_server.sofb_server()
-        rffb.sofb = sofb.sofb
-
-        iochelper.on_init.append(lambda : mode.set(0))
-        iochelper.start_ioc()
+    mode = ringmode()
+    mode.listeners.append(rffb.set_datadir)
+    mode.listeners.append(sofb.sofb.set_datadir)
+    
+    iochelper.start_ioc()
         
-mydb = rffb_database()
+startup()
 

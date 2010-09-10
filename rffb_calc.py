@@ -14,11 +14,6 @@ cache = {}
 def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp, rad_over_A):
     "get the dispersion corrector vector and cache"
     
-    # pad out the 13S bpms
-    xr = range(170)
-    xr.remove(12*7+0)
-    xr.remove(12*7+1)
-    
     key = (tuple(enabled_bpm), tuple(enabled_cor))
     if key in cache:
         return cache[key]
@@ -31,7 +26,10 @@ def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp, rad_over_A):
     rmx = rmx[ix_(enabled_bpm, enabled_cor)] / rad_over_A[enabled_cor]
     
     dispcor = dot(pinv(rmx), dispx)
+    
+    cache.clear()
     cache[key] = dispcor
+    
     return dispcor
 
 def calc_rffb(bpmresp, disp, enabled_bpm, enabled_cor, hcm, rad_over_A):

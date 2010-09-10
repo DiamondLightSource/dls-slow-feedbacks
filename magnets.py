@@ -20,7 +20,7 @@ def bind1st(x, f):
         f(x, *args, **kw)
     return g
 
-class s_server(object):
+class magnets_server(object):
     
     def __init__(self):
         
