@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 372
-y 277
+x 1411
+y 250
 w 342
 h 664
 font "helvetica-bold-r-14.0"
@@ -58,7 +58,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "SLOW FEEDBACK"
+  "SLOW FEEDBACK CS-DI-IOC-09"
 }
 endObjectProperties
 
@@ -670,7 +670,7 @@ fontAlign "center"
 fgColor index 0
 bgColor index 9
 value {
-  "RB FEEDBACK"
+  "RF FEEDBACK"
 }
 endObjectProperties
 
