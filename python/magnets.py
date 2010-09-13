@@ -76,8 +76,13 @@ class magnets_server(object):
         
         # get corrector readbacks
         for p in range(2):
-            hv[p] = caget(mml.ao[fam[p]].readback[en[p]])
-
+            pvs = mml.ao[fam[p]].readback[en[p]]
+            hv[p] = caget(pvs)
+            # update max value and name
+            i = argmax(abs(array(hv[p])))
+            self.maxval[p].set(hv[p][i])
+            self.maxname[p].set(pvs[i])
+            
         # write to waveforms (disabled are set to zero)
         for p in range(2):
             w = self.wf[p].get()
@@ -94,8 +99,11 @@ class magnets_server(object):
         r.set(wf)
 
     def create_controls(self):
-        
+
         self.cenabled = [None, None]
+        self.maxval = [None, None]
+        self.maxname = [None, None]
+        
         fams = ["hcm", "vcm"]
         records = [[], []]
 
@@ -107,6 +115,11 @@ class magnets_server(object):
             envec = zeros(NC)
             envec[12*7+0:12*7+2] = 1
             iochelper.SetDevice("SR-PC-%sSTR-01" % "HV"[p])
+
+            # maximum value and name
+            self.maxval[p] = builder.aOut("MAXI", initial_value = 0)
+            self.maxname[p] = builder.stringOut("MAXNAME")
+            
             self.cenabled[p] = builder.WaveformIn("ENABLED", 
                                                   initial_value = envec)
             # build individual controls
@@ -125,6 +138,6 @@ class magnets_server(object):
         
 if __name__ == "__main__":
     # standalone test
-    s = s_server()
+    s = magnets_server()
     iochelper.start_ioc()
     
