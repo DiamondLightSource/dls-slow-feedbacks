@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 759
-y 228
+x 109
+y 265
 w 1008
 h 732
 font "helvetica-medium-r-12.0"
@@ -251,7 +251,7 @@ minor 1
 release 0
 x 416
 y 704
-w 200
+w 144
 h 24
 font "helvetica-bold-r-14.0"
 fontAlign "center"
@@ -270,11 +270,11 @@ minor 4
 release 0
 x 160
 y 704
-w 120
+w 160
 h 24
 controlPv "SR-PC-HSTR-01:MAXNAME"
-font "helvetica-bold-r-14.0"
-fontAlign "right"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -291,41 +291,17 @@ beginObjectProperties
 major 4
 minor 4
 release 0
-x 288
+x 328
 y 704
-w 120
+w 80
 h 24
-controlPv "SR-PC-HSTR-01:MAXNAME"
-font "helvetica-bold-r-14.0"
+controlPv "SR-PC-HSTR-01:MAXI"
+font "helvetica-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
 bgColor index 0
 useDisplayBg
-limitsFromDb
-nullColor index 0
-useHexPrefix
-showUnits
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 4
-release 0
-x 624
-y 704
-w 120
-h 24
-controlPv "SR-PC-VSTR-01:MAXNAME"
-font "helvetica-bold-r-14.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-limitsFromDb
+precision 3
 nullColor index 0
 useHexPrefix
 newPos
@@ -338,20 +314,42 @@ beginObjectProperties
 major 4
 minor 4
 release 0
-x 752
+x 568
 y 704
-w 120
+w 160
 h 24
 controlPv "SR-PC-VSTR-01:MAXNAME"
-font "helvetica-bold-r-14.0"
-fontAlign "right"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
 fgColor index 14
 bgColor index 0
 useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
-showUnits
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 736
+y 704
+w 80
+h 24
+controlPv "SR-PC-VSTR-01:MAXI"
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+precision 3
+nullColor index 0
+useHexPrefix
 newPos
 objType "controls"
 endObjectProperties
