@@ -3,7 +3,6 @@
 import os, sys
 from pkg_resources import require
 require('cothread==1.16')
-# sys.path.append("/home/mga83/epics/cothread")
 require('scipy==0.8.0b1')
 require('iocbuilder==3.3')
 
@@ -45,8 +44,6 @@ class ringmode(object):
 class rffb_server(object):
     
     def __init__(self):
-        self.event = cothread.Event()
-
         self.tick = 0
         self.power = 0
         self.rfstep = 0.1
@@ -76,11 +73,11 @@ class rffb_server(object):
                 continue
             
             try:
-                if self.power:
-                    self.feedback()
+                self.feedback()
             except:
                 traceback.print_exc()
                 self.calc_error.set(1)
+                self.power_pv.set(0)
                 
 
     def feedback(self):
@@ -89,15 +86,13 @@ class rffb_server(object):
         fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
         enabled_cor = catools.caget("SR-PC-HSTR-01:ENABLED") == 0
         enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
+        current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 
         # always turn off 16-6
         enabled_bpm[iochelper.BPM_16_6] = False
         
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
-        
-        if fbstat == 0:
-            return
         
         drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
                                   enabled_bpm, enabled_cor,
@@ -112,16 +107,27 @@ class rffb_server(object):
             drf = numpy.sign(drf) * self.rfstep
         target_limit = round10(rf + drf)
 
-        # channel access write
-        catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
-        
         # update status
         self.target_pv.set(target)
+
+        # turn off feedback loop with no orbit loop
+        if fbstat == 0:
+            self.power_pv.set(0)
+            return
+        
+        # turn off feedback loop below 2mA
+        if current <= 2:
+            self.power_pv.set(0)
+            return
+        
+        # channel access write
+        if self.power:
+            catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
+        
         self.calc_error.set(0)
 
     def set_power(self, power):
         self.power = power
-        self.event.Signal()
 
     def set_rfstep(self, rfstep):
         self.rfstep = rfstep

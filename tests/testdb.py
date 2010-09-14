@@ -3,7 +3,7 @@
 "Test Database for SOFB"
 
 import os, sys
-sys.path.append("..")
+sys.path.append("../python")
 from pkg_resources import require
 require('cothread==1.16')
 require('iocbuilder==3.0')

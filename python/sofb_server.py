@@ -48,10 +48,16 @@ class sofb_server(object):
             cothread.Sleep(1.0)
             try:
                 if self.power:
-                    self.sofb.correction()
-                    self.calc_error.set(0)
+                    # no loop below 2mA
+                    current = caget("SR-DI-DCCT-01:SIGNAL")
+                    if current > 2:
+                        self.sofb.correction()
+                        self.calc_error.set(0)
+                    else:
+                        self.power_pv.set(0)
             except:
                 traceback.print_exc()
+                self.power_pv.set(0)
                 self.calc_error.set(1)
 
     def single(self, value):
@@ -60,9 +66,9 @@ class sofb_server(object):
     def records(self):
         iochelper.SetDevice("SR-CS-SOFB-01")
 
-        builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
-                       initial_value = self.power,
-                       on_update = self.set_power)
+        self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
+                                       initial_value = self.power,
+                                       on_update = self.set_power)
         
         builder.aOut("SVDT", initial_value = self.sofb.threshold,
                      on_update = self.sofb.set_threshold,
