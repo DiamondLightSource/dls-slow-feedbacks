@@ -2,7 +2,7 @@
 
 import os, sys
 from pkg_resources import require
-require('cothread==1.16')
+require('cothread==1.17')
 require('scipy==0.8.0b1')
 require('iocbuilder==3.3')
 
@@ -74,6 +74,10 @@ class rffb_server(object):
             
             try:
                 self.feedback()
+            except catools.ca_nothing, e:
+                self.pv_error.set(e.name)
+                self.calc_error.set(1)
+                self.power_pv.set(0)
             except:
                 traceback.print_exc()
                 self.calc_error.set(1)
@@ -125,6 +129,7 @@ class rffb_server(object):
             catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
         
         self.calc_error.set(0)
+        self.pv_error.set("OK")
 
     def set_power(self, power):
         self.power = power
@@ -167,6 +172,9 @@ class rffb_server(object):
             "ECALC", DESC = "Calculation Error",
             initial_value = 0, ZNAM = "OK",
             ONAM = "RFFB CALC")
+
+        self.pv_error = builder.stringIn(
+            "EPV", DESC = "PV Error", initial_value = "OK")
 
         self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                   initial_value = self.power,

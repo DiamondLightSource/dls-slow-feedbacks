@@ -4,7 +4,7 @@ import mml
 import builder
 import iochelper
 import cothread
-from cothread.catools import caget
+from cothread.catools import caget, ca_nothing
 from numpy import *
 from scipy.io import loadmat
 import sofb
@@ -53,8 +53,13 @@ class sofb_server(object):
                     if current > 2:
                         self.sofb.correction()
                         self.calc_error.set(0)
+                        self.pv_error.set("OK")
                     else:
                         self.power_pv.set(0)
+            except ca_nothing, e:
+                self.pv_error.set(e.name)
+                self.power_pv.set(0)
+                self.calc_error.set(1)
             except:
                 traceback.print_exc()
                 self.power_pv.set(0)
@@ -91,5 +96,7 @@ class sofb_server(object):
             initial_value = 0, ZNAM = "OK",
             ONAM = "SOFB CALC")
 
+        self.pv_error = builder.stringIn(
+            "EPV", DESC = "PV Error", initial_value = "OK")
 
         

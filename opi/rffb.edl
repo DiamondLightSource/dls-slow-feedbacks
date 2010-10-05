@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1411
-y 250
+x 1050
+y 210
 w 342
-h 664
+h 728
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -31,7 +31,7 @@ major 4
 minor 0
 release 0
 x 216
-y 376
+y 408
 w 120
 h 24
 fgColor index 14
@@ -69,7 +69,7 @@ major 4
 minor 1
 release 0
 x 288
-y 632
+y 696
 w 48
 h 24
 fgColor index 46
@@ -193,7 +193,7 @@ major 4
 minor 1
 release 0
 x 8
-y 376
+y 408
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -273,7 +273,7 @@ major 4
 minor 2
 release 0
 x 8
-y 632
+y 696
 w 136
 h 24
 fgColor index 43
@@ -496,7 +496,7 @@ major 4
 minor 0
 release 0
 x 216
-y 600
+y 664
 w 120
 h 24
 fgColor index 14
@@ -519,7 +519,7 @@ major 4
 minor 1
 release 0
 x 8
-y 600
+y 664
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -538,7 +538,7 @@ major 4
 minor 1
 release 0
 x 8
-y 568
+y 632
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -557,7 +557,7 @@ major 4
 minor 0
 release 0
 x 216
-y 568
+y 632
 w 120
 h 24
 fgColor index 14
@@ -576,7 +576,7 @@ major 4
 minor 1
 release 0
 x 8
-y 440
+y 472
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -595,7 +595,7 @@ major 4
 minor 4
 release 0
 x 216
-y 440
+y 472
 w 120
 h 24
 controlPv "SR-CS-SOFB-01:LIMIT"
@@ -619,7 +619,7 @@ major 4
 minor 1
 release 0
 x 8
-y 472
+y 504
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -638,7 +638,7 @@ major 4
 minor 4
 release 0
 x 216
-y 472
+y 504
 w 120
 h 24
 controlPv "SR-CS-SOFB-01:SVDT"
@@ -681,7 +681,7 @@ major 4
 minor 1
 release 0
 x 8
-y 408
+y 440
 w 328
 h 24
 font "helvetica-bold-r-14.0"
@@ -700,7 +700,7 @@ major 4
 minor 0
 release 0
 x 216
-y 536
+y 568
 w 24
 h 24
 lineColor index 14
@@ -716,7 +716,7 @@ major 4
 minor 4
 release 0
 x 8
-y 536
+y 568
 w 200
 h 24
 controlPv "SR-CS-SOFB-01:ECALC.ONAM"
@@ -738,7 +738,7 @@ major 4
 minor 4
 release 0
 x 8
-y 504
+y 536
 w 200
 h 24
 controlPv "SR-CS-SOFB-01:EMATRIX.ONAM"
@@ -760,7 +760,7 @@ major 4
 minor 0
 release 0
 x 216
-y 504
+y 536
 w 24
 h 24
 lineColor index 14
@@ -776,7 +776,7 @@ major 4
 minor 2
 release 0
 x 152
-y 632
+y 696
 w 128
 h 24
 fgColor index 43
@@ -789,6 +789,90 @@ numPvs 4
 numDsps 1
 displayFileName {
   0 "bpms.edl"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 376
+w 104
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "BAD PV"
+}
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 120
+y 376
+w 216
+h 24
+controlPv "SR-CS-RFFB-01:EPV"
+font "helvetica-bold-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 120
+y 600
+w 216
+h 24
+controlPv "SR-CS-SOFB-01:EPV"
+font "helvetica-bold-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 600
+w 104
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "BAD PV"
 }
 endObjectProperties
 
