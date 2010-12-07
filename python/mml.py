@@ -55,8 +55,10 @@ def make_families():
         0.219088331921733] * 24
 
     # add 13S correctors and scale correctly
-    h_rad_over_A = array(h_rad_over_A[:12*7] + [1, 1] + h_rad_over_A[12*7:]) * 1e-3
-    v_rad_over_A = array(v_rad_over_A[:12*7] + [1, 1] + v_rad_over_A[12*7:]) * 1e-3
+    hi13 = [0.019986164156833, 0.003397647906607]
+    vi13 = [0.018287340203453, 0.003297717085824]
+    h_rad_over_A = array(h_rad_over_A[:12*7] + hi13 + h_rad_over_A[12*7:]) * 1e-3
+    v_rad_over_A = array(v_rad_over_A[:12*7] + vi13 + v_rad_over_A[12*7:]) * 1e-3
     
     cm = [None, None]
     
