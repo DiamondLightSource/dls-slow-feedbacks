@@ -53,6 +53,7 @@ class sofb(object):
 
         # calculate inverse response matrix on demand
 
+        afrac = caget("SR-CS-SOFB-01:AFRAC")
         hen = caget("SR-PC-HSTR-01:ENABLED") == 0
         ven = caget("SR-PC-VSTR-01:ENABLED") == 0
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
@@ -73,8 +74,8 @@ class sofb(object):
         vdelta = dot(irm[1], bpmy)
         vdelta = vdelta * self.scale(vdelta)
         
-        caput(ao["hcm"].setpoint[hen], hcm - hdelta)
-        caput(ao["vcm"].setpoint[ven], vcm - vdelta)
+        caput(ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
+        caput(ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
         caput("CS-CS-MSTAT-01:FBHEART", 10)
         
     def scale(self, xs):
