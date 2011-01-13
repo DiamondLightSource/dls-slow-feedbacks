@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1050
-y 210
+x 865
+y 158
 w 342
-h 728
+h 760
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -69,7 +69,7 @@ major 4
 minor 1
 release 0
 x 288
-y 696
+y 728
 w 48
 h 24
 fgColor index 46
@@ -273,7 +273,7 @@ major 4
 minor 2
 release 0
 x 8
-y 696
+y 728
 w 136
 h 24
 fgColor index 43
@@ -496,7 +496,7 @@ major 4
 minor 0
 release 0
 x 216
-y 664
+y 696
 w 120
 h 24
 fgColor index 14
@@ -519,7 +519,7 @@ major 4
 minor 1
 release 0
 x 8
-y 664
+y 696
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -538,7 +538,7 @@ major 4
 minor 1
 release 0
 x 8
-y 632
+y 664
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -557,7 +557,7 @@ major 4
 minor 0
 release 0
 x 216
-y 632
+y 664
 w 120
 h 24
 fgColor index 14
@@ -610,25 +610,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 504
-w 200
-h 24
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 4
-value {
-  "SVD THRESHOLD"
-}
 endObjectProperties
 
 # (Text Control)
@@ -700,7 +681,7 @@ major 4
 minor 0
 release 0
 x 216
-y 568
+y 600
 w 24
 h 24
 lineColor index 14
@@ -716,7 +697,7 @@ major 4
 minor 4
 release 0
 x 8
-y 568
+y 600
 w 200
 h 24
 controlPv "SR-CS-SOFB-01:ECALC.ONAM"
@@ -738,7 +719,7 @@ major 4
 minor 4
 release 0
 x 8
-y 536
+y 568
 w 200
 h 24
 controlPv "SR-CS-SOFB-01:EMATRIX.ONAM"
@@ -760,7 +741,7 @@ major 4
 minor 0
 release 0
 x 216
-y 536
+y 568
 w 24
 h 24
 lineColor index 14
@@ -776,7 +757,7 @@ major 4
 minor 2
 release 0
 x 152
-y 696
+y 728
 w 128
 h 24
 fgColor index 43
@@ -841,7 +822,7 @@ major 4
 minor 4
 release 0
 x 120
-y 600
+y 632
 w 216
 h 24
 controlPv "SR-CS-SOFB-01:EPV"
@@ -864,7 +845,7 @@ major 4
 minor 1
 release 0
 x 8
-y 600
+y 632
 w 104
 h 24
 font "helvetica-bold-r-14.0"
@@ -874,5 +855,67 @@ bgColor index 4
 value {
   "BAD PV"
 }
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 504
+w 200
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "SVD THRESHOLD"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 536
+w 200
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "FRACTION TO APPLY"
+}
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 216
+y 536
+w 120
+h 24
+controlPv "SR-CS-SOFB-01:AFRAC"
+font "helvetica-bold-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
 endObjectProperties
 

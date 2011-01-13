@@ -18,7 +18,7 @@ class sofb(object):
     
     def __init__(self):
         self.step_limit = 0.05
-        self.threshold = 0
+        self.threshold = 1e-4
         self.cache = {}
 
     def set_step_limit(self, step_limit):
