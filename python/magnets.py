@@ -71,7 +71,7 @@ class magnets_server(object):
         # get bpm enables
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
         # always turn off 16-6
-        bpmen[iochelper.BPM_16_6] = False
+        bpmen[mml.BPM_16_6] = False
 
         
         # get corrector readbacks

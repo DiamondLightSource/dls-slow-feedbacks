@@ -198,22 +198,22 @@ for cell in range(CELLS):
         w = size
         print related % locals()
 
-for i in range(2):
-    deviceh = "SR13S-PC-HSTR-%02d" % (i + 1)
-    devicev = "SR13S-PC-VSTR-%02d" % (i + 1)
-    x = 13 * (size + delta) + delta
-    y = (i + 1) * (size + delta) + delta + tsize
-    pv = "%s:DISABLED" % deviceh
-    w = size / 2
-    print rectangle % locals()
-    x = x + w
-    pv = "%s:DISABLED" % devicev
-    print rectangle % locals()
+for mbcell in [9, 13]:
+    for i in range(2):
+        deviceh = "SR%02dS-PC-HSTR-%02d" % (mbcell, i + 1)
+        devicev = "SR%02dS-PC-VSTR-%02d" % (mbcell, i + 1)
+        x = mbcell * (size + delta) + delta
+        y = (i + 1) * (size + delta) + delta + tsize
+        pv = "%s:DISABLED" % deviceh
+        w = size / 2
+        print rectangle % locals()
+        x = x + w
+        pv = "%s:DISABLED" % devicev
+        print rectangle % locals()
 
-    x = x - w
-    w = size
-    print related % locals()
-    
+        x = x - w
+        w = size
+        print related % locals()
 
 print title
 print exit_ % {"x": xm - 48 - delta, "y": ym - 24 - delta, "w": 48, "h": 24}

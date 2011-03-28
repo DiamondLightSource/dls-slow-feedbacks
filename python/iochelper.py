@@ -16,5 +16,3 @@ def start_ioc():
         o()
     del on_init[:]
     interactive_ioc(globals())
-
-BPM_16_6 = 112

@@ -22,7 +22,7 @@ import sofb_server
 
 class ringmode(object):
 
-    ring_modes = ["SR", "SRI13", "SRLE3ps", "SRLEm3ps"]
+    ring_modes = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps"]
 
     def __init__(self):
         self.records()
@@ -93,7 +93,7 @@ class rffb_server(object):
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 
         # always turn off 16-6
-        enabled_bpm[iochelper.BPM_16_6] = False
+        enabled_bpm[mml.BPM_16_6] = False
         
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")

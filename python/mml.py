@@ -1,151 +1,56 @@
 #!/usr/bin/env dls-python2.6
 
-"MML for RFFB and SOFB"
+"MML for RFFB and SOFB, loaded from SQL config file"
 
-import dls1225
+import sys, os
 from numpy import *
-
-def getspos():
-    # positions at the entrance of the element
-    pos = []
-    names = []
-    s = 0
-    for r in dls1225.RING:
-        pos.append(s)
-        s += dls1225.families[r].L
-        names.append(r)
-    pos.append(s)
-    names.append("END")
-    return (array(names), array(pos))
-
-def many(xs, i):
-    return array([x + i for x in xs])
 
 class family(object):
     def __init__(self, **kw):
         for (k, v) in kw.items():
             setattr(self, k, v)
 
-def make_families():
+def fromsql():
+    "load accelerator object from SQL"
+    import sqlite3
+    conn = sqlite3.connect(":memory:")
+    conn.text_factory = str
+    for line in file(os.path.join(sys.path[0], "mml.sql")).readlines():
+        conn.execute(line.strip())
+    # connect SQL to objects, make into arrays
+    cols = ["setpoint", "readback", "devices", "enabled", "hw2physics", "s"]
+    # can't use SQL parameter for column name
+    query = "select %(col)s from devices where family = ? order by 'idx'"
+    ao2 = {}
+    families = conn.execute("select distinct family from devices order by family").fetchall()
+    for (f,) in families:
+        fdict = {}
+        for c in cols:
+            rows = conn.execute(query % {"col": c}, (f,)).fetchall()
+            v = array([r[0] for r in rows])
+            fdict[c] = v
+        ao2[f] = family(**fdict)
+    (BPM_16_6,) = conn.execute("select idx from devices where devices = 'SR16C-DI-EBPM-06'").fetchone()
+    return (ao2, BPM_16_6)
 
-    (names, pos) = getspos()
-    
-    # build these into position vectors
-    # what about the simulator?
-    
+(ao, BPM_16_6) = fromsql()
 
-    # [rad A^-1] values from middlelayer
-
-    v_rad_over_A = [
-        0.212712745518659,
-        0.212712745518659,
-        0.154932744696152,
-        0.212712745518659,
-        0.155312481816268,
-        0.212712745518659,
-        0.212712745518659] * 24
-    
-    h_rad_over_A = [
-        0.219088331921733,
-        0.219088331921733,
-        0.163286961340012,
-        0.219088331921733,
-        0.161008538618683,
-        0.219088331921733,
-        0.219088331921733] * 24
-
-    # add 13S correctors and scale correctly
-    hi13 = [0.019986164156833, 0.003397647906607]
-    vi13 = [0.018287340203453, 0.003297717085824]
-    h_rad_over_A = array(h_rad_over_A[:12*7] + hi13 + h_rad_over_A[12*7:]) * 1e-3
-    v_rad_over_A = array(v_rad_over_A[:12*7] + vi13 + v_rad_over_A[12*7:]) * 1e-3
-    
-    cm = [None, None]
-    
-    for p in range(2):
-        correctors = ["SR%02dA-PC-%sSTR-%02d" % (c + 1, "HV"[p], i + 1)
-                      for c in range(24) for i in range(7)]
-        
-        cell13 = ["SR13S-PC-%sSTR-%02d" % ("HV"[p], i+1) for i in range(2)]
-        
-        correctors = array(correctors[:12*7] + cell13 + correctors[12*7:])
-        cm[p] = correctors
-
-    # boolean indexing for enable
-    h_enabled_cor = array([True] * len(cm[0]))
-    v_enabled_cor = array([True] * len(cm[1]))
-    NBPMS = 170
-    enabled_bpm = array([True] * NBPMS)
-
-    ao = {"hcm": family(setpoint   = many(cm[0], ":SETI"),
-                        readback   = many(cm[0], ":I"),
-                        enabled    = h_enabled_cor,
-                        hw2physics = h_rad_over_A,
-                        devices    = cm[0],
-                        access     = "scalar"),
-          
-          "vcm": family(setpoint   = many(cm[1], ":SETI"),
-                        readback   = many(cm[1], ":I"),
-                        enabled    = v_enabled_cor,
-                        hw2physics = v_rad_over_A,
-                        devices    = cm[1],
-                        access     = "scalar"),
-
-          "bpmx": family(readback  = "SR-DI-EBPM-01:SA:X",
-                         enabled   = enabled_bpm,
-                         access    = "vector"),
-          
-          "bpmy": family(readback  = "SR-DI-EBPM-01:SA:Y",
-                         enabled   = enabled_bpm,
-                         access    = "vector")
-          
-          }
-
-    # connect to lattice positions
-    setattr(ao["bpmx"], "s", pos[names == "BPM"])
-    setattr(ao["bpmy"], "s", pos[names == "BPM"])
-    setattr(ao["hcm"],  "s", pos[names == "HSTR"])
-    setattr(ao["vcm"],  "s", pos[names == "VSTR"])
-    
-    return ao
-
-def disable_i13(ao):
-    ao["vcm"].enabled[7*12:7*12+2] = False
-    ao["hcm"].enabled[7*12:7*12+2] = False
-    ao["bpmx"].enabled[7*12:7*12+2] = False
-    ao["bpmy"].enabled[7*12:7*12+2] = False
-
-ao = make_families()
-disable_i13(ao)
-
-## def getrb(fam):
-##     if fam.access == "vector":
-##         return array(caget(fam.readback)[fam.enabled])
-##     else:
-##         return array(caget(fam.readback[fam.enabled]))
-        
 if __name__ == "__main__":
-
     print len(ao["hcm"].s)
     print len(ao["vcm"].s)
     print len(ao["bpmx"].s)
     print len(ao["bpmy"].s)
-
-    # need to make nice plots of corrector and bpm positions - OK put in CS-DI-IOC-09 server...
-
+    (ao2, BPM_16_6) = fromsql()
+    ao2["bpmx"].readback = ao2["bpmx"].readback[0]
+    ao2["bpmy"].readback = ao2["bpmy"].readback[0]
+    for k in ao.keys():
+        for a in dir(ao[k]):
+            if not a.startswith("_"):
+                if a in ["access"]:
+                    continue
+                if a in ["hw2physics", "s"]:
+                    print k, a, max(abs((getattr(ao2[k], a) - getattr(ao[k], a))))
+                else:
+                    print k, a, all(getattr(ao2[k], a) == getattr(ao[k], a))
+    print BPM_16_6
     
-
-##     import sys
-##     from pkg_resources import require
-##     require("cothread")
-##     from cothread.catools import *
-
-##     caput(ao["hcm"].setpoint, 1)
-##     caput(ao["vcm"].setpoint, 1)
-    
-##     print getrb(ao["hcm"])
-##     print getrb(ao["bpmx"])
-    
-##     # ok ready for test server?
-##     # test server has forward response matrix...
-
