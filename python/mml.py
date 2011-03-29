@@ -20,7 +20,7 @@ def fromsql():
     # connect SQL to objects, make into arrays
     cols = ["setpoint", "readback", "devices", "enabled", "hw2physics", "s"]
     # can't use SQL parameter for column name
-    query = "select %(col)s from devices where family = ? order by 'idx'"
+    query = "select %(col)s from devices where family = ? order by idx"
     ao2 = {}
     families = conn.execute("select distinct family from devices order by family").fetchall()
     for (f,) in families:
@@ -31,6 +31,9 @@ def fromsql():
             fdict[c] = v
         ao2[f] = family(**fdict)
     (BPM_16_6,) = conn.execute("select idx from devices where devices = 'SR16C-DI-EBPM-06'").fetchone()
+    # fix up vector channels
+    ao2["bpmx"].readback = ao2["bpmx"].readback[0]
+    ao2["bpmy"].readback = ao2["bpmy"].readback[0]
     return (ao2, BPM_16_6)
 
 (ao, BPM_16_6) = fromsql()
@@ -41,8 +44,6 @@ if __name__ == "__main__":
     print len(ao["bpmx"].s)
     print len(ao["bpmy"].s)
     (ao2, BPM_16_6) = fromsql()
-    ao2["bpmx"].readback = ao2["bpmx"].readback[0]
-    ao2["bpmy"].readback = ao2["bpmy"].readback[0]
     for k in ao.keys():
         for a in dir(ao[k]):
             if not a.startswith("_"):

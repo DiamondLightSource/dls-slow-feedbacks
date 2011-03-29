@@ -7,6 +7,18 @@ conn.text_factory = str
 
 query = "INSERT INTO devices VALUES(?,?,?,?,0,?,?,?)"
 
+def sqlfix2():
+
+    for line in file("mml.sql"):
+        conn.execute(line.strip())
+
+    for line in file("hello.txt"):
+        (fam, idx, s) = line.split()
+        conn.execute("update devices set s=? where family = ? and idx = ?", (s, fam, idx))
+    
+    for line in conn.iterdump():
+        print line
+
 def sqlfix():
     
     "insert I09 devices"
@@ -43,4 +55,4 @@ def sqlfix():
         print line
 
 if __name__ == "__main__":
-    sqlfix()
+    sqlfix2()

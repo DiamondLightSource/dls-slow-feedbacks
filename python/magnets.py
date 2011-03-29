@@ -111,9 +111,7 @@ class magnets_server(object):
             f = fams[p]
 
             # build concentrator vector
-            NC = len(mml.ao[f].devices)
-            envec = zeros(NC)
-            envec[12*7+0:12*7+2] = 1
+            envec = (mml.ao[f].enabled == 0)
             iochelper.SetDevice("SR-PC-%sSTR-01" % "HV"[p])
 
             # maximum value and name

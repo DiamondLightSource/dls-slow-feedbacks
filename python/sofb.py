@@ -11,7 +11,7 @@ from numpy import *
 from numpy.linalg import *
 from cothread.catools import *
 from cothread import Spawn, Sleep, WaitForQuit
-from mml import ao
+import mml
 import iochelper
 
 class sofb(object):
@@ -62,11 +62,11 @@ class sofb(object):
 
         irm = self.get_irm(hen, ven, bpmen, self.threshold)
         
-        bpmx = caget(ao["bpmx"].readback)[bpmen]
-        hcm = caget(ao["hcm"].readback[hen])
+        bpmx = caget(mml.ao["bpmx"].readback)[bpmen]
+        hcm = caget(mml.ao["hcm"].readback[hen])
         
-        bpmy = caget(ao["bpmy"].readback)[bpmen]
-        vcm = caget(ao["vcm"].readback[ven])
+        bpmy = caget(mml.ao["bpmy"].readback)[bpmen]
+        vcm = caget(mml.ao["vcm"].readback[ven])
 
         hdelta = dot(irm[0], bpmx)
         hdelta = hdelta * self.scale(hdelta)
@@ -74,8 +74,8 @@ class sofb(object):
         vdelta = dot(irm[1], bpmy)
         vdelta = vdelta * self.scale(vdelta)
         
-        caput(ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
-        caput(ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
+        caput(mml.ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
+        caput(mml.ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
         caput("CS-CS-MSTAT-01:FBHEART", 10)
         
     def scale(self, xs):
