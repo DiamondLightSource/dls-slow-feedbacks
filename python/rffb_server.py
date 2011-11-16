@@ -28,29 +28,30 @@ class ringmode(object):
         self.records()
         self.listeners = []
         iochelper.on_init.append(self.init)
-        
+
     def records(self):
         iochelper.SetDevice('SR-CS-RING-01')
         self.mode = builder.mbbOut("MODE", on_update = self.set_mode,
-                                   *(zip(self.ring_modes, range(len(self.ring_modes)))))
+            *(zip(self.ring_modes, range(len(self.ring_modes)))))
         self.mode = builder.mbbOut("DISABLE_16_6", ("OFF", 0), ("ON", 1))
 
     def init(self):
         self.mode.set(0)
-        
+
     def set_mode(self, mode):
         for l in self.listeners:
             l(self.ring_modes[mode])
 
 class rffb_server(object):
-    
+
     def __init__(self):
         self.tick = 0
         self.power = 0
         self.rfstep = 0.1
         self.period = 10
         self.datadir = "SR"
-        self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
+        self.dataroot = \
+            "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
 
         # use MML database
         self.rad_over_A = mml.ao["hcm"].hw2physics
@@ -59,12 +60,12 @@ class rffb_server(object):
         self.records()
 
         iochelper.on_init.append(self.start)
-        
+
     def start(self):
         cothread.Spawn(self.timer)
-        
+
     def timer(self):
-        
+
         while True:
 
             cothread.Sleep(1.0)
@@ -72,7 +73,7 @@ class rffb_server(object):
 
             if self.period == 10 and self.tick != 0:
                 continue
-            
+
             try:
                 self.feedback()
             except catools.ca_nothing, e:
@@ -83,7 +84,7 @@ class rffb_server(object):
                 traceback.print_exc()
                 self.calc_error.set(1)
                 self.power_pv.set(0)
-                
+
 
     def feedback(self):
 
@@ -96,18 +97,18 @@ class rffb_server(object):
         # always turn off 16-6
         if catools.caget("SR-CS-RING-01:DISABLE_16_6") == 1:
             enabled_bpm[mml.BPM_16_6] = False
-        
+
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
-        
+
         drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
                                   enabled_bpm, enabled_cor,
                                   hcm, self.rad_over_A)
         self.delta_pv.set(drf)
-        
+
         def round10(x):
             return round(x * 10.0) / 10.0
-        
+
         target = round10(rf + drf)
         if abs(drf) > self.rfstep:
             drf = numpy.sign(drf) * self.rfstep
@@ -120,16 +121,16 @@ class rffb_server(object):
         if fbstat == 0:
             self.power_pv.set(0)
             return
-        
+
         # turn off feedback loop below 2mA
         if current <= 2:
             self.power_pv.set(0)
             return
-        
+
         # channel access write
         if self.power:
             catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
-        
+
         self.calc_error.set(0)
         self.pv_error.set("OK")
 
@@ -141,7 +142,7 @@ class rffb_server(object):
 
     def set_period(self, period):
         self.period = period
-    
+
     def set_valid(self, valid):
         self.valid = valid
 
@@ -160,7 +161,7 @@ class rffb_server(object):
             self.bpmresp = None
             self.disp = None
             self.matrix_error.set(1)
-            
+
     def records(self):
 
         iochelper.SetDevice("SR-CS-RFFB-01")
@@ -169,7 +170,7 @@ class rffb_server(object):
             "EMATRIX", DESC = "Matrix Error",
             initial_value = 1, ZNAM = "OK",
             ONAM = "RFFB MATRIX")
-        
+
         self.calc_error = builder.boolIn(
             "ECALC", DESC = "Calculation Error",
             initial_value = 0, ZNAM = "OK",
@@ -181,21 +182,21 @@ class rffb_server(object):
         self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                   initial_value = self.power,
                                   on_update = self.set_power)
-        
+
         self.delta_pv = builder.aIn("DELTARF", initial_value = 0,
                                     PREC = 1, EGU = "Hz")
-        
+
         self.target_pv = builder.aIn("TARGET", initial_value = 0,
                                 PREC = 1, EGU = "Hz")
-        
+
         builder.aOut("RFSTEP", initial_value = self.rfstep,
                      on_update = self.set_rfstep,
                      DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "Hz")
-        
+
         builder.mbbOut('PERIOD', ("1 second", 1), ("10 seconds", 10),
                        initial_value = self.period,
                        on_update = self.set_period)
-        
+
 class status_server(object):
     def __init__(self):
         iochelper.SetDevice('CS-DI-IOC-09')
@@ -205,17 +206,17 @@ class status_server(object):
 def startup():
 
     "spawn the various servers on this IOC"
-    
+
     status = status_server()
     rffb = rffb_server()
-        
+
     mags = magnets.magnets_server()
     sofb = sofb_server.sofb_server()
-        
+
     mode = ringmode()
     mode.listeners.append(rffb.set_datadir)
     mode.listeners.append(sofb.set_datadir)
-    
+
     iochelper.start_ioc()
 
 startup()

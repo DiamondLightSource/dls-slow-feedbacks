@@ -16,7 +16,8 @@ from cothread import Spawn, Sleep
 from mml import ao
 from scipy.io import loadmat
 
-dirname = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata/SR"
+dirname = \
+    "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata/SR"
 bpmresp = loadmat(os.path.join(dirname, "GoldenBPMResp"))
 disp = loadmat(os.path.join(dirname, "GoldenDisp"))
 dispx = disp["BPMxDisp"]["Data"][0,0]
@@ -63,13 +64,13 @@ for p in range(2):
         builder.aOut("SETI", initial_value = 0)
 
 class server(object):
-    
+
     def __init__(self):
         pass
 
     def init(self):
         Spawn(self.tick)
-        
+
     def tick(self):
         print "starting timer"
         while True:
@@ -81,7 +82,7 @@ class server(object):
 
             caput(ao["hcm"].readback, hcm)
             caput(ao["vcm"].readback, vcm)
-            
+
             # little error to correct here...
             hcm[5*7+0] += 0.5
             hcm[1*7+3] -= 1
@@ -93,7 +94,7 @@ class server(object):
 
             ox = dot(rmx, hcm) + dx
             oy = dot(rmy, vcm)
-            
+
             sax.set(ox)
             say.set(oy)
             # print ox

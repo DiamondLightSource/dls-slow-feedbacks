@@ -22,7 +22,8 @@ def fromsql():
     # can't use SQL parameter for column name
     query = "select %(col)s from devices where family = ? order by idx"
     ao2 = {}
-    families = conn.execute("select distinct family from devices order by family").fetchall()
+    families = conn.execute(
+        "select distinct family from devices order by family").fetchall()
     for (f,) in families:
         fdict = {}
         for c in cols:
@@ -30,7 +31,8 @@ def fromsql():
             v = array([r[0] for r in rows])
             fdict[c] = v
         ao2[f] = family(**fdict)
-    (BPM_16_6,) = conn.execute("select idx from devices where devices = 'SR16C-DI-EBPM-06'").fetchone()
+    (BPM_16_6,) = conn.execute(
+        "select idx from devices where devices = 'SR16C-DI-EBPM-06'").fetchone()
     # fix up vector channels
     ao2["bpmx"].readback = ao2["bpmx"].readback[0]
     ao2["bpmy"].readback = ao2["bpmy"].readback[0]
@@ -50,8 +52,8 @@ if __name__ == "__main__":
                 if a in ["access"]:
                     continue
                 if a in ["hw2physics", "s"]:
-                    print k, a, max(abs((getattr(ao2[k], a) - getattr(ao[k], a))))
+                    print k, a, max(
+                        abs((getattr(ao2[k], a) - getattr(ao[k], a))))
                 else:
                     print k, a, all(getattr(ao2[k], a) == getattr(ao[k], a))
     print BPM_16_6
-    

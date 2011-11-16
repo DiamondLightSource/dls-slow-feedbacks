@@ -21,25 +21,26 @@ def bind1st(x, f):
     return g
 
 class magnets_server(object):
-    
+
     def __init__(self):
-        
+
         self.bpmen = zeros(len(mml.ao["bpmx"].s)) == 0
-        
+
         self.wf = [None, None]
-        
+
         iochelper.SetDevice("SR-DI-EBPM-01")
         builder.WaveformOut("S", initial_value = mml.ao["bpmx"].s)
-        
+
         nm = (("hcm", 'SR-PC-HSTR-01'),
               ("vcm", 'SR-PC-VSTR-01'))
-        
+
         for i, (k, v) in enumerate(nm):
             iochelper.SetDevice(v)
-            w = builder.WaveformOut("I", initial_value = zeros(len(mml.ao[k].s)))
+            w = builder.WaveformOut(
+                "I", initial_value = zeros(len(mml.ao[k].s)))
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
             self.wf[i] = w
-        
+
         self.create_controls()
 
         iochelper.on_init.append(self.init)
@@ -57,7 +58,7 @@ class magnets_server(object):
                 print 'PV error', pv_error
             except:
                 traceback.print_exc()
-            
+
     def tick(self):
 
         "read from individual correctors, write to corrector vector"
@@ -69,13 +70,13 @@ class magnets_server(object):
         # get corrector enables
         en[0] = caget("SR-PC-HSTR-01:ENABLED") == 0
         en[1] = caget("SR-PC-VSTR-01:ENABLED") == 0
-        
+
         # get bpm enables
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
         # always turn off 16-6
         if caget("SR-CS-RING-01:DISABLE_16_6") == 1:
             bpmen[mml.BPM_16_6] = False
-        
+
         # get corrector readbacks
         for p in range(2):
             pvs = mml.ao[fam[p]].readback[en[p]]
@@ -84,14 +85,14 @@ class magnets_server(object):
             i = argmax(abs(array(hv[p])))
             self.maxval[p].set(hv[p][i])
             self.maxname[p].set(pvs[i])
-            
+
         # write to waveforms (disabled are set to zero)
         for p in range(2):
             w = self.wf[p].get()
             w[en[p]] = hv[p]
             w[en[p] == False] = 0
             self.wf[p].set(w)
-    
+
     def update(self, key, value):
         "update corrector enabled vector from individual records"
         (k, i) = key
@@ -105,7 +106,7 @@ class magnets_server(object):
         self.cenabled = [None, None]
         self.maxval = [None, None]
         self.maxname = [None, None]
-        
+
         fams = ["hcm", "vcm"]
         records = [[], []]
 
@@ -119,8 +120,8 @@ class magnets_server(object):
             # maximum value and name
             self.maxval[p] = builder.aOut("MAXI", initial_value = 0)
             self.maxname[p] = builder.stringOut("MAXNAME")
-            
-            self.cenabled[p] = builder.WaveformIn("ENABLED", 
+
+            self.cenabled[p] = builder.WaveformIn("ENABLED",
                                                   initial_value = envec)
             # build individual controls
             for n, c in enumerate(mml.ao[f].devices):
@@ -135,9 +136,8 @@ class magnets_server(object):
         for p in range(2):
             for n, r in enumerate(self.records[p]):
                 r.set(self.cenabled[p].get()[n])
-        
+
 if __name__ == "__main__":
     # standalone test
     s = magnets_server()
     iochelper.start_ioc()
-    

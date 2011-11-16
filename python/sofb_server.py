@@ -10,12 +10,13 @@ from scipy.io import loadmat
 import sofb
 
 class sofb_server(object):
-    
+
     def __init__(self):
         self.sofb = sofb.sofb()
         self.power = 0
         self.records()
-        self.dataroot = "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
+        self.dataroot = \
+            "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
         iochelper.on_init.append(self.init)
 
     def set_datadir(self, datadir):
@@ -67,17 +68,17 @@ class sofb_server(object):
 
     def single(self, value):
         self.sofb.correction()
-                
+
     def records(self):
         iochelper.SetDevice("SR-CS-SOFB-01")
 
         self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                        initial_value = self.power,
                                        on_update = self.set_power)
-        
+
         builder.aOut("AFRAC", initial_value = 0.1,
                      DRVH = 1, DRVL = 0, PREC = 4, EGU = "1")
-        
+
         builder.aOut("SVDT", initial_value = self.sofb.threshold,
                      on_update = self.sofb.set_threshold,
                      DRVH = 1, DRVL = 0, PREC = 4, EGU = "Hz")
@@ -93,7 +94,7 @@ class sofb_server(object):
             "EMATRIX", DESC = "Matrix Error",
             initial_value = 1, ZNAM = "OK",
             ONAM = "SOFB MATRIX")
-        
+
         self.calc_error = builder.boolIn(
             "ECALC", DESC = "Calculation Error",
             initial_value = 0, ZNAM = "OK",
@@ -101,5 +102,3 @@ class sofb_server(object):
 
         self.pv_error = builder.stringIn(
             "EPV", DESC = "PV Error", initial_value = "OK")
-
-        

@@ -6,7 +6,7 @@ if __name__ == "__main__":
     from pkg_resources import require
     require('cothread==1.16')
     require('scipy')
-    
+
 from numpy import *
 from numpy.linalg import *
 from cothread.catools import *
@@ -15,7 +15,7 @@ import mml
 import iochelper
 
 class sofb(object):
-    
+
     def __init__(self):
         self.step_limit = 0.05
         self.threshold = 1e-4
@@ -23,10 +23,10 @@ class sofb(object):
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
-    
+
     def set_threshold(self, threshold):
         self.threshold = threshold
-    
+
     def get_irm(self, hen, ven, bpmen, threshold):
         key = (tuple(hen), tuple(ven), tuple(bpmen), threshold)
         if key in self.cache:
@@ -40,7 +40,7 @@ class sofb(object):
         self.cache.clear()
         self.cache[key] = irm
         return irm
-        
+
     def tick(self):
         while True:
             Sleep(1.0)
@@ -48,7 +48,7 @@ class sofb(object):
                 self.correction()
             except:
                 traceback.print_exc()
-    
+
     def correction(self):
 
         # calculate inverse response matrix on demand
@@ -62,10 +62,10 @@ class sofb(object):
             bpmen[mml.BPM_16_6] = False
 
         irm = self.get_irm(hen, ven, bpmen, self.threshold)
-        
+
         bpmx = caget(mml.ao["bpmx"].readback)[bpmen]
         hcm = caget(mml.ao["hcm"].readback[hen])
-        
+
         bpmy = caget(mml.ao["bpmy"].readback)[bpmen]
         vcm = caget(mml.ao["vcm"].readback[ven])
 
@@ -74,11 +74,11 @@ class sofb(object):
 
         vdelta = dot(irm[1], bpmy)
         vdelta = vdelta * self.scale(vdelta)
-        
+
         caput(mml.ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
         caput(mml.ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
         caput("CS-CS-MSTAT-01:FBHEART", 10)
-        
+
     def scale(self, xs):
         "greatest scale factor <= 1.0 such that max(abs(sf * xs)) < step_limit"
         EPS = 1e-9
@@ -92,12 +92,12 @@ class sofb(object):
 if __name__ == "__main__":
 
     # need some PVs for activities:
-    
+
     # 1) threshold
     # 2) limit
     # 3) power
     # 4) single correction
-    
+
     feedback = sofb()
     feedback.set_datadir("SR")
     feedback.correction()

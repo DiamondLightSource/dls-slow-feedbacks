@@ -25,7 +25,7 @@ class correctors(object):
         print k
 
     def create(self):
-        
+
         self.cenabled = [None, None]
         fams = ["hcm", "vcm"]
         records = [[], []]
@@ -36,7 +36,7 @@ class correctors(object):
             # build concentrator vector
             envec = (mml.ao[f].enabled == 0)
             iochelper.SetDevice("SR-PC-%sSTR-01" % "HV"[p])
-            self.cenabled[p] = builder.WaveformIn("ENABLED", 
+            self.cenabled[p] = builder.WaveformIn("ENABLED",
                                                   initial_value = envec)
             # build individual controls
             for n, c in enumerate(mml.ao[f].devices):
@@ -51,7 +51,7 @@ class correctors(object):
         for p in range(2):
             for n, r in enumerate(self.records[p]):
                 r.set(self.cenabled[p].get()[n])
-                
+
 
 
 """
