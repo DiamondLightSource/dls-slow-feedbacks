@@ -58,8 +58,7 @@ class sofb(object):
         ven = caget("SR-PC-VSTR-01:ENABLED") == 0
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
         # always turn off 16-6
-        if caget("SR-CS-RING-01:DISABLE_16_6") == 1:
-            bpmen[mml.BPM_16_6] = False
+        bpmen[mml.BPM_16_6] = False
 
         irm = self.get_irm(hen, ven, bpmen, self.threshold)
 

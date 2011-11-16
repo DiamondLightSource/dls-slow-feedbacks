@@ -33,7 +33,6 @@ class ringmode(object):
         iochelper.SetDevice('SR-CS-RING-01')
         self.mode = builder.mbbOut("MODE", on_update = self.set_mode,
             *(zip(self.ring_modes, range(len(self.ring_modes)))))
-        self.mode = builder.mbbOut("DISABLE_16_6", ("OFF", 0), ("ON", 1))
 
     def init(self):
         self.mode.set(0)
@@ -95,8 +94,7 @@ class rffb_server(object):
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 
         # always turn off 16-6
-        if catools.caget("SR-CS-RING-01:DISABLE_16_6") == 1:
-            enabled_bpm[mml.BPM_16_6] = False
+        enabled_bpm[mml.BPM_16_6] = False
 
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
