@@ -4,4 +4,6 @@ cors.edl: genedm.py
 	./genedm.py > $@
 
 clean:
-	rm cors.edl *~
+	rm -f cors.edl *~
+
+.PHONY: clean
