@@ -12,7 +12,7 @@ import mml
 from softioc import builder
 import iochelper
 import cothread
-from cothread.catools import caget
+from cothread.catools import caget, ca_nothing
 from numpy import *
 
 def bind1st(x, f):
@@ -53,6 +53,8 @@ class magnets_server(object):
             try:
                 cothread.Sleep(1.0)
                 self.tick()
+            except ca_nothing, pv_error:
+                print 'PV error', pv_error
             except:
                 traceback.print_exc()
             
