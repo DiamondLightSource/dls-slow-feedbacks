@@ -5,6 +5,8 @@
 import sys, os
 from numpy import *
 
+mml_sql = os.path.join(os.path.dirname(__file__), "mml.sql")
+
 class family(object):
     def __init__(self, **kw):
         for (k, v) in kw.items():
@@ -15,7 +17,7 @@ def fromsql():
     import sqlite3
     conn = sqlite3.connect(":memory:")
     conn.text_factory = str
-    for line in file(os.path.join(sys.path[0], "mml.sql")).readlines():
+    for line in file(mml_sql).readlines():
         conn.execute(line.strip())
     # connect SQL to objects, make into arrays
     cols = ["setpoint", "readback", "devices", "enabled", "hw2physics", "s"]
