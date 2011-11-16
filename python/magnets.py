@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
 import traceback
 import mml
-import builder
+from softioc import builder
 import iochelper
 import cothread
 from cothread.catools import caget

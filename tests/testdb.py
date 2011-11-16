@@ -5,11 +5,11 @@
 import os, sys
 sys.path.append("../python")
 from pkg_resources import require
-require('cothread==1.16')
-require('iocbuilder==3.0')
+require('cothread==2.0')
+require('iocbuilder==3.18')
 require('scipy')
-import builder
-from softioc import *
+from softioc import builder
+from softioc.softioc import *
 from numpy import *
 from cothread.catools import *
 from cothread import Spawn, Sleep
@@ -25,7 +25,6 @@ rmx = bpmresp["Rmat"][0,0]["Data"]
 rmy = bpmresp["Rmat"][1,1]["Data"]
 
 def SetDevice(d):
-    builder.SetAddressPrefix(d)
     builder.SetDeviceName(d)
 
 SetDevice("SR-DI-EBPM-01")

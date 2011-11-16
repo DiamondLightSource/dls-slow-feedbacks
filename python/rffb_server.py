@@ -2,15 +2,15 @@
 
 import os, sys
 from pkg_resources import require
-require('cothread==1.17')
+require('cothread==2.0')
 require('scipy==0.8.0b1')
-require('iocbuilder==3.3')
+require('iocbuilder==3.18')
 
 import cothread
 from cothread import catools
 import traceback
-import builder
-from softioc import *
+from softioc import builder
+from softioc.softioc import *
 from scipy.io import loadmat
 import numpy
 

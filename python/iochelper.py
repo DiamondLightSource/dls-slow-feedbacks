@@ -1,10 +1,9 @@
 "common startup routines for python ioc"
 
-import builder
-from softioc import *
+from softioc import builder
+from softioc.softioc import *
 
 def SetDevice(d):
-    builder.SetAddressPrefix(d)
     builder.SetDeviceName(d)
 
 on_init = []
