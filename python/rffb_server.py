@@ -22,7 +22,7 @@ import sofb_server
 
 class ringmode(object):
 
-    ring_modes = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps"]
+    ring_modes = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps", "SRLETHz"]
 
     def __init__(self):
         self.records()
