@@ -6,7 +6,7 @@ import os, sys
 sys.path.append("../python")
 from pkg_resources import require
 require('cothread==2.0')
-require('iocbuilder==3.18')
+require('iocbuilder==3.23')
 require('scipy')
 from softioc import builder
 from softioc.softioc import *

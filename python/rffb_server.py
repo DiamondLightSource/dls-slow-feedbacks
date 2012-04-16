@@ -2,15 +2,14 @@
 
 import os, sys
 from pkg_resources import require
-require('cothread==2.0')
+require('cothread==2.6')
 require('scipy==0.8.0b1')
-require('iocbuilder==3.18')
+require('iocbuilder==3.23')
 
 import cothread
 from cothread import catools
 import traceback
 from softioc import builder
-from softioc.softioc import *
 from scipy.io import loadmat
 import numpy
 
@@ -19,6 +18,8 @@ import iochelper
 import rffb_calc
 import magnets
 import sofb_server
+
+from softioc import pvlog
 
 class ringmode(object):
 
@@ -218,4 +219,3 @@ def startup():
     iochelper.start_ioc()
 
 startup()
-
