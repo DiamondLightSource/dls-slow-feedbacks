@@ -17,7 +17,7 @@ import iochelper
 class sofb(object):
 
     def __init__(self):
-        self.step_limit = 0.05
+        self.step_limit = 0.1
         self.threshold = 1e-4
         self.cache = {}
 

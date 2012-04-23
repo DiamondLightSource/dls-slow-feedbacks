@@ -36,7 +36,7 @@ class ringmode(object):
             *(zip(self.ring_modes, range(len(self.ring_modes)))))
 
     def init(self):
-        self.mode.set(0)
+        self.mode.set(self.ring_modes.index("SRI0913"))
 
     def set_mode(self, mode):
         for l in self.listeners:

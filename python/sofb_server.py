@@ -76,7 +76,7 @@ class sofb_server(object):
                                        initial_value = self.power,
                                        on_update = self.set_power)
 
-        builder.aOut("AFRAC", initial_value = 0.1,
+        builder.aOut("AFRAC", initial_value = 0.2,
                      DRVH = 1, DRVL = 0, PREC = 4, EGU = "1")
 
         builder.aOut("SVDT", initial_value = self.sofb.threshold,
