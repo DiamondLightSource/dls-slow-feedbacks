@@ -4,13 +4,12 @@
 Second version using RDB and CVS import"""
 
 import sqlite3, csv, numpy, os, Queue
-from pkg_resources import require
-require("scipy==0.8.0b1")
-require("cothread==2.8")
 from scipy.io import loadmat
 from cothread.catools import *
 
 OPSDATA = "/dls/ops-physics/diamondopsdata"
+AOFILE = os.path.join(os.path.dirname(__file__), "ao.csv")
+MEMBEROFFILE = os.path.join(os.path.dirname(__file__), "memberof.csv")
 
 # Matrix uses Middlelayer
 
@@ -55,9 +54,9 @@ class Middlelayer(object):
               "(:family,:readback,:setpoint,:device1,:device2,:element,:pos)"
         db.execute(create_ao)
         db.execute(create_memberof)
-        for line in csv.DictReader(file("ao.csv")):
+        for line in csv.DictReader(file(AOFILE)):
             db.execute(insert_ao, line)
-        for line in csv.DictReader(file("memberof.csv")):
+        for line in csv.DictReader(file(MEMBEROFFILE)):
             db.execute(insert_memberof, line)
         self.db = db
 
@@ -81,24 +80,47 @@ class Signal(object):
     def connect(self, sink):
         self.listeners.append(sink)
 
+class Mux(object):
+
+    def __init__(self, nmax):
+        self.Output = Signal()
+        self.inputs = [0] * nmax
+        self.n = 0
+        
+    def SetSelector(self, n):
+        self.n = n
+        self.Output.fire(self.inputs[self.n])
+        
+    def SetInput(self, n, v):
+        self.inputs[n] = v
+        self.Output.fire(self.inputs[self.n])
+
 class Correction(object):
     
-    RATELIMIT = 0.01 * 1e9
+    RATELIMIT = 1
     
     def __init__(self, mml, filename):
+        self.limited = 0
         self.mml = mml
         self.filename = filename
-        self.deltah = 0
-        self.deltav = 0
-        self.requestActuators = Signal()
+        self.delta = 0
         self.GoalHChanged = Signal()
         self.GoalVChanged = Signal()
+        self.LimitedChanged = Signal()
         self.Output = Signal()
         self.tuneh = 0
         self.tunev = 0
         self.goalh = 0
         self.goalv = 0
 
+    def GetLimited(self):
+        return self.limited
+    def SetLimited(self, limited):
+        if self.limited != limited:
+            self.limited = limited
+            self.LimitedChanged.fire(limited)
+    Limited = property(GetLimited, SetLimited)
+    
     def GetGoalH(self):
         return self.goalh
     def SetGoalH(self, goal):
@@ -116,19 +138,14 @@ class Correction(object):
     GoalV = property(GetGoalV, SetGoalV)
 
     def SetTuneH(self, tune):
-        print "SetTuneH", tune
         self.tuneh = tune
-        self.Update()
 
     def SetTuneV(self, tune):
         self.tunev = tune
     
-    def SetDeltaH(self, delta):
-        self.deltah = delta
+    def SetDelta(self, delta):
+        self.delta = delta
         
-    def SetDeltaV(self, delta):
-        self.deltav = delta
-    
     def SetMode(self, mode):
         print "setMode", mode
         self.matrix = Matrix(mode, self.filename)
@@ -138,62 +155,30 @@ class Correction(object):
         self.GoalH = self.matrix.golden[0,0]
         self.GoalV = self.matrix.golden[1,0]
 
-    def SetActuators(self, value):
-        self.x0 = value
+    def StepHUp(self, value):
+        self.Step([self.delta, 0])
 
-    def Update(self):
+    def StepHDown(self, value):
+        self.Step([-self.delta, 0])
+
+    def StepVUp(self, value):
+        self.Step([0, self.delta])
+
+    def StepVDown(self, value):
+        self.Step([0, -self.delta])
+
+    def Correct(self, unused):
+        delta = [self.goalh - self.tuneh, self.goalv - self.tunev]
+        self.Step(delta)
+
+    def Step(self, delta):
         self.x0 = caget(self.actuators)
-        dx = numpy.dot(self.irm,
-                       [self.goalh - self.tuneh,
-                        self.goalv - self.tunev])
+        dx = numpy.dot(self.irm, delta)
         maxstep = max(abs(dx))
         if maxstep > self.RATELIMIT:
             dx = dx / maxstep * self.RATELIMIT
-        x1 = self.x0 + dx
-        self.Output.fire(self.actuators, x1)
-    
-    def Correct(self, dummy):
-        # self.requestActuators.fire(self.actuators)
-        self.x0 = caget(self.actuators)
-        dx = numpy.dot(self.irm, [self.deltah, self.deltav])
-        maxstep = max(abs(dx))
-        if maxstep > self.RATELIMIT:
-            dx = dx / maxstep * self.RATELIMIT
+        self.Limited = max(abs(dx))
         x1 = self.x0 + dx
         self.Output.fire(self.actuators, x1)
 
-# 1) feedback option for the tune, wait on chromaticity
-# Golden Tunes?
-
-"""
-ao.TUNE.Monitor.Golden = [.205; .36];
-if strcmpi(srmode,'SRI13')
-ao.TUNE.Monitor.Golden = [.230; .180];
-elseif strcmpi(srmode,'SRI0913')
-ao.TUNE.Monitor.Golden = [.201; .371];
-%     ao.TUNE.Monitor.Golden = [.22; .36];
-elseif strcmpi(srmode,'SRI09')
-ao.TUNE.Monitor.Golden = [.230; .180];
-elseif strcmpi(srmode,'SR3ps')
-ao.TUNE.Monitor.Golden = [.150; .397];
-elseif strcmpi(srmode,'SR1ps')
-ao.TUNE.Monitor.Golden = [.150; .397];
-elseif strcmpi(srmode,'SRm1ps')
-ao.TUNE.Monitor.Golden = [.150; .397];
-elseif strcmp(srmode, 'SRzd')
-ao.TUNE.Monitor.Golden = [0.28; 0.222];
-elseif strcmpi(srmode,'SRLE3ps')
-ao.TUNE.Monitor.Golden = [0.3894; 0.2835];
-elseif strcmpi(srmode,'SRLEm3ps')
-ao.TUNE.Monitor.Golden = [0.3894; 0.2847];
-elseif strcmpi(srmode,'SRLETHz')
-ao.TUNE.Monitor.Golden = [0.3892; 0.2847];
-end
-"""
-
-# Wednesday: finish this IOC, First Direct apply for ISA
 # Thursday:  finish this IOC! Nearly done.
-
-# mml = Middlelayer()
-
-# signal and slots for Python
