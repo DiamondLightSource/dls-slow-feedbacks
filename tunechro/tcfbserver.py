@@ -74,13 +74,13 @@ class TuneChroServer(object):
         tunefb.LimitedChanged.connect(tunelimit.set)
         tunefb.GoalHChanged.connect(goalh.set)
         tunefb.GoalVChanged.connect(goalv.set)
-        tunefb.Output.connect(fakecaput)
+        tunefb.Output.connect(catools.caput)
         
         ModeFanout = mml2.Signal()
         ModeFanout.connect(tunefb.SetMode)
         
         ModeFanout.connect(chrofb.SetMode)
-        chrofb.Output.connect(fakecaput)
+        chrofb.Output.connect(catools.caput)
         chrofb.LimitedChanged.connect(chrolimit.set)
         
         catools.camonitor("SR-CS-RING-01:MODE", ModeFanout.fire, datatype = catools.DBR_STRING)
