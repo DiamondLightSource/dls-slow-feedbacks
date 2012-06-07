@@ -21,6 +21,10 @@ import sofb_server
 
 from softioc import pvlog
 
+sys.path.append(os.path.join(sys.path[0], "../tunechro"))
+import tcfbserver
+tcfb = tcfbserver.TuneChroServer()
+
 class ringmode(object):
 
     ring_modes = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps", "SRLETHz"]
