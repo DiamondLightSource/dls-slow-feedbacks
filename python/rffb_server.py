@@ -27,7 +27,7 @@ tcfb = tcfbserver.TuneChroServer()
 
 class ringmode(object):
 
-    ring_modes = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps", "SRLETHz"]
+    ring_modes = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps", "SRLETHz", "SRI0913_MOGA"]
 
     def __init__(self):
         self.records()
