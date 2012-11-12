@@ -1,3 +1,4 @@
 # Dummy makefile so that automated install is happy.
-all:
+install:
 	make -C opi
+clean:
