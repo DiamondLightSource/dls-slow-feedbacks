@@ -10,6 +10,7 @@ import cothread
 from cothread import catools
 import traceback
 from softioc import builder
+from iocbuilder import records
 from scipy.io import loadmat
 import numpy
 
@@ -219,6 +220,10 @@ def startup():
     mode = ringmode()
     mode.listeners.append(rffb.set_datadir)
     mode.listeners.append(sofb.set_datadir)
+
+    builder.SetDeviceName('SR-CS-FOFB-01')
+    run = records.ai('RUN', PINI = 'YES', VAL = 0,
+        INP = 'SR01A-CS-FOFB-01:RUN CP MS')
 
     iochelper.start_ioc()
 
