@@ -94,9 +94,6 @@ class rffb_server(object):
         enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 
-        # always turn off 16-6
-        enabled_bpm[mml.BPM_16_6] = False
-
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
 
