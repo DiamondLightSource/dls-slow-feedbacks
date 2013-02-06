@@ -6,6 +6,14 @@ require('cothread==2.6')
 require('scipy==0.8.0b1')
 require('iocbuilder==3.23')
 
+# If running in testing mode log instead of executing caput.  We do this by
+# "monkey patching" catools!
+if sys.path[1:]:
+    import cothread.catools
+    def caput(pvs, values, **kargs):
+        print 'caput', pvs, values, kargs
+    cothread.catools.caput = caput
+
 import cothread
 from cothread import catools
 import traceback
