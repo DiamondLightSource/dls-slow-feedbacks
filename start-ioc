@@ -9,4 +9,4 @@ export EPICS_BASE=/dls_sw/epics/R3.14.11/base
 [ -n "$1" ]  &&  export EPICS_CAS_SERVER_PORT=6064
 
 cd "$(dirname "$0")/python"
-exec $PYIOC rffb_server.py "$@"
+exec $PYIOC feedback_ioc.py "$@"

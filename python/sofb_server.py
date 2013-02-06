@@ -11,13 +11,15 @@ import sofb
 
 class sofb_server(object):
 
-    def __init__(self):
+    def __init__(self, mode):
         self.sofb = sofb.sofb()
         self.power = 0
         self.records()
         self.dataroot = \
             "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
+
         iochelper.on_init.append(self.init)
+        mode.add_listener(self.set_datadir)
 
     def set_datadir(self, datadir):
         self.sofb.cache.clear()

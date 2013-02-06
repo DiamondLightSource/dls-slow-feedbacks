@@ -1,18 +1,6 @@
 "IOC for RF Feedback"
 
 import os, sys
-from pkg_resources import require
-require('cothread==2.6')
-require('scipy==0.8.0b1')
-require('iocbuilder==3.23')
-
-# If running in testing mode log instead of executing caput.  We do this by
-# "monkey patching" catools!
-if sys.path[1:]:
-    import cothread.catools
-    def caput(pvs, values, **kargs):
-        print 'caput', pvs, values, kargs
-    cothread.catools.caput = caput
 
 import cothread
 from cothread import catools
@@ -25,18 +13,12 @@ import numpy
 import mml
 import iochelper
 import rffb_calc
-import magnets
-import sofb_server
 
-from softioc import pvlog
-
-sys.path.append(os.path.join(sys.path[0], "../tunechro"))
-import tcfbserver
-tcfb = tcfbserver.TuneChroServer()
 
 class ringmode(object):
-
-    ring_modes = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps", "SRLETHz", "SRI0913_MOGA"]
+    ring_modes = [
+        "SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
+        "SRLETHz", "SRI0913_MOGA"]
 
     def __init__(self):
         self.records()
@@ -46,7 +28,7 @@ class ringmode(object):
     def records(self):
         iochelper.SetDevice('SR-CS-RING-01')
         self.mode = builder.mbbOut("MODE", on_update = self.set_mode,
-            *(zip(self.ring_modes, range(len(self.ring_modes)))))
+            *zip(self.ring_modes, range(len(self.ring_modes))))
 
     def init(self):
         self.mode.set(self.ring_modes.index("SRI0913"))
@@ -55,9 +37,13 @@ class ringmode(object):
         for l in self.listeners:
             l(self.ring_modes[mode])
 
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+
+
 class rffb_server(object):
 
-    def __init__(self):
+    def __init__(self, mode):
         self.tick = 0
         self.power = 0
         self.rfstep = 0.1
@@ -73,6 +59,7 @@ class rffb_server(object):
         self.records()
 
         iochelper.on_init.append(self.start)
+        mode.add_listener(self.set_datadir)
 
     def start(self):
         cothread.Spawn(self.timer)
@@ -208,31 +195,3 @@ class rffb_server(object):
         builder.mbbOut('PERIOD', ("1 second", 1), ("10 seconds", 10),
                        initial_value = self.period,
                        on_update = self.set_period)
-
-class status_server(object):
-    def __init__(self):
-        iochelper.SetDevice('CS-DI-IOC-09')
-        builder.stringIn('WHOAMI', VAL = 'RF Feedback Server')
-        builder.stringIn('HOSTNAME', VAL = os.uname()[1])
-
-def startup():
-
-    "spawn the various servers on this IOC"
-
-    status = status_server()
-    rffb = rffb_server()
-
-    mags = magnets.magnets_server()
-    sofb = sofb_server.sofb_server()
-
-    mode = ringmode()
-    mode.listeners.append(rffb.set_datadir)
-    mode.listeners.append(sofb.set_datadir)
-
-    builder.SetDeviceName('SR-CS-FOFB-01')
-    run = records.ai('RUN', PINI = 'YES', VAL = 0,
-        INP = 'SR01A-CS-FOFB-01:RUN CP MS')
-
-    iochelper.start_ioc()
-
-startup()
