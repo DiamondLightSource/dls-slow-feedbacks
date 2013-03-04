@@ -2,7 +2,6 @@ import os
 import traceback
 import mml
 from softioc import builder
-import iochelper
 import cothread
 from cothread.catools import caget, ca_nothing
 from numpy import *
@@ -18,7 +17,6 @@ class sofb_server(object):
         self.dataroot = \
             "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
 
-        iochelper.on_init.append(self.init)
         mode.add_listener(self.set_datadir)
 
     def set_datadir(self, datadir):
@@ -72,7 +70,7 @@ class sofb_server(object):
         self.sofb.correction()
 
     def records(self):
-        iochelper.SetDevice("SR-CS-SOFB-01")
+        builder.SetDeviceName("SR-CS-SOFB-01")
 
         self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
                                        initial_value = self.power,

@@ -1,16 +1,8 @@
-#!/usr/bin/env dls-python2.6
-
 "magnet position PVs"
-
-if __name__ == "__main__":
-    from pkg_resources import require
-    require('iocbuilder==3.3')
-    require('cothread==1.16')
 
 import traceback
 import mml
 from softioc import builder
-import iochelper
 import cothread
 from cothread.catools import caget, ca_nothing
 from numpy import *
@@ -28,14 +20,14 @@ class magnets_server(object):
 
         self.wf = [None, None]
 
-        iochelper.SetDevice("SR-DI-EBPM-01")
+        builder.SetDeviceName("SR-DI-EBPM-01")
         builder.WaveformOut("S", initial_value = mml.ao["bpmx"].s)
 
         nm = (("hcm", 'SR-PC-HSTR-01'),
               ("vcm", 'SR-PC-VSTR-01'))
 
         for i, (k, v) in enumerate(nm):
-            iochelper.SetDevice(v)
+            builder.SetDeviceName(v)
             w = builder.WaveformOut(
                 "I", initial_value = zeros(len(mml.ao[k].s)))
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
@@ -43,7 +35,6 @@ class magnets_server(object):
 
         self.create_controls()
 
-        iochelper.on_init.append(self.init)
 
     def init(self):
         self.write()
@@ -113,7 +104,7 @@ class magnets_server(object):
 
             # build concentrator vector
             envec = (mml.ao[f].enabled == 0)
-            iochelper.SetDevice("SR-PC-%sSTR-01" % "HV"[p])
+            builder.SetDeviceName("SR-PC-%sSTR-01" % "HV"[p])
 
             # maximum value and name
             self.maxval[p] = builder.aOut("MAXI", initial_value = 0)
@@ -123,7 +114,7 @@ class magnets_server(object):
                                                   initial_value = envec)
             # build individual controls
             for n, c in enumerate(mml.ao[f].devices):
-                iochelper.SetDevice(c)
+                builder.SetDeviceName(c)
                 r = builder.mbbOut('DISABLED', ("Enabled", 0), ("Disabled", 1),
                                    on_update = bind1st((p, n), self.update))
                 records[p].append(r)
@@ -134,8 +125,3 @@ class magnets_server(object):
         for p in range(2):
             for n, r in enumerate(self.records[p]):
                 r.set(self.cenabled[p].get()[n])
-
-if __name__ == "__main__":
-    # standalone test
-    s = magnets_server()
-    iochelper.start_ioc()

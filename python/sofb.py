@@ -12,7 +12,6 @@ from numpy.linalg import *
 from cothread.catools import *
 from cothread import Spawn, Sleep, WaitForQuit
 import mml
-import iochelper
 
 class sofb(object):
 

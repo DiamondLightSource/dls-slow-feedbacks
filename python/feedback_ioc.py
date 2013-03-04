@@ -7,9 +7,7 @@ require('scipy==0.8.0b1')
 require('iocbuilder==3.23')
 
 
-print sys.argv[1:]
 if sys.argv[1:]:
-    print 'monkey patching caput'
     # If running in testing mode log instead of executing caput.  We do this by
     # "monkey patching" catools!
     import cothread.catools
@@ -18,7 +16,7 @@ if sys.argv[1:]:
     cothread.catools.caput = caput
 
 
-from softioc import builder
+from softioc import builder, softioc
 from iocbuilder import records
 
 
@@ -67,5 +65,16 @@ builder.stringIn('WHOAMI', VAL = 'RF Feedback Server')
 builder.stringIn('HOSTNAME', VAL = os.uname()[1])
 
 
-import iochelper
-iochelper.start_ioc()
+# All records created, can now fire up the IOC.
+builder.LoadDatabase()
+softioc.iocInit()
+
+
+# Perform post ioc init initialisation for the various components
+mode.init()
+mags.init()
+rffb.init()
+sofb.init()
+
+
+softioc.interactive_ioc(globals())

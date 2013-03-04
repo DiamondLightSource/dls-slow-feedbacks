@@ -11,7 +11,6 @@ from scipy.io import loadmat
 import numpy
 
 import mml
-import iochelper
 import rffb_calc
 
 
@@ -23,10 +22,9 @@ class ringmode(object):
     def __init__(self):
         self.records()
         self.listeners = []
-        iochelper.on_init.append(self.init)
 
     def records(self):
-        iochelper.SetDevice('SR-CS-RING-01')
+        builder.SetDeviceName('SR-CS-RING-01')
         self.mode = builder.mbbOut("MODE", on_update = self.set_mode,
             *zip(self.ring_modes, range(len(self.ring_modes))))
 
@@ -58,10 +56,9 @@ class rffb_server(object):
 
         self.records()
 
-        iochelper.on_init.append(self.start)
         mode.add_listener(self.set_datadir)
 
-    def start(self):
+    def init(self):
         cothread.Spawn(self.timer)
 
     def timer(self):
@@ -160,7 +157,7 @@ class rffb_server(object):
 
     def records(self):
 
-        iochelper.SetDevice("SR-CS-RFFB-01")
+        builder.SetDeviceName("SR-CS-RFFB-01")
 
         self.matrix_error = builder.boolIn(
             "EMATRIX", DESC = "Matrix Error",
