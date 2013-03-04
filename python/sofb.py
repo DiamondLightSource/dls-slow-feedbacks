@@ -1,11 +1,4 @@
-#!/bin/env dls-python2.6
-
 import sys, os, traceback
-
-if __name__ == "__main__":
-    from pkg_resources import require
-    require('cothread==1.16')
-    require('scipy')
 
 from numpy import *
 from numpy.linalg import *
@@ -84,18 +77,3 @@ class sofb(object):
         else:
             sf = 1.0
         return sf
-
-if __name__ == "__main__":
-
-    # need some PVs for activities:
-
-    # 1) threshold
-    # 2) limit
-    # 3) power
-    # 4) single correction
-
-    feedback = sofb()
-    feedback.set_datadir("SR")
-    feedback.correction()
-    Spawn(feedback.tick)
-    WaitForQuit()

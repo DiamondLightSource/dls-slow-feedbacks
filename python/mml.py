@@ -1,5 +1,3 @@
-#!/usr/bin/env dls-python2.6
-
 "MML for RFFB and SOFB, loaded from SQL config file"
 
 import sys, os
@@ -39,20 +37,3 @@ def fromsql():
     return ao2
 
 ao = fromsql()
-
-if __name__ == "__main__":
-    print len(ao["hcm"].s)
-    print len(ao["vcm"].s)
-    print len(ao["bpmx"].s)
-    print len(ao["bpmy"].s)
-    ao2 = fromsql()
-    for k in ao.keys():
-        for a in dir(ao[k]):
-            if not a.startswith("_"):
-                if a in ["access"]:
-                    continue
-                if a in ["hw2physics", "s"]:
-                    print k, a, max(
-                        abs((getattr(ao2[k], a) - getattr(ao[k], a))))
-                else:
-                    print k, a, all(getattr(ao2[k], a) == getattr(ao[k], a))
