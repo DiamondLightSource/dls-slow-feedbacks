@@ -23,6 +23,7 @@ from iocbuilder import records
 import rffb_server
 import magnets
 import sofb_server
+import coupling_fb_server
 
 sys.path.append(os.path.join(sys.path[0], "../tunechro"))
 import tcfbserver
@@ -51,6 +52,8 @@ rffb = rffb_server.rffb_server(mode)
 # Slow orbit feedback.
 sofb = sofb_server.sofb_server(mode)
 
+# Coupling control.
+cplfb = coupling_fb_server.coupling_fb_server(mode)
 
 
 # Create mirror PV for FOFB status to reduce overall load on vxWorks IOCs.
@@ -75,6 +78,7 @@ mode.init()
 mags.init()
 rffb.init()
 sofb.init()
+cplfb.init()
 
 
 softioc.interactive_ioc(globals())

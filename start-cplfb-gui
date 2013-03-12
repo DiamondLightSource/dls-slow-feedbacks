@@ -1,0 +1,8 @@
+#!/bin/sh
+# Make sure edm is on our path
+export DLS_EPICS_RELEASE=R3.14.11
+source /dls_sw/etc/profile
+#OPTS="-x -eolc -noedit"
+OPTS="-x -eolc"
+HERE="$(dirname $0)"
+cd "$HERE/opi" && edm ${OPTS} cplfb.edl
