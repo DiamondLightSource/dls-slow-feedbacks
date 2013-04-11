@@ -152,7 +152,7 @@ class cplfb_emit(object):
             self.IRM = self.RM = None
             print 'emitfb: loadMatrix', ringmode
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/' + ringmode
-            rm_file = os.path.join(matDir, 'GoldenCouplingEmittance.mat')
+            rm_file = os.path.join(matDir, 'GoldenCoupling.mat')
             RM_load=loadmat(rm_file)
             self.RM=RM_load['RM']
             if self.debug: print 'RM', self.RM
