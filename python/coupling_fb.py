@@ -15,9 +15,9 @@ class coupling_fb_constants:
     MAX_PS_TS_AGE = 2
     PS_DELTA_MAX_INITIAL = 0.1
     PS_DELTA_RMS_MAX_INITIAL = 10
-    COUPLING_MAX_INITIAL = 0.5
-    COUPLING_MIN_INITIAL = 0.1
-    COUPLING_MAX_CHANGE_INITIAL = 0.1
+    VEMIT_MAX_INITIAL = 100
+    VEMIT_MIN_INITIAL = 1
+    VEMIT_MAX_CHANGE_INITIAL = 1
     SIGMAY_MAX_INITIAL = [100.0, 100.0 ]
     SIGMAY_MIN_INITIAL = [ 0.0, 0.0 ]
     SIGMAY_MAX_CHANGE_INITIAL = [ 10.0, 10.0]
@@ -140,10 +140,10 @@ class cplfb_emit(object):
         self.skew_quads = skew_quads
 
         self.emit_coupling_mean, self.emit_coupling_mean_ts = \
-            self.monitor_wf(['SR-DI-EMIT-01:COUPLING_MEAN'])
+            self.monitor_wf(['SR-DI-EMIT-01:VEMIT_MEAN'])
 
         self.emit_coupling, self.emit_coupling_ts = \
-            self.monitor_wf(['SR-DI-EMIT-01:COUPLING'])
+            self.monitor_wf(['SR-DI-EMIT-01:VEMIT'])
 
         self.record()
 
@@ -152,7 +152,7 @@ class cplfb_emit(object):
             self.IRM = self.RM = None
             print 'emitfb: loadMatrix', ringmode
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/' + ringmode
-            rm_file = os.path.join(matDir, 'GoldenCoupling.mat')
+            rm_file = os.path.join(matDir, 'GoldenCouplingEmittance.mat')
             RM_load=loadmat(rm_file)
             self.RM=RM_load['RM']
             if self.debug: print 'RM', self.RM
@@ -214,11 +214,11 @@ class cplfb_emit(object):
         if self.debug:
             if self.use_mean:
                 print 'using mean'
-                print caget(['SR-DI-EMIT-01:COUPLING_MEAN'])
+                print caget(['SR-DI-EMIT-01:VEMIT_MEAN'])
                 print current
             else:
                 print 'using latest'
-                caget(['SR-DI-EMIT-01:COUPLING'])
+                caget(['SR-DI-EMIT-01:VEMIT'])
                 print current            
 
 
@@ -294,19 +294,19 @@ class cplfb_emit(object):
     def record(self):
         builder.SetDeviceName("SR-CS-CPLFB-01")
 
-        self.use_mean_pv = builder.mbbOut('WHICH_COUPLING', ("CURRENT", 0), ("MEAN", 1),
+        self.use_mean_pv = builder.mbbOut('WHICH_VEMIT', ("CURRENT", 0), ("MEAN", 1),
                                        initial_value = 1 if self.use_mean else 0 )
 
-        self.coupling_max_pv = builder.aOut("COUPLING_MAX",
-                initial_value = coupling_fb_constants.COUPLING_MAX_INITIAL,
+        self.coupling_max_pv = builder.aOut("VEMIT_MAX",
+                initial_value = coupling_fb_constants.VEMIT_MAX_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")        
 
-        self.coupling_min_pv = builder.aOut("COUPLING_MIN",
-                initial_value = coupling_fb_constants.COUPLING_MIN_INITIAL,
+        self.coupling_min_pv = builder.aOut("VEMIT_MIN",
+                initial_value = coupling_fb_constants.VEMIT_MIN_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
 
-        self.coupling_max_change_pv = builder.aOut("COUPLING_MAX_CHANGE",
-                initial_value = coupling_fb_constants.COUPLING_MAX_CHANGE_INITIAL,
+        self.coupling_max_change_pv = builder.aOut("VEMIT_MAX_CHANGE",
+                initial_value = coupling_fb_constants.VEMIT_MAX_CHANGE_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
 
 
@@ -441,7 +441,7 @@ class cplfb_sigmay(object):
                 last = self.last[i]
                 change = +current[i] - last
                 if self.threshold_debug or self.debug: print 'current', current[i], 'last', last, 'change ', change
-                if abs(change) > sigmay_max_change_pvs.get():
+                if abs(change) > max([smcp.get() for smcp in self.sigmay_max_change_pvs]) :
                     print 'sigmay  change too big - bail out'
                     return status.BAD_CALC_INPUT
             
