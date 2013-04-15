@@ -71,7 +71,7 @@ class coupling_fb_server(object):
         skew_quads = coupling_fb.skew_quadrupoles()
 
         self.enabled = 0
-        self.cpl_mode = 0
+        self.cpl_mode = 1
         self.debug = False #True
         self.threshold_debug = False #True
 
@@ -86,7 +86,7 @@ class coupling_fb_server(object):
         self.coupling_fbs = [ cpl_fb, emit_fb, sigmay_fb]
 
         self.set_target(coupling_fb.coupling_fb_constants.COUPLING_TARGET_INITIAL)
-        self.setFraction(0.25)
+        self.setFraction(coupling_fb.coupling_fb_constants.AFRAC_INITIAL)
 
         self.beam_current, self.beam_current_ts = \
             self.monitor_wf(['SR21C-DI-DCCT-01:SIGNAL'])
@@ -274,6 +274,7 @@ class coupling_fb_server(object):
     def set_enabled(self, enabled):
         print 'ENABLE:', enabled
         self.enabled = enabled
+        self.coupling_fb().enable(enabled)
 
     def set_cpl_mode(self, mode):
         print 'CPL MODE:', mode
@@ -306,7 +307,7 @@ class coupling_fb_server(object):
 
 
         builder.aOut("AFRAC", initial_value = self.coupling_fb().fraction, on_update = self.setFraction,
-                     DRVH = 1, DRVL = 0, PREC = 4, EGU = "1")
+                     DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
 
 
         #builder.aOut("SVDT", initial_value = self.cpl.threshold,

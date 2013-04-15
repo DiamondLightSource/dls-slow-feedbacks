@@ -11,6 +11,9 @@ from math import sqrt
 
 class coupling_fb_constants:
     COUPLING_TARGET_INITIAL = 0.3
+    VEMIT_TARGET_INITIAL = 8.0
+    AFRAC_INITIAL = 0.5
+    IIRF_PARAM_INITIAL = 0.5
     MAX_TS_AGE = 0.3
     MAX_PS_TS_AGE = 2
     PS_DELTA_MAX_INITIAL = 0.1
@@ -18,9 +21,9 @@ class coupling_fb_constants:
     COUPLING_MAX_INITIAL = 0.5
     COUPLING_MIN_INITIAL = 0.1
     COUPLING_MAX_CHANGE_INITIAL = 0.1
-    VEMIT_MAX_INITIAL = 100
-    VEMIT_MIN_INITIAL = 1
-    VEMIT_MAX_CHANGE_INITIAL = 1
+    VEMIT_MAX_INITIAL = 13.0
+    VEMIT_MIN_INITIAL = 6.0
+    VEMIT_MAX_CHANGE_INITIAL = 2.0
     SIGMAY_MAX_INITIAL = [100.0, 100.0 ]
     SIGMAY_MIN_INITIAL = [ 0.0, 0.0 ]
     SIGMAY_MAX_CHANGE_INITIAL = [ 10.0, 10.0]
@@ -34,11 +37,13 @@ class status:
     BAD_CALC_INPUT = 2
     BAD_PS_VAL = 3
     BAD_PS_OUT = 4        
+
+
+#################################  FILTER  ####################################################
     
 builder.SetDeviceName("SR-CS-CPLFB-01")
-irr_frac_pv = builder.aOut("IIRF_PARAM", initial_value = 1,
-                    DRVH = 1, DRVL = 0, PREC = 3, EGU = "1")
-
+irr_frac_pv = builder.aOut("IIRF_PARAM", initial_value = coupling_fb_constants.IIRF_PARAM_INITIAL,
+                    DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
 
 
 ################################# SKEW QUADS ####################################################
@@ -145,8 +150,8 @@ class cplfb_coupling(object):
 
         self.debug = False #True
         self.threshold_debug = False #True
-        self.fraction = 0.5
-        self.target = 0.3
+        self.fraction = coupling_fb_constants.AFRAC_INITIAL
+        self.target = coupling_fb_constants.COUPLING_TARGET_INITIAL
         self.last = None
 
         self.skew_quads = skew_quads
@@ -179,8 +184,10 @@ class cplfb_coupling(object):
 
 
     def on_mode_change(self, on):
-        pass
+        self.last = None
 
+    def enable(self, enabled):
+        self.last = None
 
     def correct(self):
         rv = self.do_calc(True)
@@ -217,13 +224,14 @@ class cplfb_coupling(object):
         if self.debug: print current, ts, current_time
 
         age = current_time - ts.min()
-        if self.threshold_debug or self.debug:
-             print 'age', age, 'MAX', coupling_fb_constants.MAX_TS_AGE 
         
         # Timestamps ok?
         if age > coupling_fb_constants.MAX_TS_AGE:
-            print 'coupling ts too old - bail out'
+            print 'coupling ts too old - bail out', 'age', age, 'MAX', coupling_fb_constants.MAX_TS_AGE
             return status.BAD_CALC_INPUT_TS
+
+        if self.threshold_debug or self.debug:
+            print 'age', age, 'MAX', coupling_fb_constants.MAX_TS_AGE 
         
         if self.debug:
             if self.use_mean:
@@ -236,29 +244,33 @@ class cplfb_coupling(object):
                 print current            
 
 
-        # vals ok
-        if self.threshold_debug or self.debug:
-             print 'coupling ', current, '  MAX ', self.coupling_max_pv.get()
+        # vals ok?
         if current > self.coupling_max_pv.get():
-            print 'coupling too high - bail out'
+            print 'coupling too high - bail out', 'coupling ', current, '  MAX ', self.coupling_max_pv.get()
             return status.BAD_CALC_INPUT            
 
         if self.threshold_debug or self.debug:
-             print 'coupling ', current, '  MIN ', self.coupling_min_pv.get()
+            print 'coupling ', current, '  MAX ', self.coupling_max_pv.get()
+
+        if self.threshold_debug or self.debug:
+            print 'coupling ', current, '  MIN ', self.coupling_min_pv.get()
         if current < self.coupling_min_pv.get():
-            print 'coupling too low - bail out'
+            print 'coupling too low - bail out', 'coupling ', current, '  MIN ', self.coupling_min_pv.get()
             return status.BAD_CALC_INPUT
 
         if self.last != None:
             last = self.last
             change = current[0] - last[0]
+            if abs(change) > self.coupling_max_change_pv.get():
+                print 'coupling change too big - bail out', 'current', current[0], 'last', last[0], \
+                    'change ', change, self.coupling_max_change_pv.get()
+                return status.BAD_CALC_INPUT
+
             if self.threshold_debug or self.debug:
                 print 'current', current[0], 'last', last[0], 'change ', change
                 print 'change ', change, '  MAX_CHANGE ', self.coupling_max_change_pv.get()
 
-            if abs(change) > self.coupling_max_change_pv.get():
-                print 'coupling change too big - bail out'
-                return status.BAD_CALC_INPUT
+
                 
         self.last = +current
 
@@ -274,8 +286,7 @@ class cplfb_coupling(object):
         delta = -self.fraction*dot(self.IRM, diff)
         if self.debug: print 'delta', delta
         
-        sqvals = self.skew_quads.squad_vals
-        #if self.debug: print 'sqvals', sqvals             
+        sqvals = self.skew_quads.squad_vals             
 
         sq_delta = [ delta[0] for val in sqvals]
 
@@ -288,24 +299,7 @@ class cplfb_coupling(object):
         if apply_calc:
             self.skew_quads.put_delta(sq_delta)
 
-        return status.OK
-
-    """
-    def input_ts_ok(self):
-
-        target = self.target
-        print 'target', target
-
-        ts = self.emit_coupling_mean_ts
-        current_time = time.time()
-        if self.debug: print 'current monitored + ts + time:'
-        if self.debug: print current, ts, current_time
-
-        age = current_time - ts.min()
-        if self.debug: print 'age', age
-        
-        return age <= coupling_fb_constants.MAX_TS_AGE:
-    """    
+        return status.OK 
 
 
     def record(self):
@@ -367,8 +361,6 @@ class cplfb_emit(object):
         self.vemit, self.vemit_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:VEMIT'])
 
-        self.get_target()
-
         self.post_filter = copy(self.vemit_mean)
 
         self.record()
@@ -391,12 +383,10 @@ class cplfb_emit(object):
 
 
     def on_mode_change(self, on):
-        if on:
-            self.get_target()
+        self.last = None
 
-    def get_target(self):
-        self.target = copy(self.vemit_mean)
-        if self.debug: print self.target
+    def enable(self, enabled):
+        self.last = None
 
 
     def correct(self):
@@ -423,7 +413,7 @@ class cplfb_emit(object):
             print 'No matrix'
             raise calc_exception
 
-        target = self.target
+        target = self.vemit_target_pv.get()
         if self.debug: print 'target', target
 
         current = self.vemit_mean if self.use_mean else self.vemit
@@ -453,16 +443,16 @@ class cplfb_emit(object):
                 print current            
 
 
-        # vals ok
-        if self.threshold_debug or self.debug:
-             print 'vemit ', current, '  MAX ', self.vemit_max_pv.get()
+        # vals ok?
         if current > self.vemit_max_pv.get():
-            print 'vemit too high - bail out'
+            print 'vemit too high - bail out', current, 'MAX ', self.vemit_max_pv.get()
             return status.BAD_CALC_INPUT            
+        elif self.threshold_debug or self.debug:
+             print 'vemit ', current, '  MAX ', self.vemit_max_pv.get()
 
 
         if current < self.vemit_min_pv.get():
-            print 'vemit too low - bail out', 'vemit ', current, '  MIN ', self.vemit_min_pv.get()
+            print 'vemit too low - bail out', 'vemit ', current, 'MIN ', self.vemit_min_pv.get()
             return status.BAD_CALC_INPUT
         elif self.threshold_debug or self.debug:
              print 'vemit ', current, '  MIN ', self.vemit_min_pv.get()
@@ -471,7 +461,7 @@ class cplfb_emit(object):
             last = self.last
             change = current[0] - last[0]
             if abs(change) > self.vemit_max_change_pv.get():
-                print 'vemit change too big - bail out', 'change ', change, '  MAX_CHANGE ', self.vemit_max_change_pv.get()
+                print 'vemit change too big - bail out', 'change ', change, 'MAX_CHANGE', self.vemit_max_change_pv.get()
                 return status.BAD_CALC_INPUT
             elif self.threshold_debug or self.debug:
                 print 'current', current[0], 'last', last[0], 'change ', change
@@ -490,7 +480,8 @@ class cplfb_emit(object):
         if self.debug: print 'diff', diff
 
         delta = -self.fraction*dot(self.IRM, diff)
-        if self.debug: print 'delta', delta
+        if self.debug:
+            print 'delta', delta
         
         sqvals = self.skew_quads.squad_vals
         #if self.debug: print 'sqvals', sqvals             
@@ -507,23 +498,6 @@ class cplfb_emit(object):
             self.skew_quads.put_delta(sq_delta)
 
         return status.OK
-
-    """
-    def input_ts_ok(self):
-
-        target = self.target
-        print 'target', target
-
-        ts = self.vemit_mean_ts
-        current_time = time.time()
-        if self.debug: print 'current monitored + ts + time:'
-        if self.debug: print current, ts, current_time
-
-        age = current_time - ts.min()
-        if self.debug: print 'age', age
-        
-        return age <= coupling_fb_constants.MAX_TS_AGE:
-    """    
 
 
     def record(self):
@@ -545,7 +519,7 @@ class cplfb_emit(object):
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
 
         self.vemit_target_pv = builder.aOut("VEMIT_TARGET",
-                initial_value = self.target[0],
+                initial_value = coupling_fb_constants.VEMIT_TARGET_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = "1")
 
 
@@ -613,7 +587,10 @@ class cplfb_sigmay(object):
     def on_mode_change(self, on):
         if on:
             self.get_target()
+        self.last = None
 
+    def enable(self, enabled):
+        self.last = None
 
     def get_target(self):
         self.target = copy(self.sigmay_mean)

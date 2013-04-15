@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1429
-y 681
+x 1513
+y 1657
 w 342
 h 425
 font "helvetica-bold-r-14.0"
@@ -124,7 +124,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "CPLFB SINGLE"
+  "SINGLE CORRECTION"
 }
 endObjectProperties
 
@@ -143,7 +143,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "CPLFB LOOP"
+  "FEEDBACK LOOP"
 }
 endObjectProperties
 
@@ -176,7 +176,7 @@ x 208
 y 216
 w 120
 h 24
-controlPv "SR-CS-CPLFB-01:PERIOD"
+controlPv "SR-CS-CPLFB-01:AFRAC"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -205,7 +205,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "PERIOD (S)"
+  "FRACTION TO APPLY"
 }
 endObjectProperties
 
@@ -224,7 +224,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "FRACTION TO APPLY"
+  "FILTER PARAMETER"
 }
 endObjectProperties
 
@@ -236,9 +236,9 @@ minor 5
 release 0
 x 216
 y 248
-w 120
+w 112
 h 24
-controlPv "SR-CS-CPLFB-01:AFRAC"
+controlPv "SR-CS-CPLFB-01:IIRF_PARAM"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -299,83 +299,6 @@ endObjectProperties
 
 endGroup
 
-endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 184
-w 200
-h 24
-
-beginGroup
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 184
-w 200
-h 24
-font "courier-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 4
-value {
-  "TARGET"
-}
-endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 208
-y 184
-w 120
-h 24
-
-beginGroup
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 208
-y 184
-w 120
-h 24
-controlPv "SR-CS-CPLFB-01:TARGET"
-font "courier-bold-r-12.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 0
-useDisplayBg
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
 endObjectProperties
 
 endGroup
@@ -483,7 +406,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "MEAN COUPLING"
+  "VERTICAL EMITTANCE"
 }
 endObjectProperties
 
@@ -540,7 +463,7 @@ x 216
 y 88
 w 120
 h 24
-controlPv "SR-DI-EMIT-01:COUPLING_MEAN"
+controlPv "SR-DI-EMIT-01:VEMIT"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -552,5 +475,48 @@ useHexPrefix
 showUnits
 newPos
 objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 208
+y 184
+w 120
+h 24
+controlPv "SR-CS-CPLFB-01:VEMIT_TARGET"
+font "courier-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 184
+w 200
+h 24
+font "courier-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "TARGET EMITTANCE (pm rad)"
+}
 endObjectProperties
 
