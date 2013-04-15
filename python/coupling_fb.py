@@ -139,10 +139,10 @@ class cplfb_emit(object):
 
         self.skew_quads = skew_quads
 
-        self.emit_coupling_mean, self.emit_coupling_mean_ts = \
+        self.emit_vemit_mean, self.emit_vemit_mean_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:VEMIT_MEAN'])
 
-        self.emit_coupling, self.emit_coupling_ts = \
+        self.emit_vemit, self.emit_vemit_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:VEMIT'])
 
         self.record()
@@ -195,9 +195,9 @@ class cplfb_emit(object):
         target = self.target
         if self.debug: print 'target', target
 
-        current = self.emit_coupling_mean if self.use_mean else self.emit_coupling_mean
+        current = self.emit_vemit_mean if self.use_mean else self.emit_vemit_mean
 
-        ts = self.emit_coupling_mean_ts if self.use_mean else self.emit_coupling_mean_ts
+        ts = self.emit_vemit_mean_ts if self.use_mean else self.emit_vemit_mean_ts
         current_time = time.time()
         if self.debug: print 'current monitored + ts + time:'
         if self.debug: print current, ts, current_time
@@ -208,7 +208,7 @@ class cplfb_emit(object):
         
         # Timestamps ok?
         if age > coupling_fb_constants.MAX_TS_AGE:
-            print 'coupling ts too old - bail out'
+            print 'vemit ts too old - bail out'
             return status.BAD_CALC_INPUT_TS
         
         if self.debug:
@@ -224,15 +224,15 @@ class cplfb_emit(object):
 
         # vals ok
         if self.threshold_debug or self.debug:
-             print 'coupling ', current, '  MAX ', self.coupling_max_pv.get()
-        if current > self.coupling_max_pv.get():
-            print 'coupling too high - bail out'
+             print 'vemit ', current, '  MAX ', self.vemit_max_pv.get()
+        if current > self.vemit_max_pv.get():
+            print 'vemit too high - bail out'
             return status.BAD_CALC_INPUT            
 
         if self.threshold_debug or self.debug:
-             print 'coupling ', current, '  MIN ', self.coupling_min_pv.get()
-        if current < self.coupling_min_pv.get():
-            print 'coupling too low - bail out'
+             print 'vemit ', current, '  MIN ', self.vemit_min_pv.get()
+        if current < self.vemit_min_pv.get():
+            print 'vemit too low - bail out'
             return status.BAD_CALC_INPUT
 
         if self.last != None:
@@ -240,10 +240,10 @@ class cplfb_emit(object):
             change = current[0] - last[0]
             if self.threshold_debug or self.debug:
                 print 'current', current[0], 'last', last[0], 'change ', change
-                print 'change ', change, '  MAX_CHANGE ', self.coupling_max_change_pv.get()
+                print 'change ', change, '  MAX_CHANGE ', self.vemit_max_change_pv.get()
 
-            if abs(change) > self.coupling_max_change_pv.get():
-                print 'coupling change too big - bail out'
+            if abs(change) > self.vemit_max_change_pv.get():
+                print 'vemit change too big - bail out'
                 return status.BAD_CALC_INPUT
                 
         self.last = +current
@@ -279,7 +279,7 @@ class cplfb_emit(object):
         target = self.target
         print 'target', target
 
-        ts = self.emit_coupling_mean_ts
+        ts = self.emit_vemit_mean_ts
         current_time = time.time()
         if self.debug: print 'current monitored + ts + time:'
         if self.debug: print current, ts, current_time
@@ -297,15 +297,15 @@ class cplfb_emit(object):
         self.use_mean_pv = builder.mbbOut('WHICH_VEMIT', ("CURRENT", 0), ("MEAN", 1),
                                        initial_value = 1 if self.use_mean else 0 )
 
-        self.coupling_max_pv = builder.aOut("VEMIT_MAX",
+        self.vemit_max_pv = builder.aOut("VEMIT_MAX",
                 initial_value = coupling_fb_constants.VEMIT_MAX_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")        
 
-        self.coupling_min_pv = builder.aOut("VEMIT_MIN",
+        self.vemit_min_pv = builder.aOut("VEMIT_MIN",
                 initial_value = coupling_fb_constants.VEMIT_MIN_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
 
-        self.coupling_max_change_pv = builder.aOut("VEMIT_MAX_CHANGE",
+        self.vemit_max_change_pv = builder.aOut("VEMIT_MAX_CHANGE",
                 initial_value = coupling_fb_constants.VEMIT_MAX_CHANGE_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
 
