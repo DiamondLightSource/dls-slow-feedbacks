@@ -161,6 +161,9 @@ class coupling_fb_server(object):
             elif calc_status == coupling_fb.status.BAD_CALC_INPUT_TS:
                 if self.debug: print 'correct OK' if do_correction else 'calc OK'
                 status = coupling_fb_status.EMITTANCE_WARNING
+            elif calc_status == coupling_fb.status.BAD_CALC_INPUT:
+                print 'bad calc input - skip', 'correct' if do_correction else 'calc'
+                status = coupling_fb_status.EMITTANCE_WARNING
             else:
                 status = coupling_fb_status.CALC_ERROR
                 print 'correct ERROR' if do_correction else 'calc ERROR'
