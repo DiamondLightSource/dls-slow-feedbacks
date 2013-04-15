@@ -157,7 +157,7 @@ class cplfb_coupling(object):
     def on_ringmode_change(self, ringmode):
         try:
             self.IRM = self.RM = None
-            print 'emitfb: loadMatrix', ringmode
+            print 'cplfb: loadMatrix', ringmode
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/' + ringmode
             rm_file = os.path.join(matDir, 'GoldenCoupling.mat')
             RM_load=loadmat(rm_file)
@@ -167,7 +167,7 @@ class cplfb_coupling(object):
             if self.debug: print 'IRM', self.IRM
 
         except:
-            print 'emitfb ringmode_change raised unexpected exception'
+            print 'cplfb ringmode_change raised unexpected exception'
             traceback.print_exc()
 
 
@@ -177,12 +177,12 @@ class cplfb_coupling(object):
 
     def correct(self):
         rv = self.do_calc(True)
-        if self.debug: print 'emitfb correct() done'
+        if self.debug: print 'cplfb correct() done'
         return rv
 
     def calc(self):
         rv = self.do_calc(False)
-        if self.debug: print 'emitfb calc() done'
+        if self.debug: print 'cplfb calc() done'
         return rv
 
 
@@ -191,9 +191,9 @@ class cplfb_coupling(object):
 
 
     def do_calc(self, apply_calc):
-        if self.debug: print 'emitfb calc() %%', self.fraction
+        if self.debug: print 'cplfb calc() %%', self.fraction
 
-        self.use_mean = self.use_mean_pv.get()
+        self.use_mean = self.use_mean_pv.get() == 1
 
         if not self.isMatrixOk():
             print 'No matrix'
@@ -202,9 +202,9 @@ class cplfb_coupling(object):
         target = self.target
         if self.debug: print 'target', target
 
-        current = self.emit_coupling_mean if self.use_mean else self.emit_coupling_mean
+        current = self.emit_coupling_mean if self.use_mean else self.emit_coupling
+        ts = self.emit_coupling_mean_ts if self.use_mean else self.emit_coupling_ts
 
-        ts = self.emit_coupling_mean_ts if self.use_mean else self.emit_coupling_mean_ts
         current_time = time.time()
         if self.debug: print 'current monitored + ts + time:'
         if self.debug: print current, ts, current_time
@@ -405,7 +405,7 @@ class cplfb_emit(object):
     def do_calc(self, apply_calc):
         if self.debug: print 'emitfb calc() %%', self.fraction
 
-        self.use_mean = self.use_mean_pv.get()
+        self.use_mean = self.use_mean_pv.get() == 1
 
         if not self.isMatrixOk():
             print 'No matrix'
@@ -414,9 +414,9 @@ class cplfb_emit(object):
         target = self.target
         if self.debug: print 'target', target
 
-        current = self.vemit_mean if self.use_mean else self.vemit_mean
+        current = self.vemit_mean if self.use_mean else self.vemit
 
-        ts = self.vemit_mean_ts if self.use_mean else self.vemit_mean_ts
+        ts = self.vemit_mean_ts if self.use_mean else self.vemit_ts
         current_time = time.time()
         if self.debug: print 'current monitored + ts + time:'
         if self.debug: print current, ts, current_time
@@ -448,25 +448,25 @@ class cplfb_emit(object):
             print 'vemit too high - bail out'
             return status.BAD_CALC_INPUT            
 
-        if self.threshold_debug or self.debug:
-             print 'vemit ', current, '  MIN ', self.vemit_min_pv.get()
+
         if current < self.vemit_min_pv.get():
-            print 'vemit too low - bail out'
+            print 'vemit too low - bail out', 'vemit ', current, '  MIN ', self.vemit_min_pv.get()
             return status.BAD_CALC_INPUT
+        elif self.threshold_debug or self.debug:
+             print 'vemit ', current, '  MIN ', self.vemit_min_pv.get()
 
         if self.last != None:
             last = self.last
             change = current[0] - last[0]
-            if self.threshold_debug or self.debug:
+            if abs(change) > self.vemit_max_change_pv.get():
+                print 'vemit change too big - bail out', 'change ', change, '  MAX_CHANGE ', self.vemit_max_change_pv.get()
+                return status.BAD_CALC_INPUT
+            elif self.threshold_debug or self.debug:
                 print 'current', current[0], 'last', last[0], 'change ', change
                 print 'change ', change, '  MAX_CHANGE ', self.vemit_max_change_pv.get()
 
-            if abs(change) > self.vemit_max_change_pv.get():
-                print 'vemit change too big - bail out'
-                return status.BAD_CALC_INPUT
                 
         self.last = +current
-
 
         diff = current-target
 
@@ -621,7 +621,7 @@ class cplfb_sigmay(object):
     def do_calc(self, apply_calc):
         if self.debug: print 'sigmay_fb correct() %% ', self.fraction
 
-        self.use_mean = self.use_mean_pv.get()
+        self.use_mean = self.use_mean_pv.get() == 1
 
         if not self.isMatrixOk():
             print 'No matrix'
@@ -631,8 +631,8 @@ class cplfb_sigmay(object):
         if self.debug: print 'target', target
 
 
-        current = self.sigmay_mean
-        ts = self.sigmay_mean_ts
+        current = self.sigmay_mean if self.use_mean else self.sigmay_mean
+        ts = self.sigmay_mean_ts if self.use_mean else self.sigmay_mean_ts
 
         current_time = time.time()
         if self.debug: print 'current monitored + ts + time:'
