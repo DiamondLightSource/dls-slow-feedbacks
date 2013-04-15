@@ -34,6 +34,11 @@ class status:
     BAD_CALC_INPUT = 2
     BAD_PS_VAL = 3
     BAD_PS_OUT = 4        
+    
+builder.SetDeviceName("SR-CS-CPLFB-01")
+irr_frac_pv = builder.aOut("IIRF_PARAM", initial_value = 1,
+                    DRVH = 1, DRVL = 0, PREC = 3, EGU = "1")
+
 
 
 ################################# SKEW QUADS ####################################################
@@ -152,6 +157,8 @@ class cplfb_coupling(object):
         self.emit_coupling, self.emit_coupling_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:COUPLING'])
 
+        self.post_filter = copy(self.emit_coupling_mean)
+
         self.record()
 
     def on_ringmode_change(self, ringmode):
@@ -255,6 +262,9 @@ class cplfb_coupling(object):
                 
         self.last = +current
 
+        alpha = irr_frac_pv.get()
+        current = alpha * current + (1-alpha) * self.post_filter
+        self.post_filter = +current
 
         diff = current-target
 
@@ -358,6 +368,8 @@ class cplfb_emit(object):
             self.monitor_wf(['SR-DI-EMIT-01:VEMIT'])
 
         self.get_target()
+
+        self.post_filter = copy(self.vemit_mean)
 
         self.record()
 
@@ -468,6 +480,10 @@ class cplfb_emit(object):
                 
         self.last = +current
 
+        alpha = irr_frac_pv.get()
+        current = alpha * current + (1-alpha) * self.post_filter
+        self.post_filter = +current
+
         diff = current-target
 
         if self.debug: print 'IRM', self.IRM
@@ -564,10 +580,12 @@ class cplfb_sigmay(object):
         self.sigmay_mean, self.sigmay_mean_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:P%d:SIGMAY_MEAN' % (n+1) for n in range(2)])
 
-        self.get_target()
-
         self.sigmay, self.sigmay_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:P%d:SIGMAY' % (n+1) for n in range(2)])
+
+        self.get_target()
+
+        self.post_filter = copy(self.sigmay_mean)
 
         self.record()
 
@@ -678,6 +696,9 @@ class cplfb_sigmay(object):
 
         diff = current-target
 
+        alpha = irr_frac_pv.get()
+        current = alpha * current + (1-alpha) * self.post_filter
+        self.post_filter = +current
 
         diff = current-target
         delta = -self.fraction*dot(self.IRM, diff)
@@ -691,7 +712,6 @@ class cplfb_sigmay(object):
 
         if apply_calc:
             self.skew_quads.put_delta(delta)
-
         
         return status.OK
 
