@@ -15,6 +15,9 @@ class coupling_fb_constants:
     MAX_PS_TS_AGE = 2
     PS_DELTA_MAX_INITIAL = 0.1
     PS_DELTA_RMS_MAX_INITIAL = 10
+    COUPLING_MAX_INITIAL = 0.5
+    COUPLING_MIN_INITIAL = 0.1
+    COUPLING_MAX_CHANGE_INITIAL = 0.1
     VEMIT_MAX_INITIAL = 100
     VEMIT_MIN_INITIAL = 1
     VEMIT_MAX_CHANGE_INITIAL = 1
@@ -31,6 +34,9 @@ class status:
     BAD_CALC_INPUT = 2
     BAD_PS_VAL = 3
     BAD_PS_OUT = 4        
+
+
+################################# SKEW QUADS ####################################################
 
 class skew_quadrupoles(object):
     def monitor_wf(self, pvs):
@@ -108,6 +114,211 @@ class skew_quadrupoles(object):
                 initial_value = coupling_fb_constants.PS_DELTA_RMS_MAX_INITIAL,
                 PREC = 4, EGU = "A")         
 
+################################# COUPLING FB ####################################################
+
+
+class cplfb_coupling(object):
+#    def monitor_pv(self, pv, name, initial_value=0, **kargs):
+#        def on_update(value):
+#            setattr(self, name, value)
+#        setattr(self, name, initial_value)
+#        camonitor(pv, on_update, **kargs)
+
+    def monitor_wf(self, pvs):
+        wf = zeros(len(pvs))
+        ts = zeros(len(pvs))
+        def on_update(value, index):
+            wf[index] = value
+            ts[index] = value.timestamp
+        camonitor(pvs, on_update, format = FORMAT_TIME)
+        return wf, ts
+
+    def __init__(self, skew_quads):
+        print 'emitfb: __init__'
+        self.RM = None
+        self.use_mean = False
+
+        self.debug = False #True
+        self.threshold_debug = False #True
+        self.fraction = 0.5
+        self.target = 0.3
+        self.last = None
+
+        self.skew_quads = skew_quads
+
+        self.emit_coupling_mean, self.emit_coupling_mean_ts = \
+            self.monitor_wf(['SR-DI-EMIT-01:COUPLING_MEAN'])
+
+        self.emit_coupling, self.emit_coupling_ts = \
+            self.monitor_wf(['SR-DI-EMIT-01:COUPLING'])
+
+        self.record()
+
+    def on_ringmode_change(self, ringmode):
+        try:
+            self.IRM = self.RM = None
+            print 'emitfb: loadMatrix', ringmode
+            matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/' + ringmode
+            rm_file = os.path.join(matDir, 'GoldenCoupling.mat')
+            RM_load=loadmat(rm_file)
+            self.RM=RM_load['RM']
+            if self.debug: print 'RM', self.RM
+            self.IRM = linalg.pinv(self.RM)
+            if self.debug: print 'IRM', self.IRM
+
+        except:
+            print 'emitfb ringmode_change raised unexpected exception'
+            traceback.print_exc()
+
+
+    def on_mode_change(self, on):
+        pass
+
+
+    def correct(self):
+        rv = self.do_calc(True)
+        if self.debug: print 'emitfb correct() done'
+        return rv
+
+    def calc(self):
+        rv = self.do_calc(False)
+        if self.debug: print 'emitfb calc() done'
+        return rv
+
+
+    def isMatrixOk(self):
+        return not (self.RM == None)
+
+
+    def do_calc(self, apply_calc):
+        if self.debug: print 'emitfb calc() %%', self.fraction
+
+        self.use_mean = self.use_mean_pv.get()
+
+        if not self.isMatrixOk():
+            print 'No matrix'
+            raise calc_exception
+
+        target = self.target
+        if self.debug: print 'target', target
+
+        current = self.emit_coupling_mean if self.use_mean else self.emit_coupling_mean
+
+        ts = self.emit_coupling_mean_ts if self.use_mean else self.emit_coupling_mean_ts
+        current_time = time.time()
+        if self.debug: print 'current monitored + ts + time:'
+        if self.debug: print current, ts, current_time
+
+        age = current_time - ts.min()
+        if self.threshold_debug or self.debug:
+             print 'age', age, 'MAX', coupling_fb_constants.MAX_TS_AGE 
+        
+        # Timestamps ok?
+        if age > coupling_fb_constants.MAX_TS_AGE:
+            print 'coupling ts too old - bail out'
+            return status.BAD_CALC_INPUT_TS
+        
+        if self.debug:
+            if self.use_mean:
+                print 'using mean'
+                print caget(['SR-DI-EMIT-01:COUPLING_MEAN'])
+                print current
+            else:
+                print 'using latest'
+                caget(['SR-DI-EMIT-01:COUPLING'])
+                print current            
+
+
+        # vals ok
+        if self.threshold_debug or self.debug:
+             print 'coupling ', current, '  MAX ', self.coupling_max_pv.get()
+        if current > self.coupling_max_pv.get():
+            print 'coupling too high - bail out'
+            return status.BAD_CALC_INPUT            
+
+        if self.threshold_debug or self.debug:
+             print 'coupling ', current, '  MIN ', self.coupling_min_pv.get()
+        if current < self.coupling_min_pv.get():
+            print 'coupling too low - bail out'
+            return status.BAD_CALC_INPUT
+
+        if self.last != None:
+            last = self.last
+            change = current[0] - last[0]
+            if self.threshold_debug or self.debug:
+                print 'current', current[0], 'last', last[0], 'change ', change
+                print 'change ', change, '  MAX_CHANGE ', self.coupling_max_change_pv.get()
+
+            if abs(change) > self.coupling_max_change_pv.get():
+                print 'coupling change too big - bail out'
+                return status.BAD_CALC_INPUT
+                
+        self.last = +current
+
+
+        diff = current-target
+
+        if self.debug: print 'IRM', self.IRM
+        if self.debug: print 'diff', diff
+
+        delta = -self.fraction*dot(self.IRM, diff)
+        if self.debug: print 'delta', delta
+        
+        sqvals = self.skew_quads.squad_vals
+        #if self.debug: print 'sqvals', sqvals             
+
+        sq_delta = [ delta[0] for val in sqvals]
+
+        if not self.skew_quads.current_values_ok():
+            return status.BAD_PS_VAL
+        
+        if not self.skew_quads.delta_ok(sq_delta):
+            return status.BAD_PS_OUT
+
+        if apply_calc:
+            self.skew_quads.put_delta(sq_delta)
+
+        return status.OK
+
+    """
+    def input_ts_ok(self):
+
+        target = self.target
+        print 'target', target
+
+        ts = self.emit_coupling_mean_ts
+        current_time = time.time()
+        if self.debug: print 'current monitored + ts + time:'
+        if self.debug: print current, ts, current_time
+
+        age = current_time - ts.min()
+        if self.debug: print 'age', age
+        
+        return age <= coupling_fb_constants.MAX_TS_AGE:
+    """    
+
+
+    def record(self):
+        builder.SetDeviceName("SR-CS-CPLFB-01")
+
+        self.use_mean_pv = builder.mbbOut('WHICH_COUPLING', ("CURRENT", 0), ("MEAN", 1),
+                                       initial_value = 1 if self.use_mean else 0 )
+
+        self.coupling_max_pv = builder.aOut("COUPLING_MAX",
+                initial_value = coupling_fb_constants.COUPLING_MAX_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")        
+
+        self.coupling_min_pv = builder.aOut("COUPLING_MIN",
+                initial_value = coupling_fb_constants.COUPLING_MIN_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
+
+        self.coupling_max_change_pv = builder.aOut("COUPLING_MAX_CHANGE",
+                initial_value = coupling_fb_constants.COUPLING_MAX_CHANGE_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
+
+
+
+################################# VEMIT FB ####################################################
 
 
 class cplfb_emit(object):
@@ -129,7 +340,7 @@ class cplfb_emit(object):
     def __init__(self, skew_quads):
         print 'emitfb: __init__'
         self.RM = None
-        self.use_mean = True
+        self.use_mean = False
 
         self.debug = False #True
         self.threshold_debug = False #True
@@ -322,6 +533,10 @@ class cplfb_emit(object):
                 DRVH = 100.0, DRVL = 0.0, PREC = "1")
 
 
+################################# SIGMAY FB ####################################################
+
+
+
 class cplfb_sigmay(object):
 
     def monitor_wf(self, pvs):
@@ -336,13 +551,13 @@ class cplfb_sigmay(object):
     def __init__(self, skew_quads):
         print 'sigmay_fb __init__'
         self.RM = None
-        self.use_mean = True
+        self.use_mean = False
         self.last = None
 
         self.fraction = 0.5
 
         self.debug = False #True
-        self.threshold_debug = True
+        self.threshold_debug = False #True
 
         self.skew_quads = skew_quads
 
@@ -383,7 +598,7 @@ class cplfb_sigmay(object):
 
 
     def get_target(self):
-        target_pvs = copy(self.sigmay_mean)
+        self.target = copy(self.sigmay_mean)
         if self.debug: print self.target
 
 

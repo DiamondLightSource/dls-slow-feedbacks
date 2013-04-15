@@ -80,9 +80,10 @@ class coupling_fb_server(object):
         self.last_good = current_time 
         self.last_apply = current_time
 
+        cpl_fb = coupling_fb.cplfb_coupling(skew_quads)
         emit_fb = coupling_fb.cplfb_emit(skew_quads)
         sigmay_fb = coupling_fb.cplfb_sigmay(skew_quads)
-        self.coupling_fbs = [ emit_fb, sigmay_fb]
+        self.coupling_fbs = [ cpl_fb, emit_fb, sigmay_fb]
 
         self.set_target(coupling_fb.coupling_fb_constants.COUPLING_TARGET_INITIAL)
         self.setFraction(0.25)
@@ -329,7 +330,7 @@ class coupling_fb_server(object):
         builder.aOut("CORRECT", initial_value = 0,
             on_update = self.single, always_update = True)
 
-        self.cpl_mode_pv = builder.mbbOut('MODE', ("EMITTANCE", 0), ("SIGMAY", 1),
+        self.cpl_mode_pv = builder.mbbOut('MODE', ("COUPLING", 0), ("VEMIT", 1), ("SIGMAY", 2),
                  initial_value = self.cpl_mode,
                  on_update = self.set_cpl_mode)
 
