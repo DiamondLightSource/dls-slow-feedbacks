@@ -30,7 +30,7 @@ class status:
     BAD_CALC_INPUT_TS = 1
     BAD_CALC_INPUT = 2
     BAD_PS_VAL = 3
-    BAD_PS_OUT = 4
+    BAD_PS_OUT = 4        
 
 class skew_quadrupoles(object):
     def monitor_wf(self, pvs):
@@ -133,17 +133,20 @@ class cplfb_emit(object):
 
         self.debug = False #True
         self.threshold_debug = False #True
+
         self.fraction = 0.5
-        self.target = 0.3
+        
         self.last = None
 
         self.skew_quads = skew_quads
 
-        self.emit_vemit_mean, self.emit_vemit_mean_ts = \
+        self.vemit_mean, self.vemit_mean_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:VEMIT_MEAN'])
 
-        self.emit_vemit, self.emit_vemit_ts = \
+        self.vemit, self.vemit_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:VEMIT'])
+
+        self.get_target()
 
         self.record()
 
@@ -165,7 +168,12 @@ class cplfb_emit(object):
 
 
     def on_mode_change(self, on):
-        pass
+        if on:
+            self.get_target()
+
+    def get_target(self):
+        self.target = copy(self.vemit_mean)
+        if self.debug: print self.target
 
 
     def correct(self):
@@ -195,9 +203,9 @@ class cplfb_emit(object):
         target = self.target
         if self.debug: print 'target', target
 
-        current = self.emit_vemit_mean if self.use_mean else self.emit_vemit_mean
+        current = self.vemit_mean if self.use_mean else self.vemit_mean
 
-        ts = self.emit_vemit_mean_ts if self.use_mean else self.emit_vemit_mean_ts
+        ts = self.vemit_mean_ts if self.use_mean else self.vemit_mean_ts
         current_time = time.time()
         if self.debug: print 'current monitored + ts + time:'
         if self.debug: print current, ts, current_time
@@ -279,7 +287,7 @@ class cplfb_emit(object):
         target = self.target
         print 'target', target
 
-        ts = self.emit_vemit_mean_ts
+        ts = self.vemit_mean_ts
         current_time = time.time()
         if self.debug: print 'current monitored + ts + time:'
         if self.debug: print current, ts, current_time
@@ -309,7 +317,9 @@ class cplfb_emit(object):
                 initial_value = coupling_fb_constants.VEMIT_MAX_CHANGE_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
 
-
+        self.vemit_target_pv = builder.aOut("VEMIT_TARGET",
+                initial_value = self.target[0],
+                DRVH = 100.0, DRVL = 0.0, PREC = "1")
 
 
 class cplfb_sigmay(object):
@@ -330,16 +340,19 @@ class cplfb_sigmay(object):
         self.last = None
 
         self.fraction = 0.5
+
         self.debug = False #True
         self.threshold_debug = True
 
-
         self.skew_quads = skew_quads
-
-        self.get_target()
 
         self.sigmay_mean, self.sigmay_mean_ts = \
             self.monitor_wf(['SR-DI-EMIT-01:P%d:SIGMAY_MEAN' % (n+1) for n in range(2)])
+
+        self.get_target()
+
+        self.sigmay, self.sigmay_ts = \
+            self.monitor_wf(['SR-DI-EMIT-01:P%d:SIGMAY' % (n+1) for n in range(2)])
 
         self.record()
 
@@ -370,8 +383,7 @@ class cplfb_sigmay(object):
 
 
     def get_target(self):
-        target_pvs = ['SR-DI-EMIT-01:P%d:SIGMAY_MEAN' % (n+1) for n in range(2)]
-        self.target = array(caget(target_pvs))
+        target_pvs = copy(self.sigmay_mean)
         if self.debug: print self.target
 
 

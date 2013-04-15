@@ -53,7 +53,8 @@ class coupling_fb_status:
     EMITTANCE_ERROR = 5
     RING_MODE_CHANGE = 6
     CALC_ERROR = 7
-
+    BAD_EMITTANCE_VALUE = 8
+    MISSING_CALC_PARAMETERS = 9
 
 class coupling_fb_server(object):
     def monitor_wf(self, pvs):
@@ -145,7 +146,7 @@ class coupling_fb_server(object):
 
         elif not self.coupling_fb().isMatrixOk():
             print 'no matrix'
-            self.handle_status(coupling_fb_status.CALC_ERROR, do_correction)
+            self.handle_status(coupling_fb_status.MISSING_CALC_PARAMETERS, do_correction)
             return
 
         else:            
@@ -162,8 +163,8 @@ class coupling_fb_server(object):
                 if self.debug: print 'correct OK' if do_correction else 'calc OK'
                 status = coupling_fb_status.EMITTANCE_WARNING
             elif calc_status == coupling_fb.status.BAD_CALC_INPUT:
-                print 'bad calc input - skip', 'correct' if do_correction else 'calc'
-                status = coupling_fb_status.EMITTANCE_WARNING
+                if self.debug: print 'bad calc input - skip', 'correct' if do_correction else 'calc'
+                status = coupling_fb_status.BAD_EMITTANCE_VALUE
             else:
                 status = coupling_fb_status.CALC_ERROR
                 print 'correct ERROR' if do_correction else 'calc ERROR'
@@ -206,7 +207,8 @@ class coupling_fb_server(object):
         self.calc_status_pv.set(status)
         if status in [ coupling_fb_status.OK, \
                        coupling_fb_status.INJECTING, \
-                       coupling_fb_status.EMITTANCE_WARNING ]:
+                       coupling_fb_status.EMITTANCE_WARNING, \
+                       coupling_fb_status.BAD_EMITTANCE_VALUE ]:
             self.calc_error.set(0)
             if do_correction or (self.enabled == 1):
                 self.status_pv.set(status)
@@ -345,6 +347,8 @@ class coupling_fb_server(object):
                  ("Emitance calc error", coupling_fb_status.EMITTANCE_ERROR, "MAJOR"),
                  ("Ring mode change", coupling_fb_status.RING_MODE_CHANGE, "MAJOR"),
                  ("Calculation error", coupling_fb_status.CALC_ERROR, "MAJOR"),
+                 ("Bad emittance value", coupling_fb_status.BAD_EMITTANCE_VALUE, "MINOR"),
+                 ("Calculation error", coupling_fb_status.MISSING_CALC_PARAMETERS, "MAJOR"),
                  initial_value = coupling_fb_status.OK)
 
         self.calc_status_pv = builder.mbbIn('CALC_STATUS',\
@@ -356,6 +360,8 @@ class coupling_fb_server(object):
                  ("Emitance calc error", coupling_fb_status.EMITTANCE_ERROR, "MINOR"),
                  ("Ring mode change", coupling_fb_status.RING_MODE_CHANGE, "MINOR"),
                  ("Calculation error", coupling_fb_status.CALC_ERROR, "MINOR"),
+                 ("Bad emittance value", coupling_fb_status.BAD_EMITTANCE_VALUE, "MINOR"),
+                 ("Calculation error", coupling_fb_status.MISSING_CALC_PARAMETERS, "MINOR"),
                  initial_value = coupling_fb_status.OK)
 
         self.time_since_last_good_threshold_pv = builder.aOut("TSLG_THRESHOLD", initial_value = 10.0,
