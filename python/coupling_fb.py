@@ -65,7 +65,7 @@ class skew_quadrupoles(object):
         self.squad_pvs= ['SR%02dA-PC-SQUAD-%02d:SETI' % (n,m)  for n in range(1,25) for m in range (1,5)]
 
         self.squad_vals, self.squad_vals_ts = \
-            self.monitor_wf(['SR%02dA-PC-SQUAD-%02d:I' % (n,m)  for n in range(1,25) for m in range (1,5)])
+            self.monitor_wf(['SR%02dA-PC-SQUAD-%02d:SETI' % (n,m)  for n in range(1,25) for m in range (1,5)])
 
         self.drvhs = caget(['SR%02dA-PC-SQUAD-%02d:SETI.DRVH' % (n,m)  for n in range(1,25) for m in range (1,5)])
         self.drvls = caget(['SR%02dA-PC-SQUAD-%02d:SETI.DRVL' % (n,m)  for n in range(1,25) for m in range (1,5)])
