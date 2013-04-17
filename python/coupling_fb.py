@@ -349,7 +349,7 @@ class cplfb_emit(object):
         self.debug = False #True
         self.threshold_debug = False #True
 
-        self.fraction = 0.5
+        self.target = coupling_fb_constants.COUPLING_TARGET_INITIAL
         
         self.last = None
 
@@ -544,7 +544,7 @@ class cplfb_sigmay(object):
         self.use_mean = False
         self.last = None
 
-        self.fraction = 0.5
+        self.fraction = coupling_fb_constants.AFRAC_INITIAL
 
         self.debug = False #True
         self.threshold_debug = False #True
