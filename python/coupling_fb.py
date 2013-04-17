@@ -116,11 +116,11 @@ class skew_quadrupoles(object):
     def record(self):
         builder.SetDeviceName("SR-CS-CPLFB-01")
 
-        self.ps_delta_max_pv = self.coupling_max_pv = self.period_pv = builder.aOut("PS_DELTA_MAX",
+        self.ps_delta_max_pv = builder.aOut("PS_DELTA_MAX",
                 initial_value = coupling_fb_constants.PS_DELTA_MAX_INITIAL,
                 PREC = 4, EGU = "A")
 
-        self.ps_delta_rms_max_pv = self.coupling_max_pv = self.period_pv = builder.aOut("PS_DELTA_RMS_MAX",
+        self.ps_delta_rms_max_pv = builder.aOut("PS_DELTA_RMS_MAX",
                 initial_value = coupling_fb_constants.PS_DELTA_RMS_MAX_INITIAL,
                 PREC = 4, EGU = "A")         
 
