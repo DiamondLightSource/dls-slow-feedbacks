@@ -340,7 +340,7 @@ class coupling_fb_server(object):
                      DRVH = 1000, DRVL = 0, PREC = 4, EGU = "mA")
 
 
-        self.status_pv = builder.mbbIn('STATUS', ("Ok", coupling_fb_status.OK),
+        self.status_pv = builder.mbbIn('STATUS',\
                  ("Ok", coupling_fb_status.OK),
                  ("Injecting", coupling_fb_status.INJECTING),
                  ("Transient emittance error", coupling_fb_status.EMITTANCE_WARNING, "MINOR"),
@@ -350,7 +350,7 @@ class coupling_fb_server(object):
                  ("Ring mode change", coupling_fb_status.RING_MODE_CHANGE, "MAJOR"),
                  ("Calculation error", coupling_fb_status.CALC_ERROR, "MAJOR"),
                  ("Bad emittance value", coupling_fb_status.BAD_EMITTANCE_VALUE, "MINOR"),
-                 ("Calculation error", coupling_fb_status.MISSING_CALC_PARAMETERS, "MAJOR"),
+                 ("Missing calc parameters", coupling_fb_status.MISSING_CALC_PARAMETERS, "MAJOR"),
                  initial_value = coupling_fb_status.OK)
 
         self.calc_status_pv = builder.mbbIn('CALC_STATUS',\
@@ -363,7 +363,7 @@ class coupling_fb_server(object):
                  ("Ring mode change", coupling_fb_status.RING_MODE_CHANGE, "MINOR"),
                  ("Calculation error", coupling_fb_status.CALC_ERROR, "MINOR"),
                  ("Bad emittance value", coupling_fb_status.BAD_EMITTANCE_VALUE, "MINOR"),
-                 ("Calculation error", coupling_fb_status.MISSING_CALC_PARAMETERS, "MINOR"),
+                 ("Missing calc parameters", coupling_fb_status.MISSING_CALC_PARAMETERS, "MINOR"),
                  initial_value = coupling_fb_status.OK)
 
         self.time_since_last_good_threshold_pv = builder.aOut("TSLG_THRESHOLD", initial_value = 10.0,
