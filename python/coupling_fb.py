@@ -12,18 +12,19 @@ from math import sqrt
 class coupling_fb_constants:
     COUPLING_TARGET_INITIAL = 0.3
     VEMIT_TARGET_INITIAL = 8.0
-    AFRAC_INITIAL = 0.5
-    IIRF_PARAM_INITIAL = 0.5
+    AFRAC_INITIAL = 0.1
+    IIRF_PARAM_INITIAL = 0.25
     MAX_TS_AGE = 0.3
     MAX_PS_TS_AGE = 2
-    PS_DELTA_MAX_INITIAL = 0.1
-    PS_DELTA_RMS_MAX_INITIAL = 10
+    PS_DELTA_MAX_INITIAL = 0.01
+    PS_DELTA_RMS_MAX_INITIAL = 1.0
     COUPLING_MAX_INITIAL = 0.5
     COUPLING_MIN_INITIAL = 0.1
     COUPLING_MAX_CHANGE_INITIAL = 0.1
-    VEMIT_MAX_INITIAL = 13.0
-    VEMIT_MIN_INITIAL = 6.0
-    VEMIT_MAX_CHANGE_INITIAL = 2.0
+    #VEMIT_MAX_INITIAL = 9.0
+    #VEMIT_MIN_INITIAL = 7.0
+    VEMIT_MAX_CHANGE_INITIAL = 0.8
+    VEMIT_ERR_MAX_INITIAL = 1.0
     SIGMAY_MAX_INITIAL = [100.0, 100.0 ]
     SIGMAY_MIN_INITIAL = [ 0.0, 0.0 ]
     SIGMAY_MAX_CHANGE_INITIAL = [ 10.0, 10.0]
@@ -42,7 +43,7 @@ class status:
 #################################  FILTER  ####################################################
     
 builder.SetDeviceName("SR-CS-CPLFB-01")
-irr_frac_pv = builder.aOut("IIRF_PARAM", initial_value = coupling_fb_constants.IIRF_PARAM_INITIAL,
+iir_frac_pv = builder.aOut("IIRF_PARAM", initial_value = coupling_fb_constants.IIRF_PARAM_INITIAL,
                     DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
 
 
@@ -62,18 +63,34 @@ class skew_quadrupoles(object):
         self.debug = False #True
         self.threshold_debug = False #True
 
-        self.squad_pvs= ['SR%02dA-PC-SQUAD-%02d:SETI' % (n,m)  for n in range(1,25) for m in range (1,5)]
+        squad_pvs = ['SR%02dA-PC-SQUAD-%02d:SETI' % (n,m)  for n in range(1,25) for m in range (1,5)]
+        self.squad_pvs = squad_pvs
+
+        squad_rb_pvs = ['SR%02dA-PC-SQUAD-%02d:I' % (n,m)  for n in range(1,25) for m in range (1,5)]
+        self.squad_rb_pvs = squad_pvs
 
         self.squad_vals, self.squad_vals_ts = \
-            self.monitor_wf(['SR%02dA-PC-SQUAD-%02d:SETI' % (n,m)  for n in range(1,25) for m in range (1,5)])
+            self.monitor_wf(squad_pvs)
 
+        self.squad_rb_vals, self.squad_rb_vals_ts = \
+            self.monitor_wf(squad_rb_pvs)
         self.drvhs = caget(['SR%02dA-PC-SQUAD-%02d:SETI.DRVH' % (n,m)  for n in range(1,25) for m in range (1,5)])
         self.drvls = caget(['SR%02dA-PC-SQUAD-%02d:SETI.DRVL' % (n,m)  for n in range(1,25) for m in range (1,5)])
 
         self.record()
 
+        self.make_setpoint()
+
+
     def current_values_ok(self):
         return True
+
+
+    def make_setpoint(self):
+        self.sp = +self.squad_vals
+        self.sum_delta = array([ 0 for val in self.squad_vals])
+        #print self.sp
+
 
     def delta_ok(self, delta):
         sqvals = self.squad_vals
@@ -109,8 +126,32 @@ class skew_quadrupoles(object):
 
 
     def put_delta(self, delta):
-        new_sqvals = array([ val + delta[0] for val in self.squad_vals])
+        self.sum_delta = self.sum_delta + delta
+
+        src = self.squad_source_pv.get()
+        if src == 0:
+            new_sqvals = self.sp + self.sum_delta
+        elif src == 1:
+            new_sqvals = self.squad_vals + delta
+        elif src == 2:
+            new_sqvals = self.squad_rb_vals + delta
+        else:
+            print 'Should never get here'
+                
         caput(self.squad_pvs, new_sqvals)
+
+
+    def put_delta_scaled(self, delta):
+        if self.ps_delta_max_pv.get() <= 0:
+            print 'max delta non positive'
+            return
+        max_delta = max([abs(d) for d in delta])
+        if max_delta > self.ps_delta_max_pv.get():
+            scale = self.ps_delta_max_pv.get() / max_delta
+            print 'scaled ', scale
+            for i in range(len(delta)):
+                delta[i] = scale * delta[i]
+        self.put_delta(delta)
 
 
     def record(self):
@@ -123,6 +164,11 @@ class skew_quadrupoles(object):
         self.ps_delta_rms_max_pv = builder.aOut("PS_DELTA_RMS_MAX",
                 initial_value = coupling_fb_constants.PS_DELTA_RMS_MAX_INITIAL,
                 PREC = 4, EGU = "A")         
+
+        self.squad_source_pv = builder.mbbOut("SQUAD_SOURCE",
+                 ("SP", 0), ("SETI", 1), ("I", 2),
+                 initial_value = 0) #,
+                 #on_update = self.set_cpl_mode)
 
 ################################# COUPLING FB ####################################################
 
@@ -197,6 +243,11 @@ class cplfb_coupling(object):
     def calc(self):
         rv = self.do_calc(False)
         if self.debug: print 'cplfb calc() done'
+        return rv
+
+    def single(self):
+        rv = self.do_calc(True)
+        if self.debug: print 'cplfb single() done'
         return rv
 
 
@@ -274,7 +325,7 @@ class cplfb_coupling(object):
                 
         self.last = +current
 
-        alpha = irr_frac_pv.get()
+        alpha = iir_frac_pv.get()
         current = alpha * current + (1-alpha) * self.post_filter
         self.post_filter = +current
 
@@ -399,12 +450,16 @@ class cplfb_emit(object):
         if self.debug: print 'emitfb calc() done'
         return rv
 
+    def single(self):
+        rv = self.do_calc(True, False, False)
+        if self.debug: print 'emitfb single() done'
+        return rv
 
     def isMatrixOk(self):
         return not (self.RM == None)
 
 
-    def do_calc(self, apply_calc):
+    def do_calc(self, apply_calc, use_filter = True, check_limits=True):
         if self.debug: print 'emitfb calc() %%', self.fraction
 
         self.use_mean = self.use_mean_pv.get() == 1
@@ -444,36 +499,41 @@ class cplfb_emit(object):
 
 
         # vals ok?
-        if current > self.vemit_max_pv.get():
-            print 'vemit too high - bail out', current, 'MAX ', self.vemit_max_pv.get()
-            return status.BAD_CALC_INPUT            
-        elif self.threshold_debug or self.debug:
-             print 'vemit ', current, '  MAX ', self.vemit_max_pv.get()
 
+        if check_limits:
+            vmax = target + self.vemit_err_max_pv.get()
+            if current > vmax:
+                print 'vemit too high - bail out', current, 'MAX ', vmax
+                return status.BAD_CALC_INPUT            
+            elif self.threshold_debug or self.debug:
+                print 'vemit ', current, '  MAX ', vmax
 
-        if current < self.vemit_min_pv.get():
-            print 'vemit too low - bail out', 'vemit ', current, 'MIN ', self.vemit_min_pv.get()
-            return status.BAD_CALC_INPUT
-        elif self.threshold_debug or self.debug:
-             print 'vemit ', current, '  MIN ', self.vemit_min_pv.get()
-
-        if self.last != None:
-            last = self.last
-            change = current[0] - last[0]
-            if abs(change) > self.vemit_max_change_pv.get():
-                print 'vemit change too big - bail out', 'change ', change, 'MAX_CHANGE', self.vemit_max_change_pv.get()
+            vmin = target - self.vemit_err_max_pv.get()
+            if current < vmin:
+                print 'vemit too low - bail out', 'vemit ', current, 'MIN ', vmin
                 return status.BAD_CALC_INPUT
             elif self.threshold_debug or self.debug:
-                print 'current', current[0], 'last', last[0], 'change ', change
-                print 'change ', change, '  MAX_CHANGE ', self.vemit_max_change_pv.get()
+                print 'vemit ', current, '  MIN ', vmin
+
+            if self.last != None:
+                last = self.last
+                change = current[0] - last[0]
+                if abs(change) > self.vemit_max_change_pv.get():
+                    print 'vemit change too big - bail out', 'change ', change, 'MAX_CHANGE', self.vemit_max_change_pv.get()
+                    return status.BAD_CALC_INPUT
+                elif self.threshold_debug or self.debug:
+                    print 'current', current[0], 'last', last[0], 'change ', change
+                    print 'change ', change, '  MAX_CHANGE ', self.vemit_max_change_pv.get()
 
                 
         self.last = +current
 
-        alpha = irr_frac_pv.get()
+        alpha = iir_frac_pv.get()
         current = alpha * current + (1-alpha) * self.post_filter
         self.post_filter = +current
 
+        if not use_filter:
+            current = self.last 
         diff = current-target
 
         if self.debug: print 'IRM', self.IRM
@@ -487,6 +547,10 @@ class cplfb_emit(object):
         #if self.debug: print 'sqvals', sqvals             
 
         sq_delta = [ delta[0] for val in sqvals]
+
+        if not check_limits:
+            self.skew_quads.put_delta_scaled(sq_delta)
+            return status.OK            
 
         if not self.skew_quads.current_values_ok():
             return status.BAD_PS_VAL
@@ -506,21 +570,26 @@ class cplfb_emit(object):
         self.use_mean_pv = builder.mbbOut('WHICH_VEMIT', ("CURRENT", 0), ("MEAN", 1),
                                        initial_value = 1 if self.use_mean else 0 )
 
-        self.vemit_max_pv = builder.aOut("VEMIT_MAX",
-                initial_value = coupling_fb_constants.VEMIT_MAX_INITIAL,
-                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")        
+        #self.vemit_max_pv = builder.aOut("VEMIT_MAX",
+        #        initial_value = coupling_fb_constants.VEMIT_MAX_INITIAL,
+        #        DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")        
 
-        self.vemit_min_pv = builder.aOut("VEMIT_MIN",
-                initial_value = coupling_fb_constants.VEMIT_MIN_INITIAL,
-                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
+        #self.vemit_min_pv = builder.aOut("VEMIT_MIN",
+        #        initial_value = coupling_fb_constants.VEMIT_MIN_INITIAL,
+        #        DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
         self.vemit_max_change_pv = builder.aOut("VEMIT_MAX_CHANGE",
                 initial_value = coupling_fb_constants.VEMIT_MAX_CHANGE_INITIAL,
-                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "%")
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad ")
+
+        self.vemit_err_max_pv = builder.aOut("VEMIT_ERR_MAX",
+                initial_value = coupling_fb_constants.VEMIT_ERR_MAX_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
         self.vemit_target_pv = builder.aOut("VEMIT_TARGET",
                 initial_value = coupling_fb_constants.VEMIT_TARGET_INITIAL,
-                DRVH = 100.0, DRVL = 0.0, PREC = "1")
+                DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
+
 
 
 ################################# SIGMAY FB ####################################################
@@ -609,6 +678,12 @@ class cplfb_sigmay(object):
         return rv
 
 
+    def single(self):
+        rv = self.do_calc(True)        
+        if self.debug: print 'sigmay_fb single() done'
+        return rv
+
+
     def isMatrixOk(self):
         return not (self.RM == None)
 
@@ -673,7 +748,7 @@ class cplfb_sigmay(object):
 
         diff = current-target
 
-        alpha = irr_frac_pv.get()
+        alpha = iir_frac_pv.get()
         current = alpha * current + (1-alpha) * self.post_filter
         self.post_filter = +current
 

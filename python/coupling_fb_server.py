@@ -69,6 +69,7 @@ class coupling_fb_server(object):
     def __init__(self, mode):
         print 'coupling_fb_srvr __init__'
         skew_quads = coupling_fb.skew_quadrupoles()
+        self.skew_quads = skew_quads
 
         self.enabled = 0
         self.cpl_mode = 1
@@ -107,10 +108,7 @@ class coupling_fb_server(object):
                 cothread.Sleep(self.time_step)
                 do_correction = False
                 current_time = time.time()
-                if (current_time - self.last_apply) > self.period_pv.get():
-                    do_correction = (self.enabled == 1)
-                elif not self.coupling_fb().use_mean:
-                    do_correction = (self.enabled == 1)
+                do_correction = (self.enabled == 1)
                 self.run_once(do_correction)
 
             except:
@@ -119,7 +117,7 @@ class coupling_fb_server(object):
                 self.handle_status(coupling_fb_status.UNKNOWN_ERROR, do_correction)  
                 
 
-    def run_once(self, do_correction):
+    def run_once(self, do_correction, single = False):
         if self.debug: print 'run once', 'do_corection', do_correction
         if self.debug: 'EMIT STATUS', emit_status
 
@@ -149,9 +147,11 @@ class coupling_fb_server(object):
             print 'no matrix'
             self.handle_status(coupling_fb_status.MISSING_CALC_PARAMETERS, do_correction)
             return
-
-        else:            
-            if do_correction:
+        else:
+            if single:
+                self.last_apply = time.time()
+                calc_status = self.coupling_fb().single()            
+            elif do_correction:
                 self.last_apply = time.time()
                 calc_status = self.coupling_fb().correct()
             else:
@@ -181,7 +181,7 @@ class coupling_fb_server(object):
 
     def single(self, value):
         print 'single'
-        self.run_once(True)
+        self.run_once(True, True)
 
 
     def on_ringmode_change(self, ringmode):
@@ -192,16 +192,18 @@ class coupling_fb_server(object):
            self.handle_status(coupling_fb_status.RING_MODE_CHANGE, True)
         else:
             self.handle_status(coupling_fb_status.OK, True)
+        self.skew_quads.make_setpoint()
 
 
     def on_mode_change(self):
         for fb in self.coupling_fbs:
             fb.on_mode_change(False)
         self.coupling_fb().on_mode_change(True)
-
+        self.skew_quads.make_setpoint()
             
     def coupling_fb(self):
         return self.coupling_fbs[self.cpl_mode]
+
 
     def handle_status(self, status, do_correction):
         if self.debug: print 'handle status', status, do_correction
@@ -271,28 +273,35 @@ class coupling_fb_server(object):
                                 emittance_status.INJECTING, \
                                 emittance_status.STALLED ]
 
+
     def set_enabled(self, enabled):
         print 'ENABLE:', enabled
         self.enabled = enabled
         self.coupling_fb().enable(enabled)
+        if enabled:
+            self.skew_quads.make_setpoint()
+
 
     def set_cpl_mode(self, mode):
         print 'CPL MODE:', mode
-        self.cpl_mode = mode
-        self.on_mode_change()
+        if mode != self.mode:
+            self.cpl_mode = mode
+            self.on_mode_change()
+
 
     def on_error(self):
         print 'error'
         self.enable_pv.set(0)
 
+
     def setFraction(self, value):
         for fb in self.coupling_fbs:
             fb.fraction = value
 
+
     def set_target(self, value):
         print 'TARGET:', value
         self.coupling_fbs[0].target = value
-
 
 
     def records(self):
@@ -315,8 +324,8 @@ class coupling_fb_server(object):
         #             DRVH = 1, DRVL = 0, PREC = 4, EGU = "Hz")
 
 
-        self.period_pv = builder.aOut("PERIOD", initial_value = 5.0,
-                     DRVH = 10.0, DRVL = 0.1, PREC = 1, EGU = "s")
+        #self.period_pv = builder.aOut("PERIOD", initial_value = 5.0,
+        #             DRVH = 10.0, DRVL = 0.1, PREC = 1, EGU = "s")
 
         self.matrix_error = builder.boolIn(
             "EMATRIX", DESC = "Matrix Error",
