@@ -12,7 +12,7 @@ from math import sqrt
 class coupling_fb_constants:
     COUPLING_TARGET_INITIAL = 0.3
     VEMIT_TARGET_INITIAL = 8.0
-    AFRAC_INITIAL = 0.1
+    AFRAC_INITIAL = 0.15
     IIRF_PARAM_INITIAL = 0.25
     MAX_TS_AGE = 0.3
     MAX_PS_TS_AGE = 2
