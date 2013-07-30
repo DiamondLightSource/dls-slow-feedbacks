@@ -230,6 +230,7 @@ class SkewQuadrupoles:
             self.sum_delta += delta
             new_sqvals = self.sp + self.sum_delta
         elif self.seti.ok:
+            print 'use current value'
             new_sqvals = self.seti.values + delta
         else:
             return False
@@ -518,9 +519,10 @@ class vefb_server:
               EmittanceStatus.INJECTING ]
 
 
-    def set_enabled(self, enabled):
-        debug.dbg(debug.INFO, 'ENABLE:', enabled)
-        self.enabled = (enabled == 1)
+    def set_enabled(self, value):
+        debug.dbg(debug.INFO, 'ENABLE:', value)
+        enabled = (value == 1)
+        self.enabled = enabled
         self.error_or_recover_time = 0
         self.error_time = 0
         if enabled:
