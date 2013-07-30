@@ -234,6 +234,9 @@ class SkewQuadrupoles:
         else:
             return False
 
+        if not self.ok:
+            return False
+
         if not self.values_within_levels(new_sqvals):
             return False
 
