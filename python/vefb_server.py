@@ -83,7 +83,7 @@ class DebugWriter:
         self.lines_last = set()
         self.tagged_lines = {}
         self.tagged_lines_last = {}
-        self.dbg_level = self.INFO #self.NONE 
+        self.dbg_level = self.INFO
 
     def dbg(self, dbg_level, *args):
         line = ' '.join(map(str, args))
@@ -92,14 +92,14 @@ class DebugWriter:
       
     def dbg_unique(self, dbg_level, *args):
         line = ' '.join(map(str, args))
-        if line not in self.lines_last and line not in self.lines:   
+        if line not in self.lines_last and line not in self.lines:
             if dbg_level <= self.dbg_level:
                 print line
-                self.lines.add(line)            
+                self.lines.add(line)
 
     def dbg_tag_unique(self, dbg_level, tag, *args):
         line = ' '.join(map(str, args))
-        if tag not in self.tagged_lines_last and tag not in self.tagged_lines:   
+        if tag not in self.tagged_lines_last and tag not in self.tagged_lines:
             if dbg_level <= self.dbg_level:
                 print line
             self.tagged_lines[tag] = line
@@ -199,9 +199,9 @@ class SkewQuadrupoles:
     def use_setpoint(self, use):
         if use and (self.sp is None or not self._use_setpoint):
             self.make_setpoint()
-        self._use_setpoint = use      
+        self._use_setpoint = use
 
-    
+
     def values_within_levels(self, values):
         drvhs = self.seti_drvhs.values
         drvls = self.seti_drvls.values
@@ -264,7 +264,7 @@ class SkewQuadrupoles:
         self.seti_drvls = WFMonitor(squad_pv_drvls)
 
         self.drvhs = self.seti_drvhs.values
-        self.drvls = self.seti_drvls.values   
+        self.drvls = self.seti_drvls.values
 
 
 ################################# VEMIT FB ####################################################
@@ -309,7 +309,7 @@ class vefb_server:
                          self.vemit,
                          self.beam_current,
                          self.emit_status ]
-                          
+
             if all([pv.ok for pv in monitors]):
                 print 'initialised ok'
                 return
@@ -332,7 +332,7 @@ class vefb_server:
             except:
                 debug.dbg(debug.ERROR, 'Vemit control raised unexpected exception')
                 traceback.print_exc()
-                self.handle_status(VEFBStatus.UNKNOWN_ERROR, do_correction)             
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, do_correction)         
                 
 
     def run_once(self, do_correction, single = False):
@@ -350,34 +350,25 @@ class vefb_server:
 
         elif self.recovering_cameras:
             status = VEFBStatus.RECOVERING_CAMERAS
-            #self.err_msg_pv.set("Recovering cameras") ## 
-            #self.err_msg_pv.set_alarm(1, 7) ## 
 
         elif self.is_injecting():
             debug.dbg_unique(debug.INFO, 'injecting')
-            #self.err_msg_pv.set("Injecting") ##
-            #self.err_msg_pv.set_alarm(0, 0) ##  
             status = VEFBStatus.INJECTING
 
         elif self.emittance_status_bad():
             debug.dbg_unique(debug.WARNING,
                 'emittance status %d not ok, but not fatal yet - skip' % self.emit_status.value)
-            #self.err_msg_pv.set('Bad emittance status %d' % self.emit_status.value) ##
-            #self.err_msg_pv.set_alarm(1, 7) ##
-             
             status = VEFBStatus.EMITTANCE_WARNING
 
         else:
-            #self.err_msg_pv.set("None") ##
-            #self.err_msg_pv.set_alarm(0, 0) ## 
             if single:
-                status = self.single_correct()            
+                status = self.single_correct()
             elif do_correction:
                 status = self.loop_correct()
             else:
                 status = self.calc_only()
 
-        self.handle_status(status, do_correction)                
+        self.handle_status(status, do_correction)
 
 
     def single(self, value):
@@ -419,15 +410,15 @@ class vefb_server:
         if self.last_status != status:
             debug.dbg(debug.INFO, 'vefb status change', self.last_status, '->', status)
             if status == VEFBStatus.OK:
-                debug.dbg(debug.INFO, 'OK again') 
+                debug.dbg(debug.INFO, 'OK again')
         self.last_status = status
 
         self.calc_status_pv.set(status)
-        if status in [ VEFBStatus.OK, 
-                       VEFBStatus.INJECTING, 
-                       VEFBStatus.EMITTANCE_WARNING, 
-                       VEFBStatus.NO_EMITTANCE_VALUE, 
-                       VEFBStatus.BAD_EMITTANCE_VALUE, 
+        if status in [ VEFBStatus.OK,
+                       VEFBStatus.INJECTING,
+                       VEFBStatus.EMITTANCE_WARNING,
+                       VEFBStatus.NO_EMITTANCE_VALUE,
+                       VEFBStatus.BAD_EMITTANCE_VALUE,
                        VEFBStatus.RECOVERING_CAMERAS ]:
             if do_correction or self.enabled:
                 self.status_pv.set(status)
@@ -449,9 +440,9 @@ class vefb_server:
             pass
         elif status in [ VEFBStatus.RECOVERING_CAMERAS ]:
             self.error_or_recover_time += diff
-        else:            
+        else:
             self.error_or_recover_time += diff
-            self.error_time += diff        
+            self.error_time += diff
 
         if self.enabled and \
                 self.error_or_recover_time > self.max_recovery_time_pv.get():
@@ -463,7 +454,7 @@ class vefb_server:
                 (self.error_time > self.max_error_time_pv.get()):
             debug.dbg(debug.ERROR, 'time in error exceeds timeout',
                     self.max_error_time_pv)
-            status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS       
+            status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS
 
         self.current_time = current_time
 
@@ -490,7 +481,7 @@ class vefb_server:
 
         elif self.cam_recovery_enable_pv.get() == 1:
             self.recovering_cameras = self.camera_recovery_started()
-            if self.recovering_cameras:               
+            if self.recovering_cameras:
                  current_time = time.time()
                  self.recovery_start_time = current_time
                  debug.dbg(debug.INFO, 'camera recovery started')
@@ -510,7 +501,7 @@ class vefb_server:
         ok = self.beam_current.ok
         beam_current = self.beam_current.value
         debug.dbg(debug.DEBUG, ok, beam_current)
-        return ok and beam_current > self.dcct_threshold_pv.get()   
+        return ok and beam_current > self.dcct_threshold_pv.get()
 
 
     def is_injecting(self):
@@ -519,11 +510,11 @@ class vefb_server:
 
     def emittance_status_bad(self):
         if not self.emit_status.ok:
-            print 'Emit Status PV not ok' 
-            return False 
+            print 'Emit Status PV not ok'
+            return False
         return self.emit_status.value not in \
-            [ EmittanceStatus.OK, 
-              EmittanceStatus.FORCED, 
+            [ EmittanceStatus.OK,
+              EmittanceStatus.FORCED,
               EmittanceStatus.INJECTING ]
 
 
@@ -577,16 +568,16 @@ class vefb_server:
             if vemit > vmax:
                 debug.dbg_tag_unique(debug.WARNING, 'VEMIT BIG',
                     'vemit too high - bail out', vemit, 'MAX ', vmax)
-                return VEFBStatus.BAD_EMITTANCE_VALUE            
+                return VEFBStatus.BAD_EMITTANCE_VALUE
                 
             vmin = target - self.vemit_err_max_pv.get()
             if vemit < vmin:
                 debug.dbg_tag_unique(debug.WARNING, 'VEMIT SMALL',
                     'vemit too low - bail out', 'vemit ', vemit, 'MIN ', vmin)
-                return VEFBStatus.BAD_EMITTANCE_VALUE         
+                return VEFBStatus.BAD_EMITTANCE_VALUE
 
         # apply filter (IIR) if required
-        if use_filter:      
+        if use_filter:
             filter_frac = self.iir_frac_pv.get()
             filtered = filter_frac * vemit + (1-filter_frac) * self.vemit_filtered
             vemit_used = filtered if use_filter else vemit
@@ -596,7 +587,7 @@ class vefb_server:
 
         # calc skew quad delta
         fraction = self.afrac_pv.get()
-        delta = -fraction * self.IRM * (vemit_used-target)   
+        delta = -fraction * self.IRM * (vemit_used-target)
 
         # check delta within limits and raise error or scale
         delta_max = self.squad_delta_max_pv.get()
@@ -690,7 +681,7 @@ class vefb_server:
         self.squad_delta_max_pv = builder.aOut(
                 "SQUAD_DELTA_MAX",
                 initial_value = VEFBConstants.PS_DELTA_MAX_INITIAL,
-                PREC = 4, EGU = "A")  
+                PREC = 4, EGU = "A")
 
 
         self.status_pv = builder.mbbIn('STATUS',
@@ -727,8 +718,4 @@ class vefb_server:
              ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
              ("Persistent emittance err", VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
              initial_value = VEFBStatus.OK)
-
-        #self.err_msg_pv = builder.stringIn('ERR_MSG', initial_value = "None")
-
-
 
