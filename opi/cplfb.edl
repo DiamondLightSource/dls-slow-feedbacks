@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1513
-y 1657
+x 1245
+y 699
 w 342
 h 425
 font "helvetica-bold-r-14.0"
@@ -39,7 +39,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "COUPLING FEEDBACK CS-DI-IOC-09"
+  "VERTICAL EMITTANCE FEEDBACK CS-DI-IOC-09"
 }
 endObjectProperties
 
@@ -58,7 +58,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "COUPLING"
+  "VERTICAL EMITTANCE"
 }
 endObjectProperties
 
@@ -72,7 +72,7 @@ x 216
 y 56
 w 120
 h 24
-controlPv "SR-DI-EMIT-01:COUPLING"
+controlPv "SR-DI-EMIT-01:VEMIT"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -101,7 +101,7 @@ onColor index 3
 offColor index 3
 topShadowColor index 0
 botShadowColor index 14
-controlPv "SR-CS-CPLFB-01:CORRECT"
+controlPv "SR-CS-CPLFB-01:SINGLE"
 pressValue "1"
 onLabel "CORRECTION"
 offLabel "CORRECTION"
@@ -162,7 +162,7 @@ bgColor index 3
 inconsistentColor index 14
 topShadowColor index 0
 botShadowColor index 14
-controlPv "SR-CS-CPLFB-01:ONOFF"
+controlPv "SR-CS-CPLFB-01:LOOP"
 font "helvetica-bold-r-14.0"
 endObjectProperties
 
@@ -250,59 +250,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 152
-w 328
-h 24
-
-beginGroup
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 152
-w 328
-h 24
-
-beginGroup
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 152
-w 328
-h 24
-font "courier-bold-r-12.0"
-fontAlign "center"
-fgColor index 0
-bgColor index 9
-value {
-  "COUPLING FEEDBACK"
-}
-endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-endGroup
-
 endObjectProperties
 
 # (Static Text)
@@ -406,7 +353,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "VERTICAL EMITTANCE"
+  "COUPLING"
 }
 endObjectProperties
 
@@ -463,7 +410,7 @@ x 216
 y 88
 w 120
 h 24
-controlPv "SR-DI-EMIT-01:VEMIT"
+controlPv "SR-DI-EMIT-01:COUPLING"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -517,6 +464,25 @@ fgColor index 14
 bgColor index 4
 value {
   "TARGET EMITTANCE (pm rad)"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 152
+w 328
+h 24
+font "courier-bold-r-12.0"
+fontAlign "center"
+fgColor index 0
+bgColor index 9
+value {
+  "VERTICAL EMITTANCE FEEDBACK"
 }
 endObjectProperties
 

@@ -1,6 +1,5 @@
 import os
 import traceback
-#import mml
 from softioc import builder
 import cothread
 from cothread.catools import *
@@ -8,10 +7,17 @@ from numpy import *
 from scipy.io import loadmat
 import time
 
-import coupling_fb
+
+class CFBConstants:
+    VEMIT_TARGET_INITIAL = 8.0
+    AFRAC_INITIAL = 0.15
+    IIRF_PARAM_INITIAL = 0.25
+    MAX_TS_AGE = 0.35
+    PS_DELTA_MAX_INITIAL = 0.01
+    VEMIT_TARGET_ERR_MAX_INITIAL = 1.0
 
 
-class emittance_status:
+class EmittanceStatus:
     # Successful emittance calculation.
     OK              = 0
     # Successful emittance calculation on invalid beam (no beam or injecting).
@@ -44,7 +50,7 @@ class emittance_status:
     RECOVER_FAILED  = 12
 
 
-class coupling_fb_status:
+class CFBStatus:
     OK = 0
     INJECTING = 1
     EMITTANCE_WARNING = 2
@@ -52,329 +58,674 @@ class coupling_fb_status:
     NO_STORED_BEAM = 4    
     EMITTANCE_ERROR = 5
     RING_MODE_CHANGE = 6
-    CALC_ERROR = 7
+    MAGNET_DELTA_ERROR = 7
     BAD_EMITTANCE_VALUE = 8
     MISSING_CALC_PARAMETERS = 9
+    MAGNET_ERROR = 10
+    RECOVERING_CAMERAS = 11
+    NO_EMITTANCE_VALUE = 12
+    PERSISTENT_EMITTANCE_ERRORS = 13
 
-class coupling_fb_server(object):
-    def monitor_wf(self, pvs):
-        wf = zeros(len(pvs))
-        ts = zeros(len(pvs))
-        def on_update(value, index):
-            wf[index] = value
-            ts[index] = value.timestamp
-        camonitor(pvs, on_update, format = FORMAT_TIME)
-        return wf, ts
+#################################  DEBUG WIDGET  ##############################################
+
+class DebugWriter:
+    NONE           =  0
+    ERROR          =  1
+    WARNING        =  2
+    INFO           =  3
+    THRESHOLD      =  4
+    DEBUG          =  5
+    VERBOSE_DEBUG  =  6
+    ALL            =  7
+
+    def __init__(self):
+        self.lines = set()
+        self.lines_last = set()
+        self.tagged_lines = {}
+        self.tagged_lines_last = {}
+        self.dbg_level = self.INFO #self.NONE 
+
+    def dbg(self, dbg_level, *args):
+        line = ' '.join(map(str, args))
+        if dbg_level <= self.dbg_level:
+            print line
+      
+    def dbg_unique(self, dbg_level, *args):
+        line = ' '.join(map(str, args))
+        if line not in self.lines_last and line not in self.lines:   
+            if dbg_level <= self.dbg_level:
+                print line
+                self.lines.add(line)            
+
+    def dbg_tag_unique(self, dbg_level, tag, *args):
+        line = ' '.join(map(str, args))
+        if tag not in self.tagged_lines_last and tag not in self.tagged_lines:   
+            if dbg_level <= self.dbg_level:
+                print line
+            self.tagged_lines[tag] = line
+
+    def flush(self):
+        self.lines_last = self.lines
+        self.lines = set()
+        self.tagged_lines_last = self.tagged_lines
+        self.tagged_lines = {}
+
+
+debug = DebugWriter()
+
+#################################  Monitors  ##############################################
+
+class PVMonitor:
+    def __init__(self, name):
+        self.name = name
+        self.ok = False
+        self.value = None
+        self.timestamp = 0
+        camonitor(name, self.on_update, format = FORMAT_TIME, notify_disconnect = True)
+
+    def on_update(self, value):
+        self.ok = value.ok
+        if value.ok:
+            self.value = +value
+            self.timestamp = value.timestamp
+        else:
+            self.value = None
+            self.timestamp = time.time()
+
+
+class WFMonitor:
+    def __init__(self, names, dtype=double):
+        self.names = names
+        self.ok = False
+        self.oks = array([False for i in names], dtype = bool)
+        self.values = zeros(len(names), dtype=dtype)
+        self.timestamps = zeros(len(names))
+        camonitor(names, self.on_update, format = FORMAT_TIME, notify_disconnect = True)
+
+    def on_update(self, value, index):
+        self.oks[index] = value.ok
+        if value.ok:
+            self.values[index] = +value
+            self.timestamps[index] = value.timestamp
+        else:
+            self.values[index] = 0
+            self.timestamps[index] = time.time()
+        self.ok = all(self.oks)
+
+
+################################# SKEW QUADS ####################################################
+
+class SkewQuadrupoles:
+    def __init__(self):
+        self.monitors()
+        self.sp = None
+        self.sum_delta = zeros(self.num)
+        self._use_setpoint = False
+
+    
+    @property
+    def num(self):
+        return len(self.squad_pvs)
+
+    
+    def check_state(self):
+        return self.ok and self.drive_levels_ok()
+
+
+    @property
+    def ok(self):
+        pvs = [self.seti, self.seti_drvls, self.seti_drvls]
+        return all([s.ok for s in pvs])
+
+
+    def drive_levels_ok(self):
+        for a,b, c in zip(self.seti_drvls.values,
+                       self.seti_drvhs.values,
+                       self.squad_pvs):
+            if a >= b:
+                debug.dbg_tag_unique(debug.ERROR, "drive check", "DRVH >= DRVL", c)
+                return False
+        return True
+
+
+    def make_setpoint(self):
+        if self.seti.ok:
+            self.sp = +self.seti.values
+            self.sum_delta = zeros(self.num)
+            debug.dbg(debug.INFO, 'new set point')
+            debug.dbg(debug.INFO, self.sp)
+
+
+    def use_setpoint(self, use):
+        if use and (self.sp is None or not self._use_setpoint):
+            self.make_setpoint()
+        self._use_setpoint = use      
+
+    
+    def values_within_levels(self, values):
+        drvhs = self.seti_drvhs.values
+        drvls = self.seti_drvls.values
+
+        debug.dbg(debug.VERBOSE_DEBUG, 'drvls', self.drvls)
+        for i in range(len(self.drvls)):
+            if values[i] < self.drvls[i]:
+                debug.dbg_tag_unique(debug.ERROR, "DRVL check", self.squad_pvs[i],
+                    ": New SQUAD value", values[i], "< DRVL", drvls[i])
+                return False
+
+        debug.dbg(debug.VERBOSE_DEBUG, 'drvhs', drvhs)
+        for i in range(len(self.drvhs)):
+            if values[i] > self.drvhs[i]:
+                debug.dbg_tag_unique(debug.ERROR, "DRVH check", self.squad_pvs[i],
+                    ": New SQUAD value", values[i], "> DRVH", self.drvhs[i])
+                return False
+
+        return True
+
+
+    def put_delta(self, delta):
+        if self._use_setpoint:
+            if self.sp == None:
+                return False
+            self.sum_delta += delta
+            new_sqvals = self.sp + self.sum_delta
+        elif self.seti.ok:
+            new_sqvals = self.seti.values + delta
+        else:
+            return False
+
+        if not self.values_within_levels(new_sqvals):
+            return False
+
+        results = caput(self.squad_pvs, new_sqvals, throw=False)
+        ok = all(map(bool, results))
+        if not ok:
+            for s in [str(r) for r in results if not bool(r)]:
+                print s
+        return ok
+
+
+    def monitors(self):
+        squad_pv_names = ['SR%02dA-PC-SQUAD-%02d' % (n,m)\
+            for n in range(1,25) for m in range (1,5)]
+
+        squad_pvs = ['%s:SETI' % name for name in squad_pv_names ]
+        self.squad_pvs = squad_pvs
+
+        self.seti = WFMonitor(squad_pvs)
+
+        squad_pv_drvhs = ['%s:SETI.DRVH' % name for name in squad_pv_names ]
+        squad_pv_drvls = ['%s:SETI.DRVL' % name for name in squad_pv_names ]
+
+        self.seti_drvhs = WFMonitor(squad_pv_drvhs)
+        self.seti_drvls = WFMonitor(squad_pv_drvls)
+
+        self.drvhs = self.seti_drvhs.values
+        self.drvls = self.seti_drvls.values   
+
+
+################################# VEMIT FB ####################################################
+
+
+class coupling_fb_server:
 
     def __init__(self, mode):
-        print 'coupling_fb_srvr __init__'
-        skew_quads = coupling_fb.skew_quadrupoles()
-        self.skew_quads = skew_quads
+        self.skew_quads = SkewQuadrupoles()
 
-        self.enabled = 0
-        self.cpl_mode = 1
-        self.debug = False #True
-        self.threshold_debug = False #True
-
+        self.enabled = False
         self.time_step = 0.2
-        current_time = time.time()
-        self.last_good = current_time 
-        self.last_apply = current_time
 
-        cpl_fb = coupling_fb.cplfb_coupling(skew_quads)
-        emit_fb = coupling_fb.cplfb_emit(skew_quads)
-        sigmay_fb = coupling_fb.cplfb_sigmay(skew_quads)
-        self.coupling_fbs = [ cpl_fb, emit_fb, sigmay_fb]
+        self.IRM = None
+        self.last = None
+        self.vemit_filtered = CFBConstants.VEMIT_TARGET_INITIAL
+        self.last_status = CFBStatus.OK
 
-        self.set_target(coupling_fb.coupling_fb_constants.COUPLING_TARGET_INITIAL)
-        self.setFraction(coupling_fb.coupling_fb_constants.AFRAC_INITIAL)
+        self.recovering_cameras = False
+        
+        self.error_or_recover_time = 0
+        self.error_time = 0
+        self.current_time = time.time()
+        self.recovery_start_time = self.current_time
 
-        self.beam_current, self.beam_current_ts = \
-            self.monitor_wf(['SR21C-DI-DCCT-01:SIGNAL'])
-
-        self.emit_status, self.emit_status_ts = \
-            self.monitor_wf(['SR-DI-EMIT-01:STATUS'])
-
+        self.monitors()
         self.records()
+
         mode.add_listener(self.on_ringmode_change)
+
 
     def init(self):
         cothread.Spawn(self.run)
-        print 'coupling_fb_srvr starting'
+
+
+    def init_wait(self, wait_time):
+        print 'init wait'
+        end_time = time.time() + wait_time
+        
+        while True:
+            monitors = [ self.skew_quads,
+                         self.vemit,
+                         self.beam_current,
+                         self.emit_status ]
+                          
+            if all([pv.ok for pv in monitors]):
+                print 'initialised ok'
+                return
+            if time.time() > end_time:
+                print 'init timeout'
+                return
+            cothread.Sleep(self.time_step)
+            
 
     def run(self):
+        self.init_wait(3.0)
         while True:
             try:
                 cothread.Sleep(self.time_step)
-                do_correction = False
                 current_time = time.time()
-                do_correction = (self.enabled == 1)
+                do_correction = self.enabled
                 self.run_once(do_correction)
+                debug.flush()
 
             except:
-                print 'Coupling control raised unexpected exception'
+                debug.dbg(debug.ERROR, 'Coupling control raised unexpected exception')
                 traceback.print_exc()
-                self.handle_status(coupling_fb_status.UNKNOWN_ERROR, do_correction)  
+                self.handle_status(CFBStatus.UNKNOWN_ERROR, do_correction)             
                 
 
     def run_once(self, do_correction, single = False):
-        if self.debug: print 'run once', 'do_corection', do_correction
-        if self.debug: 'EMIT STATUS', emit_status
+        status = CFBStatus.UNKNOWN_ERROR
 
-        status = coupling_fb_status.UNKNOWN_ERROR
+        self.check_camera_state()
 
         if not self.have_stored_beam():
-            print 'no stored beam'
-            self.handle_status(coupling_fb_status.NO_STORED_BEAM, do_correction)
-            return
+            debug.dbg_unique(debug.ERROR, 'no stored beam')
+            status = CFBStatus.NO_STORED_BEAM
+
+        elif not self.skew_quads.check_state():
+            debug.dbg_unique(debug.ERROR, 'skew quad error')
+            status = CFBStatus.MAGNET_ERROR
+
+        elif self.recovering_cameras:
+            status = CFBStatus.RECOVERING_CAMERAS
+            #self.err_msg_pv.set("Recovering cameras") ## 
+            #self.err_msg_pv.set_alarm(1, 7) ## 
 
         elif self.is_injecting():
-            print 'injecting'
-            self.last_good = time.time()
-            self.handle_status(coupling_fb_status.INJECTING, do_correction)
-            return
+            debug.dbg_unique(debug.INFO, 'injecting')
+            #self.err_msg_pv.set("Injecting") ##
+            #self.err_msg_pv.set_alarm(0, 0) ##  
+            status = CFBStatus.INJECTING
 
-        elif not self.is_emittance_ok():
-            print 'emittance status bad'
-            self.handle_status(coupling_fb_status.EMITTANCE_ERROR, do_correction)
-            return
+        elif self.emittance_status_bad():
+            debug.dbg_unique(debug.WARNING,
+                'emittance status %d not ok, but not fatal yet - skip' % self.emit_status.value)
+            #self.err_msg_pv.set('Bad emittance status %d' % self.emit_status.value) ##
+            #self.err_msg_pv.set_alarm(1, 7) ##
+             
+            status = CFBStatus.EMITTANCE_WARNING
 
-        elif self.skip():
-            print 'emittance status not ok, but not fatal yet - skip'
-            status = coupling_fb_status.EMITTANCE_WARNING
-
-        elif not self.coupling_fb().isMatrixOk():
-            print 'no matrix'
-            self.handle_status(coupling_fb_status.MISSING_CALC_PARAMETERS, do_correction)
-            return
         else:
+            #self.err_msg_pv.set("None") ##
+            #self.err_msg_pv.set_alarm(0, 0) ## 
             if single:
-                self.last_apply = time.time()
-                calc_status = self.coupling_fb().single()            
+                status = self.single_correct()            
             elif do_correction:
-                self.last_apply = time.time()
-                calc_status = self.coupling_fb().correct()
+                status = self.loop_correct()
             else:
-                calc_status = self.coupling_fb().calc()
-            if calc_status == coupling_fb.status.OK:
-                if self.debug: print 'correct OK' if do_correction else 'calc OK'
-                self.last_good = time.time()
-                status = coupling_fb_status.OK
-            elif calc_status == coupling_fb.status.BAD_CALC_INPUT_TS:
-                if self.debug: print 'correct OK' if do_correction else 'calc OK'
-                status = coupling_fb_status.EMITTANCE_WARNING
-            elif calc_status == coupling_fb.status.BAD_CALC_INPUT:
-                if self.debug: print 'bad calc input - skip', 'correct' if do_correction else 'calc'
-                status = coupling_fb_status.BAD_EMITTANCE_VALUE
-            else:
-                status = coupling_fb_status.CALC_ERROR
-                print 'correct ERROR' if do_correction else 'calc ERROR'
-
-        time_since_last_good = time.time() - self.last_good
-        if self.debug: print 'tslg: ', time_since_last_good
-        if time_since_last_good > self.time_since_last_good_threshold_pv.get():
-            print 'tslg threshold exceeded', time_since_last_good
-            status = coupling_fb_status.EMITTANCE_ERROR
+                status = self.calc_only()
 
         self.handle_status(status, do_correction)                
-        if self.threshold_debug or self.debug: print
+
 
     def single(self, value):
-        print 'single'
+        debug.dbg(debug.INFO, 'single')
         self.run_once(True, True)
 
 
     def on_ringmode_change(self, ringmode):
-        for fb in self.coupling_fbs:
-            fb.on_ringmode_change(ringmode)
-        self.on_mode_change()
+        try:
+            self.last = None
+            self.IRM = None
+
+            matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
+            rm_file = os.path.join(matDir, ringmode, 'GoldenCouplingEmittance.mat')
+            debug.dbg(debug.INFO, 'emitfb: loadMatrix', ringmode, rm_file)
+
+            RM_load=loadmat(rm_file)
+            RM=RM_load['RM']
+            debug.dbg(debug.INFO, 'RM=', RM)
+            self.IRM_ = linalg.pinv(RM)
+            self.IRM = 1/RM[0][0]
+            debug.dbg(debug.INFO,'IRM', self.IRM)
+
+        except:
+            debug.dbg(debug.ERROR, 'emitfb ringmode_change raised unexpected exception')
+            traceback.print_exc()
+
         if self.enabled:
-           self.handle_status(coupling_fb_status.RING_MODE_CHANGE, True)
+           self.handle_status(CFBStatus.RING_MODE_CHANGE, True)
         else:
-            self.handle_status(coupling_fb_status.OK, True)
-        self.skew_quads.make_setpoint()
-
-
-    def on_mode_change(self):
-        for fb in self.coupling_fbs:
-            fb.on_mode_change(False)
-        self.coupling_fb().on_mode_change(True)
-        self.skew_quads.make_setpoint()
-            
-    def coupling_fb(self):
-        return self.coupling_fbs[self.cpl_mode]
+            self.handle_status(CFBStatus.OK, True)
 
 
     def handle_status(self, status, do_correction):
-        if self.debug: print 'handle status', status, do_correction
-        self.calc_status_pv.set(status)
-        if status in [ coupling_fb_status.OK, \
-                       coupling_fb_status.INJECTING, \
-                       coupling_fb_status.EMITTANCE_WARNING, \
-                       coupling_fb_status.BAD_EMITTANCE_VALUE ]:
-            self.calc_error.set(0)
-            if do_correction or (self.enabled == 1):
-                self.status_pv.set(status)
-        else:
-            self.calc_error.set(1)
-            if do_correction or (self.enabled == 1):
-                self.status_pv.set(status)
-                self.on_error()
+        debug.dbg(debug.DEBUG, 'handle status', status, do_correction)
 
-        self.matrix_error.set(0 if self.coupling_fb().isMatrixOk() else 1)
-        cothread.Sleep(0.01)
+        status = self.persistent_error_check(status)
+
+        if self.last_status != status:
+            debug.dbg(debug.INFO, 'cpl status change', self.last_status, '->', status)
+            if status == CFBStatus.OK:
+                debug.dbg(debug.INFO, 'OK again') 
+        self.last_status = status
+
+        self.calc_status_pv.set(status)
+        if status in [ CFBStatus.OK, 
+                       CFBStatus.INJECTING, 
+                       CFBStatus.EMITTANCE_WARNING, 
+                       CFBStatus.NO_EMITTANCE_VALUE, 
+                       CFBStatus.BAD_EMITTANCE_VALUE, 
+                       CFBStatus.RECOVERING_CAMERAS ]:
+            if do_correction or self.enabled:
+                self.status_pv.set(status)
+
+        elif do_correction or self.enabled:
+                self.status_pv.set(status)
+                self.enable_pv.set(0)
+
+
+    def persistent_error_check(self, status):
+
+        current_time = time.time()
+        diff = current_time - self.current_time
+
+        if status in [ CFBStatus.OK ]:
+            self.error_or_recover_time = 0
+            self.error_time = 0
+        elif status in [ CFBStatus.INJECTING ]:
+            pass
+        elif status in [ CFBStatus.RECOVERING_CAMERAS ]:
+            self.error_or_recover_time += diff
+        else:            
+            self.error_or_recover_time += diff
+            self.error_time += diff        
+
+        if self.enabled and \
+                self.error_or_recover_time > self.max_recovery_time_pv.get():
+            debug.dbg(debug.ERROR, 'time in error/recovery exceeds timeout',
+                      self.max_recovery_time_pv)
+            status = CFBStatus.PERSISTENT_EMITTANCE_ERRORS
+
+        elif self.enabled and \
+                (self.error_time > self.max_error_time_pv.get()):
+            debug.dbg(debug.ERROR, 'time in error exceeds timeout',
+                    self.max_error_time_pv)
+            status = CFBStatus.PERSISTENT_EMITTANCE_ERRORS       
+
+        self.current_time = current_time
+
+        return status
+
+
+    def check_camera_state(self):
+        if self.recovering_cameras:
+            current_time = time.time()
+            min_recovery_timeout = self.min_camera_recovery_time_pv.get()
+            max_recovery_timeout = self.max_camera_recovery_time_pv.get()
+            recovery_time = current_time - self.recovery_start_time
+
+            if recovery_time > min_recovery_timeout and \
+                    self.camera_recovery_complete():
+                message = 'camera recovery successful after %g seconds' % recovery_time
+                debug.dbg(debug.INFO, message)
+                self.recovering_cameras = False
+            else:
+                if recovery_time > max_recovery_timeout:
+                    debug.dbg(debug.INFO,
+                        'camera recovery timeout %g seconds exceeded' % max_recovery_timeout)
+                    self.recovering_cameras = False
+
+        elif self.cam_recovery_enable_pv.get() == 1:
+            self.recovering_cameras = self.camera_recovery_started()
+            if self.recovering_cameras:               
+                 current_time = time.time()
+                 self.recovery_start_time = current_time
+                 debug.dbg(debug.INFO, 'camera recovery started')
+
+
+    def camera_recovery_started(self):
+        emit_status = self.emit_status.value
+        return emit_status == EmittanceStatus.RECOVERING
+
+
+    def camera_recovery_complete(self):
+        emit_status = self.emit_status.value
+        return emit_status == EmittanceStatus.OK
+
 
     def have_stored_beam(self):
-        beam_current = self.beam_current
-        if self.debug: print beam_current
-        return beam_current > self.dcct_threshold_pv.get()   
+        ok = self.beam_current.ok
+        beam_current = self.beam_current.value
+        debug.dbg(debug.DEBUG, ok, beam_current)
+        return ok and beam_current > self.dcct_threshold_pv.get()   
 
 
     def is_injecting(self):
-        #return False
-
-        """        
-        try:
-            self.inject_ctr = self.inject_ctr+1
-            print 'INJ CTR', self.inject_ctr
-        except:
-            self.inject_ctr = 0
-        if self.inject_ctr > 5:
-            self.inject_ctr = 0
-            return True
-        return False
-        """
-
-        emit_status = self.emit_status
-        return emit_status == emittance_status.INJECTING
+        return self.emit_status.value == EmittanceStatus.INJECTING
 
 
-    def skip(self):
-        #return False       
-        emit_status = self.emit_status
-        return emit_status in [ emittance_status.SATURATED, \
-                                emittance_status.TOO_DIM, \
-                                emittance_status.FIT_ERROR, \
-                                emittance_status.NO_TRIGGER, \
-                                emittance_status.INJECTING, \
-                                emittance_status.STALLED, ]
-
-
-    def is_emittance_ok(self):
-        #return True         
-        emit_status = self.emit_status
-        return emit_status in [ emittance_status.OK, \
-                                emittance_status.FORCED, \
-                                emittance_status.INJECTING, \
-                                emittance_status.SATURATED, \
-                                emittance_status.TOO_DIM, \
-                                emittance_status.FIT_ERROR, \
-                                emittance_status.NO_TRIGGER, \
-                                emittance_status.INJECTING, \
-                                emittance_status.STALLED ]
+    def emittance_status_bad(self):
+        if not self.emit_status.ok:
+            print 'Emit Status PV not ok' 
+            return False 
+        return self.emit_status.value not in \
+            [ EmittanceStatus.OK, 
+              EmittanceStatus.FORCED, 
+              EmittanceStatus.INJECTING ]
 
 
     def set_enabled(self, enabled):
-        print 'ENABLE:', enabled
-        self.enabled = enabled
-        self.coupling_fb().enable(enabled)
+        debug.dbg(debug.INFO, 'ENABLE:', enabled)
+        self.enabled = (enabled == 1)
+        self.error_or_recover_time = 0
+        self.error_time = 0
         if enabled:
-            self.skew_quads.make_setpoint()
+            self.vemit_filtered = self.vemit_target_pv.get()
+        self.skew_quads.use_setpoint(enabled)
 
 
-    def set_cpl_mode(self, mode):
-        print 'CPL MODE:', mode
-        if mode != self.mode:
-            self.cpl_mode = mode
-            self.on_mode_change()
+    def loop_correct(self):
+        return self.do_calc(True)
 
 
-    def on_error(self):
-        print 'error'
-        self.enable_pv.set(0)
+    def single_correct(self):
+        return self.do_calc(True, False, False)
 
 
-    def setFraction(self, value):
-        for fb in self.coupling_fbs:
-            fb.fraction = value
+    def calc_only(self):
+        return self.do_calc(False)
 
 
-    def set_target(self, value):
-        print 'TARGET:', value
-        self.coupling_fbs[0].target = value
+    def calc_parameters_ok(self):
+        return self.IRM is not None
+
+
+    def do_calc(self, apply_calc, use_filter=True, check_limits=True):
+        
+        if not self.calc_parameters_ok():
+            debug.dbg(debug.ERROR, 'No matrix')
+            return CFBStatus.MISSING_CALC_PARAMETERS
+
+        target = self.vemit_target_pv.get()
+        vemit = self.vemit.value
+        ts = self.vemit.timestamp
+
+        current_time = time.time()
+        age = current_time - ts
+
+        # Timestamps ok?
+        if age > CFBConstants.MAX_TS_AGE:
+            debug.dbg_unique(debug.WARNING, 'vemit ts too old - bail out')
+            return CFBStatus.NO_EMITTANCE_VALUE
+            
+        # values ok?
+        if check_limits:
+            vmax = target + self.vemit_err_max_pv.get()
+            if vemit > vmax:
+                debug.dbg_tag_unique(debug.WARNING, 'VEMIT BIG',
+                    'vemit too high - bail out', vemit, 'MAX ', vmax)
+                return CFBStatus.BAD_EMITTANCE_VALUE            
+                
+            vmin = target - self.vemit_err_max_pv.get()
+            if vemit < vmin:
+                debug.dbg_tag_unique(debug.WARNING, 'VEMIT SMALL',
+                    'vemit too low - bail out', 'vemit ', vemit, 'MIN ', vmin)
+                return CFBStatus.BAD_EMITTANCE_VALUE         
+
+        # apply filter (IIR) if required
+        if use_filter:      
+            filter_frac = self.iir_frac_pv.get()
+            filtered = filter_frac * vemit + (1-filter_frac) * self.vemit_filtered
+            vemit_used = filtered if use_filter else vemit
+            self.vemit_filtered = filtered
+        else:
+            vemit_used = vemit
+
+        # calc skew quad delta
+        fraction = self.afrac_pv.get()
+        delta = -fraction * self.IRM * (vemit_used-target)   
+
+        # check delta within limits and raise error or scale
+        delta_max = self.squad_delta_max_pv.get()
+        if check_limits:
+            if abs(delta) > delta_max:
+                return CFBStatus.MAGNET_DELTA_ERROR
+        else:
+            if delta_max <= 0:
+                debug.dbg(debug.ERROR, 'max delta non positive')
+                return CFBStatus.MAGNET_DELTA_ERROR
+
+            if delta > delta_max:
+                print 'scaled ', delta, '->', delta_max
+                delta = delta_max
+            elif delta < -delta_max:
+                print 'scaled ', delta, '->', -delta_max
+                delta = -delta_max
+
+        # same correction applied to all skew quads
+        num_squads = self.skew_quads.num
+        sq_delta = array([ delta ] * num_squads)
+
+        if apply_calc:
+            # apply correction to skew quads
+            ok = self.skew_quads.put_delta(sq_delta)
+            if not ok:
+                return CFBStatus.MAGNET_ERROR
+
+        return CFBStatus.OK
+
+
+    def monitors(self):
+        self.vemit = PVMonitor('SR-DI-EMIT-01:VEMIT')
+        self.beam_current = PVMonitor('SR21C-DI-DCCT-01:SIGNAL')
+        self.emit_status =  PVMonitor('SR-DI-EMIT-01:STATUS')
 
 
     def records(self):
         builder.SetDeviceName("SR-CS-CPLFB-01")
 
-        self.target_pv = builder.aOut("TARGET", initial_value = self.coupling_fbs[0].target,
-                     on_update = self.set_target, DRVL = 0.0, PREC = 4)
+        self.enable_pv = builder.mbbOut(
+                'LOOP', ("OFF", 0, "MINOR"), ("ON", 1),
+                initial_value = 0, on_update = self.set_enabled)
 
-        self.enable_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1, "MINOR"),
-                                       initial_value = self.enabled,
-                                       on_update = self.set_enabled)
+        builder.aOut("SINGLE", initial_value = 0,
+                     on_update = self.single, always_update = True)
 
-
-        builder.aOut("AFRAC", initial_value = self.coupling_fb().fraction, on_update = self.setFraction,
-                     DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
-
-
-        #builder.aOut("SVDT", initial_value = self.cpl.threshold,
-        #             on_update = self.cpl.set_threshold,
-        #             DRVH = 1, DRVL = 0, PREC = 4, EGU = "Hz")
-
-
-        #self.period_pv = builder.aOut("PERIOD", initial_value = 5.0,
-        #             DRVH = 10.0, DRVL = 0.1, PREC = 1, EGU = "s")
-
-        self.matrix_error = builder.boolIn(
-            "EMATRIX", DESC = "Matrix Error",
-            initial_value = 0, ZNAM = "OK",
-            ONAM = "coupling_fb MATRIX")
-
-        self.calc_error = builder.boolIn(
-            "ECALC", DESC = "Calculation Error",
-            initial_value = 0, ZNAM = "OK",
-            ONAM = "coupling_fb CALC")
-
-        builder.aOut("CORRECT", initial_value = 0,
-            on_update = self.single, always_update = True)
-
-        self.cpl_mode_pv = builder.mbbOut('MODE', ("COUPLING", 0), ("VEMIT", 1), ("SIGMAY", 2),
-                 initial_value = self.cpl_mode,
-                 on_update = self.set_cpl_mode)
+        self.afrac_pv = builder.aOut(
+                "AFRAC", initial_value = CFBConstants.AFRAC_INITIAL,
+                DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
+    
+        self.iir_frac_pv = builder.aOut(
+                "IIRF_PARAM",
+                initial_value = CFBConstants.IIRF_PARAM_INITIAL,
+                DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
 
 
-        self.dcct_threshold_pv = builder.aOut("DCCT_THRESHOLD", initial_value = 5,
-                     DRVH = 1000, DRVL = 0, PREC = 4, EGU = "mA")
+        self.dcct_threshold_pv = builder.aOut(
+                "DCCT_THRESHOLD", initial_value = 5,
+                DRVH = 1000, DRVL = 0, PREC = 4, EGU = "mA")
+
+        self.vemit_err_max_pv = builder.aOut(
+                "VEMIT_TARGET_ERR_MAX",
+                initial_value = CFBConstants.VEMIT_TARGET_ERR_MAX_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
+
+        self.vemit_target_pv = builder.aOut(
+                "VEMIT_TARGET",
+                initial_value = CFBConstants.VEMIT_TARGET_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
+
+        self.max_error_time_pv = builder.aOut(
+                 "MAX_ERROR_TIME", initial_value = 24.0,
+                 DRVL = 0.0, PREC = 1, EGU = "s")
+
+        self.max_recovery_time_pv = builder.aOut(
+                 "MAX_RECOVERY_TIME", initial_value = 120,
+                 DRVL = 0.0, PREC = 1, EGU = "s")
+
+        self.min_camera_recovery_time_pv = builder.aOut(
+                     "MIN_CAM_RECOVERY_TIME",
+                     initial_value = 35, DRVL = 0.0, PREC = 1, EGU = "s")
+
+        self.max_camera_recovery_time_pv = builder.aOut("MAX_CAM_RECOVERY_TIME",
+                     initial_value = 50, DRVL = 0.0, PREC = 1, EGU = "s")
+
+        self.cam_recovery_enable_pv = builder.mbbOut(
+                'CAM_RECOVERY', ("DISABLED", 0), ("ENABLED", 1),
+                 initial_value = 1)
+
+        self.squad_delta_max_pv = builder.aOut(
+                "SQUAD_DELTA_MAX",
+                initial_value = CFBConstants.PS_DELTA_MAX_INITIAL,
+                PREC = 4, EGU = "A")  
 
 
-        self.status_pv = builder.mbbIn('STATUS',\
-                 ("Ok", coupling_fb_status.OK),
-                 ("Injecting", coupling_fb_status.INJECTING),
-                 ("Transient emittance error", coupling_fb_status.EMITTANCE_WARNING, "MINOR"),
-                 ("Unknown error", coupling_fb_status.UNKNOWN_ERROR, "MAJOR"),
-                 ("No stored beam", coupling_fb_status.NO_STORED_BEAM, "MAJOR"),
-                 ("Emitance calc error", coupling_fb_status.EMITTANCE_ERROR, "MAJOR"),
-                 ("Ring mode change", coupling_fb_status.RING_MODE_CHANGE, "MAJOR"),
-                 ("Calculation error", coupling_fb_status.CALC_ERROR, "MAJOR"),
-                 ("Bad emittance value", coupling_fb_status.BAD_EMITTANCE_VALUE, "MINOR"),
-                 ("Missing calc parameters", coupling_fb_status.MISSING_CALC_PARAMETERS, "MAJOR"),
-                 initial_value = coupling_fb_status.OK)
+        self.status_pv = builder.mbbIn('STATUS',
+             ("Ok", CFBStatus.OK),
+             ("Injecting", CFBStatus.INJECTING),
+             ("Bad emittance status", CFBStatus.EMITTANCE_WARNING, "MINOR"),
+             ("Unknown error", CFBStatus.UNKNOWN_ERROR, "MAJOR"),
+             ("No stored beam", CFBStatus.NO_STORED_BEAM, "MAJOR"),
+             ("Emittance calc error", CFBStatus.EMITTANCE_ERROR, "MAJOR"),
+             ("Ring mode change", CFBStatus.RING_MODE_CHANGE, "MAJOR"),
+             ("Magnet delta error", CFBStatus.MAGNET_DELTA_ERROR, "MAJOR"),
+             ("Bad emittance value", CFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
+             ("Missing calc parameters", CFBStatus.MISSING_CALC_PARAMETERS, "MAJOR"),
+             ("Magnet Error", CFBStatus.MAGNET_ERROR, "MAJOR"),
+             ("Recovering cameras", CFBStatus.RECOVERING_CAMERAS, "MINOR"),
+             ("No emittance value", CFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
+             ("Persistent emittance err", CFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
+             initial_value = CFBStatus.OK)
 
-        self.calc_status_pv = builder.mbbIn('CALC_STATUS',\
-                 ("Ok", coupling_fb_status.OK),
-                 ("Injecting", coupling_fb_status.INJECTING),
-                 ("Transient emittance error", coupling_fb_status.EMITTANCE_WARNING, "MINOR"),
-                 ("Unknown error", coupling_fb_status.UNKNOWN_ERROR, "MINOR"),
-                 ("No stored beam", coupling_fb_status.NO_STORED_BEAM, "MINOR"),
-                 ("Emitance calc error", coupling_fb_status.EMITTANCE_ERROR, "MINOR"),
-                 ("Ring mode change", coupling_fb_status.RING_MODE_CHANGE, "MINOR"),
-                 ("Calculation error", coupling_fb_status.CALC_ERROR, "MINOR"),
-                 ("Bad emittance value", coupling_fb_status.BAD_EMITTANCE_VALUE, "MINOR"),
-                 ("Missing calc parameters", coupling_fb_status.MISSING_CALC_PARAMETERS, "MINOR"),
-                 initial_value = coupling_fb_status.OK)
 
-        self.time_since_last_good_threshold_pv = builder.aOut("TSLG_THRESHOLD", initial_value = 10.0,
-                     DRVL = 0.0, PREC = 1, EGU = "s")
+        self.calc_status_pv = builder.mbbIn('CALC_STATUS',
+             ("Ok", CFBStatus.OK),
+             ("Injecting", CFBStatus.INJECTING),
+             ("Bad emittance status", CFBStatus.EMITTANCE_WARNING, "MINOR"),
+             ("Unknown error", CFBStatus.UNKNOWN_ERROR, "MINOR"),
+             ("No stored beam", CFBStatus.NO_STORED_BEAM, "MINOR"),
+             ("Emittance calc error", CFBStatus.EMITTANCE_ERROR, "MINOR"),
+             ("Ring mode change", CFBStatus.RING_MODE_CHANGE, "MINOR"),
+             ("Magnet delta error", CFBStatus.MAGNET_DELTA_ERROR, "MINOR"),
+             ("Bad emittance value", CFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
+             ("Missing calc parameters", CFBStatus.MISSING_CALC_PARAMETERS, "MINOR"),
+             ("Magnet Error", CFBStatus.MAGNET_ERROR, "MINOR"),
+             ("Recovering cameras", CFBStatus.RECOVERING_CAMERAS, "MINOR"),
+             ("No emittance value", CFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
+             ("Persistent emittance err", CFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
+             initial_value = CFBStatus.OK)
+
+        #self.err_msg_pv = builder.stringIn('ERR_MSG', initial_value = "None")
+
+
 
