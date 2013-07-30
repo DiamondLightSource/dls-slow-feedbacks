@@ -101,7 +101,7 @@ onColor index 3
 offColor index 3
 topShadowColor index 0
 botShadowColor index 14
-controlPv "SR-CS-CPLFB-01:SINGLE"
+controlPv "SR-CS-VEFB-01:SINGLE"
 pressValue "1"
 onLabel "CORRECTION"
 offLabel "CORRECTION"
@@ -162,7 +162,7 @@ bgColor index 3
 inconsistentColor index 14
 topShadowColor index 0
 botShadowColor index 14
-controlPv "SR-CS-CPLFB-01:LOOP"
+controlPv "SR-CS-VEFB-01:LOOP"
 font "helvetica-bold-r-14.0"
 endObjectProperties
 
@@ -176,7 +176,7 @@ x 208
 y 216
 w 120
 h 24
-controlPv "SR-CS-CPLFB-01:AFRAC"
+controlPv "SR-CS-VEFB-01:AFRAC"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -238,7 +238,7 @@ x 216
 y 248
 w 112
 h 24
-controlPv "SR-CS-CPLFB-01:IIRF_PARAM"
+controlPv "SR-CS-VEFB-01:IIRF_PARAM"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -281,7 +281,7 @@ x 120
 y 280
 w 216
 h 24
-controlPv "SR-CS-CPLFB-01:STATUS"
+controlPv "SR-CS-VEFB-01:STATUS"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 15
@@ -324,7 +324,7 @@ x 120
 y 312
 w 216
 h 24
-controlPv "SR-CS-CPLFB-01:CALC_STATUS"
+controlPv "SR-CS-VEFB-01:CALC_STATUS"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 15
@@ -434,7 +434,7 @@ x 208
 y 184
 w 120
 h 24
-controlPv "SR-CS-CPLFB-01:VEMIT_TARGET"
+controlPv "SR-CS-VEFB-01:VEMIT_TARGET"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14

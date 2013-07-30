@@ -8,7 +8,7 @@ from scipy.io import loadmat
 import time
 
 
-class CFBConstants:
+class VEFBConstants:
     VEMIT_TARGET_INITIAL = 8.0
     AFRAC_INITIAL = 0.15
     IIRF_PARAM_INITIAL = 0.25
@@ -50,7 +50,7 @@ class EmittanceStatus:
     RECOVER_FAILED  = 12
 
 
-class CFBStatus:
+class VEFBStatus:
     OK = 0
     INJECTING = 1
     EMITTANCE_WARNING = 2
@@ -267,7 +267,7 @@ class SkewQuadrupoles:
 ################################# VEMIT FB ####################################################
 
 
-class coupling_fb_server:
+class vefb_server:
 
     def __init__(self, mode):
         self.skew_quads = SkewQuadrupoles()
@@ -277,8 +277,8 @@ class coupling_fb_server:
 
         self.IRM = None
         self.last = None
-        self.vemit_filtered = CFBConstants.VEMIT_TARGET_INITIAL
-        self.last_status = CFBStatus.OK
+        self.vemit_filtered = VEFBConstants.VEMIT_TARGET_INITIAL
+        self.last_status = VEFBStatus.OK
 
         self.recovering_cameras = False
         
@@ -327,26 +327,26 @@ class coupling_fb_server:
                 debug.flush()
 
             except:
-                debug.dbg(debug.ERROR, 'Coupling control raised unexpected exception')
+                debug.dbg(debug.ERROR, 'Vemit control raised unexpected exception')
                 traceback.print_exc()
-                self.handle_status(CFBStatus.UNKNOWN_ERROR, do_correction)             
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, do_correction)             
                 
 
     def run_once(self, do_correction, single = False):
-        status = CFBStatus.UNKNOWN_ERROR
+        status = VEFBStatus.UNKNOWN_ERROR
 
         self.check_camera_state()
 
         if not self.have_stored_beam():
             debug.dbg_unique(debug.ERROR, 'no stored beam')
-            status = CFBStatus.NO_STORED_BEAM
+            status = VEFBStatus.NO_STORED_BEAM
 
         elif not self.skew_quads.check_state():
             debug.dbg_unique(debug.ERROR, 'skew quad error')
-            status = CFBStatus.MAGNET_ERROR
+            status = VEFBStatus.MAGNET_ERROR
 
         elif self.recovering_cameras:
-            status = CFBStatus.RECOVERING_CAMERAS
+            status = VEFBStatus.RECOVERING_CAMERAS
             #self.err_msg_pv.set("Recovering cameras") ## 
             #self.err_msg_pv.set_alarm(1, 7) ## 
 
@@ -354,7 +354,7 @@ class coupling_fb_server:
             debug.dbg_unique(debug.INFO, 'injecting')
             #self.err_msg_pv.set("Injecting") ##
             #self.err_msg_pv.set_alarm(0, 0) ##  
-            status = CFBStatus.INJECTING
+            status = VEFBStatus.INJECTING
 
         elif self.emittance_status_bad():
             debug.dbg_unique(debug.WARNING,
@@ -362,7 +362,7 @@ class coupling_fb_server:
             #self.err_msg_pv.set('Bad emittance status %d' % self.emit_status.value) ##
             #self.err_msg_pv.set_alarm(1, 7) ##
              
-            status = CFBStatus.EMITTANCE_WARNING
+            status = VEFBStatus.EMITTANCE_WARNING
 
         else:
             #self.err_msg_pv.set("None") ##
@@ -403,9 +403,9 @@ class coupling_fb_server:
             traceback.print_exc()
 
         if self.enabled:
-           self.handle_status(CFBStatus.RING_MODE_CHANGE, True)
+           self.handle_status(VEFBStatus.RING_MODE_CHANGE, True)
         else:
-            self.handle_status(CFBStatus.OK, True)
+            self.handle_status(VEFBStatus.OK, True)
 
 
     def handle_status(self, status, do_correction):
@@ -414,18 +414,18 @@ class coupling_fb_server:
         status = self.persistent_error_check(status)
 
         if self.last_status != status:
-            debug.dbg(debug.INFO, 'cpl status change', self.last_status, '->', status)
-            if status == CFBStatus.OK:
+            debug.dbg(debug.INFO, 'vefb status change', self.last_status, '->', status)
+            if status == VEFBStatus.OK:
                 debug.dbg(debug.INFO, 'OK again') 
         self.last_status = status
 
         self.calc_status_pv.set(status)
-        if status in [ CFBStatus.OK, 
-                       CFBStatus.INJECTING, 
-                       CFBStatus.EMITTANCE_WARNING, 
-                       CFBStatus.NO_EMITTANCE_VALUE, 
-                       CFBStatus.BAD_EMITTANCE_VALUE, 
-                       CFBStatus.RECOVERING_CAMERAS ]:
+        if status in [ VEFBStatus.OK, 
+                       VEFBStatus.INJECTING, 
+                       VEFBStatus.EMITTANCE_WARNING, 
+                       VEFBStatus.NO_EMITTANCE_VALUE, 
+                       VEFBStatus.BAD_EMITTANCE_VALUE, 
+                       VEFBStatus.RECOVERING_CAMERAS ]:
             if do_correction or self.enabled:
                 self.status_pv.set(status)
 
@@ -439,12 +439,12 @@ class coupling_fb_server:
         current_time = time.time()
         diff = current_time - self.current_time
 
-        if status in [ CFBStatus.OK ]:
+        if status in [ VEFBStatus.OK ]:
             self.error_or_recover_time = 0
             self.error_time = 0
-        elif status in [ CFBStatus.INJECTING ]:
+        elif status in [ VEFBStatus.INJECTING ]:
             pass
-        elif status in [ CFBStatus.RECOVERING_CAMERAS ]:
+        elif status in [ VEFBStatus.RECOVERING_CAMERAS ]:
             self.error_or_recover_time += diff
         else:            
             self.error_or_recover_time += diff
@@ -454,13 +454,13 @@ class coupling_fb_server:
                 self.error_or_recover_time > self.max_recovery_time_pv.get():
             debug.dbg(debug.ERROR, 'time in error/recovery exceeds timeout',
                       self.max_recovery_time_pv)
-            status = CFBStatus.PERSISTENT_EMITTANCE_ERRORS
+            status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS
 
         elif self.enabled and \
                 (self.error_time > self.max_error_time_pv.get()):
             debug.dbg(debug.ERROR, 'time in error exceeds timeout',
                     self.max_error_time_pv)
-            status = CFBStatus.PERSISTENT_EMITTANCE_ERRORS       
+            status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS       
 
         self.current_time = current_time
 
@@ -554,7 +554,7 @@ class coupling_fb_server:
         
         if not self.calc_parameters_ok():
             debug.dbg(debug.ERROR, 'No matrix')
-            return CFBStatus.MISSING_CALC_PARAMETERS
+            return VEFBStatus.MISSING_CALC_PARAMETERS
 
         target = self.vemit_target_pv.get()
         vemit = self.vemit.value
@@ -564,9 +564,9 @@ class coupling_fb_server:
         age = current_time - ts
 
         # Timestamps ok?
-        if age > CFBConstants.MAX_TS_AGE:
+        if age > VEFBConstants.MAX_TS_AGE:
             debug.dbg_unique(debug.WARNING, 'vemit ts too old - bail out')
-            return CFBStatus.NO_EMITTANCE_VALUE
+            return VEFBStatus.NO_EMITTANCE_VALUE
             
         # values ok?
         if check_limits:
@@ -574,13 +574,13 @@ class coupling_fb_server:
             if vemit > vmax:
                 debug.dbg_tag_unique(debug.WARNING, 'VEMIT BIG',
                     'vemit too high - bail out', vemit, 'MAX ', vmax)
-                return CFBStatus.BAD_EMITTANCE_VALUE            
+                return VEFBStatus.BAD_EMITTANCE_VALUE            
                 
             vmin = target - self.vemit_err_max_pv.get()
             if vemit < vmin:
                 debug.dbg_tag_unique(debug.WARNING, 'VEMIT SMALL',
                     'vemit too low - bail out', 'vemit ', vemit, 'MIN ', vmin)
-                return CFBStatus.BAD_EMITTANCE_VALUE         
+                return VEFBStatus.BAD_EMITTANCE_VALUE         
 
         # apply filter (IIR) if required
         if use_filter:      
@@ -599,11 +599,11 @@ class coupling_fb_server:
         delta_max = self.squad_delta_max_pv.get()
         if check_limits:
             if abs(delta) > delta_max:
-                return CFBStatus.MAGNET_DELTA_ERROR
+                return VEFBStatus.MAGNET_DELTA_ERROR
         else:
             if delta_max <= 0:
                 debug.dbg(debug.ERROR, 'max delta non positive')
-                return CFBStatus.MAGNET_DELTA_ERROR
+                return VEFBStatus.MAGNET_DELTA_ERROR
 
             if delta > delta_max:
                 print 'scaled ', delta, '->', delta_max
@@ -620,9 +620,9 @@ class coupling_fb_server:
             # apply correction to skew quads
             ok = self.skew_quads.put_delta(sq_delta)
             if not ok:
-                return CFBStatus.MAGNET_ERROR
+                return VEFBStatus.MAGNET_ERROR
 
-        return CFBStatus.OK
+        return VEFBStatus.OK
 
 
     def monitors(self):
@@ -632,7 +632,7 @@ class coupling_fb_server:
 
 
     def records(self):
-        builder.SetDeviceName("SR-CS-CPLFB-01")
+        builder.SetDeviceName("SR-CS-VEFB-01")
 
         self.enable_pv = builder.mbbOut(
                 'LOOP', ("OFF", 0, "MINOR"), ("ON", 1),
@@ -642,12 +642,12 @@ class coupling_fb_server:
                      on_update = self.single, always_update = True)
 
         self.afrac_pv = builder.aOut(
-                "AFRAC", initial_value = CFBConstants.AFRAC_INITIAL,
+                "AFRAC", initial_value = VEFBConstants.AFRAC_INITIAL,
                 DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
     
         self.iir_frac_pv = builder.aOut(
                 "IIRF_PARAM",
-                initial_value = CFBConstants.IIRF_PARAM_INITIAL,
+                initial_value = VEFBConstants.IIRF_PARAM_INITIAL,
                 DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
 
 
@@ -657,12 +657,12 @@ class coupling_fb_server:
 
         self.vemit_err_max_pv = builder.aOut(
                 "VEMIT_TARGET_ERR_MAX",
-                initial_value = CFBConstants.VEMIT_TARGET_ERR_MAX_INITIAL,
+                initial_value = VEFBConstants.VEMIT_TARGET_ERR_MAX_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
         self.vemit_target_pv = builder.aOut(
                 "VEMIT_TARGET",
-                initial_value = CFBConstants.VEMIT_TARGET_INITIAL,
+                initial_value = VEFBConstants.VEMIT_TARGET_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
 
         self.max_error_time_pv = builder.aOut(
@@ -686,44 +686,44 @@ class coupling_fb_server:
 
         self.squad_delta_max_pv = builder.aOut(
                 "SQUAD_DELTA_MAX",
-                initial_value = CFBConstants.PS_DELTA_MAX_INITIAL,
+                initial_value = VEFBConstants.PS_DELTA_MAX_INITIAL,
                 PREC = 4, EGU = "A")  
 
 
         self.status_pv = builder.mbbIn('STATUS',
-             ("Ok", CFBStatus.OK),
-             ("Injecting", CFBStatus.INJECTING),
-             ("Bad emittance status", CFBStatus.EMITTANCE_WARNING, "MINOR"),
-             ("Unknown error", CFBStatus.UNKNOWN_ERROR, "MAJOR"),
-             ("No stored beam", CFBStatus.NO_STORED_BEAM, "MAJOR"),
-             ("Emittance calc error", CFBStatus.EMITTANCE_ERROR, "MAJOR"),
-             ("Ring mode change", CFBStatus.RING_MODE_CHANGE, "MAJOR"),
-             ("Magnet delta error", CFBStatus.MAGNET_DELTA_ERROR, "MAJOR"),
-             ("Bad emittance value", CFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
-             ("Missing calc parameters", CFBStatus.MISSING_CALC_PARAMETERS, "MAJOR"),
-             ("Magnet Error", CFBStatus.MAGNET_ERROR, "MAJOR"),
-             ("Recovering cameras", CFBStatus.RECOVERING_CAMERAS, "MINOR"),
-             ("No emittance value", CFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
-             ("Persistent emittance err", CFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
-             initial_value = CFBStatus.OK)
+             ("Ok", VEFBStatus.OK),
+             ("Injecting", VEFBStatus.INJECTING),
+             ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
+             ("Unknown error", VEFBStatus.UNKNOWN_ERROR, "MAJOR"),
+             ("No stored beam", VEFBStatus.NO_STORED_BEAM, "MAJOR"),
+             ("Emittance calc error", VEFBStatus.EMITTANCE_ERROR, "MAJOR"),
+             ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MAJOR"),
+             ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MAJOR"),
+             ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
+             ("Missing calc parameters", VEFBStatus.MISSING_CALC_PARAMETERS, "MAJOR"),
+             ("Magnet Error", VEFBStatus.MAGNET_ERROR, "MAJOR"),
+             ("Recovering cameras", VEFBStatus.RECOVERING_CAMERAS, "MINOR"),
+             ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
+             ("Persistent emittance err", VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
+             initial_value = VEFBStatus.OK)
 
 
         self.calc_status_pv = builder.mbbIn('CALC_STATUS',
-             ("Ok", CFBStatus.OK),
-             ("Injecting", CFBStatus.INJECTING),
-             ("Bad emittance status", CFBStatus.EMITTANCE_WARNING, "MINOR"),
-             ("Unknown error", CFBStatus.UNKNOWN_ERROR, "MINOR"),
-             ("No stored beam", CFBStatus.NO_STORED_BEAM, "MINOR"),
-             ("Emittance calc error", CFBStatus.EMITTANCE_ERROR, "MINOR"),
-             ("Ring mode change", CFBStatus.RING_MODE_CHANGE, "MINOR"),
-             ("Magnet delta error", CFBStatus.MAGNET_DELTA_ERROR, "MINOR"),
-             ("Bad emittance value", CFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
-             ("Missing calc parameters", CFBStatus.MISSING_CALC_PARAMETERS, "MINOR"),
-             ("Magnet Error", CFBStatus.MAGNET_ERROR, "MINOR"),
-             ("Recovering cameras", CFBStatus.RECOVERING_CAMERAS, "MINOR"),
-             ("No emittance value", CFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
-             ("Persistent emittance err", CFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
-             initial_value = CFBStatus.OK)
+             ("Ok", VEFBStatus.OK),
+             ("Injecting", VEFBStatus.INJECTING),
+             ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
+             ("Unknown error", VEFBStatus.UNKNOWN_ERROR, "MINOR"),
+             ("No stored beam", VEFBStatus.NO_STORED_BEAM, "MINOR"),
+             ("Emittance calc error", VEFBStatus.EMITTANCE_ERROR, "MINOR"),
+             ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MINOR"),
+             ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MINOR"),
+             ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
+             ("Missing calc parameters", VEFBStatus.MISSING_CALC_PARAMETERS, "MINOR"),
+             ("Magnet Error", VEFBStatus.MAGNET_ERROR, "MINOR"),
+             ("Recovering cameras", VEFBStatus.RECOVERING_CAMERAS, "MINOR"),
+             ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
+             ("Persistent emittance err", VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
+             initial_value = VEFBStatus.OK)
 
         #self.err_msg_pv = builder.stringIn('ERR_MSG', initial_value = "None")
 

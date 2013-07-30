@@ -52,8 +52,8 @@ rffb = rffb_server.rffb_server(mode)
 # Slow orbit feedback.
 sofb = sofb_server.sofb_server(mode)
 
-# Coupling control.
-cplfb = vefb_server.coupling_fb_server(mode)
+# Vertical emittance feedback.
+vefb = vefb_server.vefb_server(mode)
 
 
 # Create mirror PV for FOFB status to reduce overall load on vxWorks IOCs.
@@ -78,7 +78,7 @@ mode.init()
 mags.init()
 rffb.init()
 sofb.init()
-cplfb.init()
+vefb.init()
 
 
 softioc.interactive_ioc(globals())
