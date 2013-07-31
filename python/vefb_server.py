@@ -20,6 +20,7 @@ class VEFBConstants:
     MIN_CAM_RECOVERY_TIME_INITIAL = 35.0
     MAX_CAM_RECOVERY_TIME_INITIAL = 50.0
 
+
 class EmittanceStatus:
     # Successful emittance calculation.
     OK              = 0
@@ -319,6 +320,16 @@ class vefb_server:
                 self.handle_status(VEFBStatus.UNKNOWN_ERROR, do_correction)
 
 
+    def run_single(self, value):
+        print 'single correct'
+        try:
+            self.run_once(True, True)
+        except:
+            print 'Vemit FB raised unexpected exception'
+            traceback.print_exc()
+            self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
+
+
     def run_once(self, do_correction, single = False):
         status = VEFBStatus.UNKNOWN_ERROR
 
@@ -351,12 +362,7 @@ class vefb_server:
             else:
                 status = self.calc_only()
 
-        self.handle_status(status, do_correction)
-
-
-    def single(self, value):
-        print 'single correct'
-        self.run_once(True, True)
+        self.handle_status(status, do_correction)       
 
 
     def on_ringmode_change(self, ringmode):
@@ -614,7 +620,7 @@ class vefb_server:
                 initial_value = 0, on_update = self.set_enabled)
 
         builder.aOut("SINGLE", initial_value = 0,
-                     on_update = self.single, always_update = True)
+                     on_update = self.run_single, always_update = True)
 
         self.afrac_pv = builder.aOut(
                 "AFRAC", initial_value = VEFBConstants.AFRAC_INITIAL,
@@ -655,7 +661,8 @@ class vefb_server:
                 initial_value = VEFBConstants.MIN_CAM_RECOVERY_TIME_INITIAL,
                 DRVL = 0.0, PREC = 1, EGU = "s")
 
-        self.max_camera_recovery_time_pv = builder.aOut("MAX_CAM_RECOVERY_TIME",
+        self.max_camera_recovery_time_pv = builder.aOut(
+                "MAX_CAM_RECOVERY_TIME",
                 initial_value = VEFBConstants.MAX_CAM_RECOVERY_TIME_INITIAL,
                 DRVL = 0.0, PREC = 1, EGU = "s")
 
