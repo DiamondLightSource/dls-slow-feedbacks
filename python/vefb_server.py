@@ -15,7 +15,10 @@ class VEFBConstants:
     MAX_TS_AGE = 0.35
     PS_DELTA_MAX_INITIAL = 0.01
     VEMIT_TARGET_ERR_MAX_INITIAL = 1.0
-
+    MAX_ERROR_TIME_INITIAL = 24.0
+    MAX_RECOVERY_TIME_INITIAL = 120.0
+    MIN_CAM_RECOVERY_TIME_INITIAL = 35.0
+    MAX_CAM_RECOVERY_TIME_INITIAL = 50.0
 
 class EmittanceStatus:
     # Successful emittance calculation.
@@ -66,52 +69,6 @@ class VEFBStatus:
     NO_EMITTANCE_VALUE = 12
     PERSISTENT_EMITTANCE_ERRORS = 13
 
-#################################  DEBUG WIDGET  ##############################################
-
-class DebugWriter:
-    NONE           =  0
-    ERROR          =  1
-    WARNING        =  2
-    INFO           =  3
-    THRESHOLD      =  4
-    DEBUG          =  5
-    VERBOSE_DEBUG  =  6
-    ALL            =  7
-
-    def __init__(self):
-        self.lines = set()
-        self.lines_last = set()
-        self.tagged_lines = {}
-        self.tagged_lines_last = {}
-        self.dbg_level = self.INFO
-
-    def dbg(self, dbg_level, *args):
-        line = ' '.join(map(str, args))
-        if dbg_level <= self.dbg_level:
-            print line
-      
-    def dbg_unique(self, dbg_level, *args):
-        line = ' '.join(map(str, args))
-        if line not in self.lines_last and line not in self.lines:
-            if dbg_level <= self.dbg_level:
-                print line
-                self.lines.add(line)
-
-    def dbg_tag_unique(self, dbg_level, tag, *args):
-        line = ' '.join(map(str, args))
-        if tag not in self.tagged_lines_last and tag not in self.tagged_lines:
-            if dbg_level <= self.dbg_level:
-                print line
-            self.tagged_lines[tag] = line
-
-    def flush(self):
-        self.lines_last = self.lines
-        self.lines = set()
-        self.tagged_lines_last = self.tagged_lines
-        self.tagged_lines = {}
-
-
-debug = DebugWriter()
 
 #################################  Monitors  ##############################################
 
@@ -152,7 +109,6 @@ class WFMonitor:
             self.timestamps[index] = time.time()
         self.ok = all(self.oks)
 
-
 ################################# SKEW QUADS ####################################################
 
 class SkewQuadrupoles:
@@ -162,12 +118,12 @@ class SkewQuadrupoles:
         self.sum_delta = zeros(self.num)
         self._use_setpoint = False
 
-    
+
     @property
     def num(self):
         return len(self.squad_pvs)
 
-    
+
     def check_state(self):
         return self.ok and self.drive_levels_ok()
 
@@ -183,7 +139,7 @@ class SkewQuadrupoles:
                        self.seti_drvhs.values,
                        self.squad_pvs):
             if a >= b:
-                debug.dbg_tag_unique(debug.ERROR, "drive check", "DRVH >= DRVL", c)
+                print "drive check", "DRVH >= DRVL", c
                 return False
         return True
 
@@ -192,8 +148,8 @@ class SkewQuadrupoles:
         if self.seti.ok:
             self.sp = +self.seti.values
             self.sum_delta = zeros(self.num)
-            debug.dbg(debug.INFO, 'new set point')
-            debug.dbg(debug.INFO, self.sp)
+            print 'new set point'
+            print self.sp
 
 
     def use_setpoint(self, use):
@@ -206,18 +162,16 @@ class SkewQuadrupoles:
         drvhs = self.seti_drvhs.values
         drvls = self.seti_drvls.values
 
-        debug.dbg(debug.VERBOSE_DEBUG, 'drvls', self.drvls)
-        for i in range(len(self.drvls)):
+        for i in range(self.num):
             if values[i] < self.drvls[i]:
-                debug.dbg_tag_unique(debug.ERROR, "DRVL check", self.squad_pvs[i],
-                    ": New SQUAD value", values[i], "< DRVL", drvls[i])
+                print "DRVL check", self.squad_pvs[i], \
+                    ": New SQUAD value", values[i], "< DRVL", drvls[i]
                 return False
 
-        debug.dbg(debug.VERBOSE_DEBUG, 'drvhs', drvhs)
-        for i in range(len(self.drvhs)):
+        for i in range(self.num):
             if values[i] > self.drvhs[i]:
-                debug.dbg_tag_unique(debug.ERROR, "DRVH check", self.squad_pvs[i],
-                    ": New SQUAD value", values[i], "> DRVH", self.drvhs[i])
+                print "DRVH check", self.squad_pvs[i], \
+                    ": New SQUAD value", values[i], "> DRVH", self.drvhs[i]
                 return False
 
         return True
@@ -230,7 +184,7 @@ class SkewQuadrupoles:
             self.sum_delta += delta
             new_sqvals = self.sp + self.sum_delta
         elif self.seti.ok:
-            print 'use current value'
+            print 'use current values'
             new_sqvals = self.seti.values + delta
         else:
             return False
@@ -304,7 +258,7 @@ class vefb_server:
     def init_wait(self, wait_time):
         print 'init wait'
         end_time = time.time() + wait_time
-        
+
         while True:
             monitors = [ self.skew_quads,
                          self.vemit,
@@ -318,7 +272,7 @@ class vefb_server:
                 print 'init timeout'
                 return
             cothread.Sleep(self.time_step)
-            
+
 
     def run(self):
         self.init_wait(3.0)
@@ -328,13 +282,12 @@ class vefb_server:
                 current_time = time.time()
                 do_correction = self.enabled
                 self.run_once(do_correction)
-                debug.flush()
 
             except:
-                debug.dbg(debug.ERROR, 'Vemit control raised unexpected exception')
+                print 'Vemit FB raised unexpected exception'
                 traceback.print_exc()
-                self.handle_status(VEFBStatus.UNKNOWN_ERROR, do_correction)         
-                
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, do_correction)
+
 
     def run_once(self, do_correction, single = False):
         status = VEFBStatus.UNKNOWN_ERROR
@@ -342,23 +295,22 @@ class vefb_server:
         self.check_camera_state()
 
         if not self.have_stored_beam():
-            debug.dbg_unique(debug.ERROR, 'no stored beam')
+            print 'no stored beam'
             status = VEFBStatus.NO_STORED_BEAM
 
         elif not self.skew_quads.check_state():
-            debug.dbg_unique(debug.ERROR, 'skew quad error')
+            print 'skew quad error'
             status = VEFBStatus.MAGNET_ERROR
 
         elif self.recovering_cameras:
             status = VEFBStatus.RECOVERING_CAMERAS
 
         elif self.is_injecting():
-            debug.dbg_unique(debug.INFO, 'injecting')
             status = VEFBStatus.INJECTING
 
         elif self.emittance_status_bad():
-            debug.dbg_unique(debug.WARNING,
-                'emittance status %d not ok, but not fatal yet - skip' % self.emit_status.value)
+            print 'emittance status %d not ok, but not fatal yet - skip' \
+                    % self.emit_status.value
             status = VEFBStatus.EMITTANCE_WARNING
 
         else:
@@ -373,7 +325,7 @@ class vefb_server:
 
 
     def single(self, value):
-        debug.dbg(debug.INFO, 'single')
+        print 'single correct'
         self.run_once(True, True)
 
 
@@ -384,17 +336,17 @@ class vefb_server:
 
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
             rm_file = os.path.join(matDir, ringmode, 'GoldenCouplingEmittance.mat')
-            debug.dbg(debug.INFO, 'emitfb: loadMatrix', ringmode, rm_file)
+            print 'emitfb: loadMatrix', ringmode, rm_file
 
             RM_load=loadmat(rm_file)
             RM=RM_load['RM']
-            debug.dbg(debug.INFO, 'RM=', RM)
+            print 'RM=', RM
             self.IRM_ = linalg.pinv(RM)
             self.IRM = 1/RM[0][0]
-            debug.dbg(debug.INFO,'IRM', self.IRM)
+            print 'IRM', self.IRM
 
         except:
-            debug.dbg(debug.ERROR, 'emitfb ringmode_change raised unexpected exception')
+            print 'emitfb ringmode_change raised unexpected exception'
             traceback.print_exc()
 
         if self.enabled:
@@ -404,14 +356,13 @@ class vefb_server:
 
 
     def handle_status(self, status, do_correction):
-        debug.dbg(debug.DEBUG, 'handle status', status, do_correction)
 
         status = self.persistent_error_check(status)
 
         if self.last_status != status:
-            debug.dbg(debug.INFO, 'vefb status change', self.last_status, '->', status)
+            print 'vefb status change', self.last_status, '->', status
             if status == VEFBStatus.OK:
-                debug.dbg(debug.INFO, 'OK again')
+                print 'OK again'
         self.last_status = status
 
         self.calc_status_pv.set(status)
@@ -447,14 +398,14 @@ class vefb_server:
 
         if self.enabled and \
                 self.error_or_recover_time > self.max_recovery_time_pv.get():
-            debug.dbg(debug.ERROR, 'time in error/recovery exceeds timeout',
-                      self.max_recovery_time_pv)
+            print 'time in error/recovery exceeds timeout', \
+                      self.max_recovery_time_pv
             status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS
 
         elif self.enabled and \
                 (self.error_time > self.max_error_time_pv.get()):
-            debug.dbg(debug.ERROR, 'time in error exceeds timeout',
-                    self.max_error_time_pv)
+            print 'time in error exceeds timeout', \
+                    self.max_error_time_pv
             status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS
 
         self.current_time = current_time
@@ -471,21 +422,21 @@ class vefb_server:
 
             if recovery_time > min_recovery_timeout and \
                     self.camera_recovery_complete():
-                message = 'camera recovery successful after %g seconds' % recovery_time
-                debug.dbg(debug.INFO, message)
+                print 'camera recovery successful after %g seconds' \
+                        % recovery_time
                 self.recovering_cameras = False
-            else:
-                if recovery_time > max_recovery_timeout:
-                    debug.dbg(debug.INFO,
-                        'camera recovery timeout %g seconds exceeded' % max_recovery_timeout)
-                    self.recovering_cameras = False
+
+            elif recovery_time > max_recovery_timeout:
+                print 'camera recovery timeout %g seconds exceeded' \
+                        % max_recovery_timeout
+                self.recovering_cameras = False
 
         elif self.cam_recovery_enable_pv.get() == 1:
             self.recovering_cameras = self.camera_recovery_started()
             if self.recovering_cameras:
                  current_time = time.time()
                  self.recovery_start_time = current_time
-                 debug.dbg(debug.INFO, 'camera recovery started')
+                 print 'camera recovery started'
 
 
     def camera_recovery_started(self):
@@ -499,10 +450,8 @@ class vefb_server:
 
 
     def have_stored_beam(self):
-        ok = self.beam_current.ok
-        beam_current = self.beam_current.value
-        debug.dbg(debug.DEBUG, ok, beam_current)
-        return ok and beam_current > self.dcct_threshold_pv.get()
+        return self.beam_current.ok and \
+            self.beam_current.value > self.dcct_threshold_pv.get()
 
 
     def is_injecting(self):
@@ -520,7 +469,7 @@ class vefb_server:
 
 
     def set_enabled(self, value):
-        debug.dbg(debug.INFO, 'ENABLE:', value)
+        print 'LOOP ENABLE:', value
         enabled = (value == 1)
         self.enabled = enabled
         self.error_or_recover_time = 0
@@ -547,9 +496,9 @@ class vefb_server:
 
 
     def do_calc(self, apply_calc, use_filter=True, check_limits=True):
-        
+
         if not self.calc_parameters_ok():
-            debug.dbg(debug.ERROR, 'No matrix')
+            print 'No matrix'
             return VEFBStatus.MISSING_CALC_PARAMETERS
 
         target = self.vemit_target_pv.get()
@@ -561,21 +510,19 @@ class vefb_server:
 
         # Timestamps ok?
         if age > VEFBConstants.MAX_TS_AGE:
-            debug.dbg_unique(debug.WARNING, 'vemit ts too old - bail out')
+            print 'vemit ts too old - skip'
             return VEFBStatus.NO_EMITTANCE_VALUE
-            
+
         # values ok?
         if check_limits:
             vmax = target + self.vemit_err_max_pv.get()
             if vemit > vmax:
-                debug.dbg_tag_unique(debug.WARNING, 'VEMIT BIG',
-                    'vemit too high - bail out', vemit, 'MAX ', vmax)
+                print 'vemit too high - skip', vemit, 'MAX ', vmax
                 return VEFBStatus.BAD_EMITTANCE_VALUE
-                
+
             vmin = target - self.vemit_err_max_pv.get()
             if vemit < vmin:
-                debug.dbg_tag_unique(debug.WARNING, 'VEMIT SMALL',
-                    'vemit too low - bail out', 'vemit ', vemit, 'MIN ', vmin)
+                print 'vemit too low - skip', 'vemit ', vemit, 'MIN ', vmin
                 return VEFBStatus.BAD_EMITTANCE_VALUE
 
         # apply filter (IIR) if required
@@ -598,7 +545,7 @@ class vefb_server:
                 return VEFBStatus.MAGNET_DELTA_ERROR
         else:
             if delta_max <= 0:
-                debug.dbg(debug.ERROR, 'max delta non positive')
+                print 'max delta non positive'
                 return VEFBStatus.MAGNET_DELTA_ERROR
 
             if delta > delta_max:
@@ -631,7 +578,7 @@ class vefb_server:
         builder.SetDeviceName("SR-CS-VEFB-01")
 
         self.enable_pv = builder.mbbOut(
-                'LOOP', ("OFF", 0, "MINOR"), ("ON", 1),
+                "LOOP", ("OFF", 0, "MINOR"), ("ON", 1),
                 initial_value = 0, on_update = self.set_enabled)
 
         builder.aOut("SINGLE", initial_value = 0,
@@ -662,22 +609,26 @@ class vefb_server:
                 DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
 
         self.max_error_time_pv = builder.aOut(
-                 "MAX_ERROR_TIME", initial_value = 24.0,
-                 DRVL = 0.0, PREC = 1, EGU = "s")
+                "MAX_ERROR_TIME",
+                initial_value = VEFBConstants.MAX_ERROR_TIME_INITIAL,
+                DRVL = 0.0, PREC = 1, EGU = "s")
 
         self.max_recovery_time_pv = builder.aOut(
-                 "MAX_RECOVERY_TIME", initial_value = 120,
-                 DRVL = 0.0, PREC = 1, EGU = "s")
+                "MAX_RECOVERY_TIME",
+                initial_value = VEFBConstants.MAX_ERROR_TIME_INITIAL,
+                DRVL = 0.0, PREC = 1, EGU = "s")
 
         self.min_camera_recovery_time_pv = builder.aOut(
-                     "MIN_CAM_RECOVERY_TIME",
-                     initial_value = 35, DRVL = 0.0, PREC = 1, EGU = "s")
+                "MIN_CAM_RECOVERY_TIME",
+                initial_value = VEFBConstants.MIN_CAM_RECOVERY_TIME_INITIAL,
+                DRVL = 0.0, PREC = 1, EGU = "s")
 
         self.max_camera_recovery_time_pv = builder.aOut("MAX_CAM_RECOVERY_TIME",
-                     initial_value = 50, DRVL = 0.0, PREC = 1, EGU = "s")
+                initial_value = VEFBConstants.MAX_CAM_RECOVERY_TIME_INITIAL,
+                DRVL = 0.0, PREC = 1, EGU = "s")
 
         self.cam_recovery_enable_pv = builder.mbbOut(
-                'CAM_RECOVERY', ("DISABLED", 0), ("ENABLED", 1),
+                "CAM_RECOVERY", ("DISABLED", 0), ("ENABLED", 1),
                  initial_value = 1)
 
         self.squad_delta_max_pv = builder.aOut(
@@ -686,7 +637,7 @@ class vefb_server:
                 PREC = 4, EGU = "A")
 
 
-        self.status_pv = builder.mbbIn('STATUS',
+        self.status_pv = builder.mbbIn("STATUS",
              ("Ok", VEFBStatus.OK),
              ("Injecting", VEFBStatus.INJECTING),
              ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
@@ -696,15 +647,17 @@ class vefb_server:
              ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MAJOR"),
              ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MAJOR"),
              ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
-             ("Missing calc parameters", VEFBStatus.MISSING_CALC_PARAMETERS, "MAJOR"),
+             ("Missing calc parameters",
+                 VEFBStatus.MISSING_CALC_PARAMETERS, "MAJOR"),
              ("Magnet Error", VEFBStatus.MAGNET_ERROR, "MAJOR"),
              ("Recovering cameras", VEFBStatus.RECOVERING_CAMERAS, "MINOR"),
              ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
-             ("Persistent emittance err", VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
+             ("Persistent emittance err",
+                 VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
              initial_value = VEFBStatus.OK)
 
 
-        self.calc_status_pv = builder.mbbIn('CALC_STATUS',
+        self.calc_status_pv = builder.mbbIn("CALC_STATUS",
              ("Ok", VEFBStatus.OK),
              ("Injecting", VEFBStatus.INJECTING),
              ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
@@ -714,10 +667,12 @@ class vefb_server:
              ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MINOR"),
              ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MINOR"),
              ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
-             ("Missing calc parameters", VEFBStatus.MISSING_CALC_PARAMETERS, "MINOR"),
+             ("Missing calc parameters",
+                  VEFBStatus.MISSING_CALC_PARAMETERS, "MINOR"),
              ("Magnet Error", VEFBStatus.MAGNET_ERROR, "MINOR"),
              ("Recovering cameras", VEFBStatus.RECOVERING_CAMERAS, "MINOR"),
              ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
-             ("Persistent emittance err", VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
+             ("Persistent emittance err",
+                 VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
              initial_value = VEFBStatus.OK)
 
