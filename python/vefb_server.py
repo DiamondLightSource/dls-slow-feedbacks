@@ -54,23 +54,49 @@ class EmittanceStatus:
 
 
 class VEFBStatus:
+    # Feedback operation successful.
     OK = 0
+
+    # Feedback suspended during injection.
     INJECTING = 1
+
+    # Emittance calc reports error status. Feedback suspended.
     EMITTANCE_WARNING = 2
+
+    # Error of unknown type (e.g. uncaught exception). Feedback stops.
     UNKNOWN_ERROR = 3
-    NO_STORED_BEAM = 4    
-    EMITTANCE_ERROR = 5
-    RING_MODE_CHANGE = 6
-    MAGNET_DELTA_ERROR = 7
-    BAD_EMITTANCE_VALUE = 8
-    MISSING_CALC_PARAMETERS = 9
-    MAGNET_ERROR = 10
-    RECOVERING_CAMERAS = 11
-    NO_EMITTANCE_VALUE = 12
-    PERSISTENT_EMITTANCE_ERRORS = 13
+
+    # No stored beam. Feedback stops.
+    NO_STORED_BEAM = 4
+
+    # Ring mode change with feedback running. Feedback stops.
+    RING_MODE_CHANGE = 5
+
+    # Magnet change exceeds threshold. Feedback stops if running.
+    MAGNET_DELTA_ERROR = 6
+
+    # Emittance value outside tolerable values. Feedback suspended.
+    BAD_EMITTANCE_VALUE = 7
+
+    # A paremeter required for feedback to run. Feedback stopped/won't start.
+    MISSING_CALC_PARAMETERS = 8
+
+    # Error reading from/writing to magnet or with magnet drive levels.
+    MAGNET_ERROR = 9
+
+    # Camera are in recovery. Feedback suspended.
+    RECOVERING_CAMERAS = 10
+
+    # No value from emittance IOC. Feedback suspended.
+    NO_EMITTANCE_VALUE = 11
+
+    # Time feedback is suspended due to errors exceeds theshold.
+    # Feedback stops.
+    PERSISTENT_EMITTANCE_ERRORS = 12
 
 
 #################################  Monitors  ##############################################
+
 
 class PVMonitor:
     def __init__(self, name):
@@ -109,7 +135,9 @@ class WFMonitor:
             self.timestamps[index] = time.time()
         self.ok = all(self.oks)
 
+
 ################################# SKEW QUADS ####################################################
+
 
 class SkewQuadrupoles:
     def __init__(self):
@@ -239,7 +267,7 @@ class vefb_server:
         self.last_status = VEFBStatus.OK
 
         self.recovering_cameras = False
-        
+
         self.error_or_recover_time = 0
         self.error_time = 0
         self.current_time = time.time()
@@ -587,7 +615,7 @@ class vefb_server:
         self.afrac_pv = builder.aOut(
                 "AFRAC", initial_value = VEFBConstants.AFRAC_INITIAL,
                 DRVH = 1, DRVL = 0, PREC = 2, EGU = "1")
-    
+
         self.iir_frac_pv = builder.aOut(
                 "IIRF_PARAM",
                 initial_value = VEFBConstants.IIRF_PARAM_INITIAL,
@@ -643,7 +671,6 @@ class vefb_server:
              ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
              ("Unknown error", VEFBStatus.UNKNOWN_ERROR, "MAJOR"),
              ("No stored beam", VEFBStatus.NO_STORED_BEAM, "MAJOR"),
-             ("Emittance calc error", VEFBStatus.EMITTANCE_ERROR, "MAJOR"),
              ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MAJOR"),
              ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MAJOR"),
              ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
@@ -663,7 +690,6 @@ class vefb_server:
              ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
              ("Unknown error", VEFBStatus.UNKNOWN_ERROR, "MINOR"),
              ("No stored beam", VEFBStatus.NO_STORED_BEAM, "MINOR"),
-             ("Emittance calc error", VEFBStatus.EMITTANCE_ERROR, "MINOR"),
              ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MINOR"),
              ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MINOR"),
              ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
