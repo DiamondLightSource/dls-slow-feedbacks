@@ -95,7 +95,7 @@ class VEFBStatus:
     PERSISTENT_EMITTANCE_ERRORS = 12
 
 
-#################################  Monitors  ##############################################
+#################################  Monitors  ###################################
 
 
 class PVMonitor:
@@ -104,7 +104,8 @@ class PVMonitor:
         self.ok = False
         self.value = None
         self.timestamp = 0
-        camonitor(name, self.on_update, format = FORMAT_TIME, notify_disconnect = True)
+        camonitor(name, self.on_update,
+            format = FORMAT_TIME, notify_disconnect = True)
 
     def on_update(self, value):
         self.ok = value.ok
@@ -123,7 +124,8 @@ class WFMonitor:
         self.oks = array([False for i in names], dtype = bool)
         self.values = zeros(len(names), dtype=dtype)
         self.timestamps = zeros(len(names))
-        camonitor(names, self.on_update, format = FORMAT_TIME, notify_disconnect = True)
+        camonitor(names, self.on_update,
+            format = FORMAT_TIME, notify_disconnect = True)
 
     def on_update(self, value, index):
         self.oks[index] = value.ok
@@ -136,7 +138,7 @@ class WFMonitor:
         self.ok = all(self.oks)
 
 
-################################# SKEW QUADS ####################################################
+################################# SKEW QUADS ###################################
 
 
 class SkewQuadrupoles:
@@ -250,7 +252,7 @@ class SkewQuadrupoles:
         self.drvls = self.seti_drvls.values
 
 
-################################# VEMIT FB ####################################################
+################################# VEMIT FB #####################################
 
 
 class vefb_server:
@@ -363,7 +365,8 @@ class vefb_server:
             self.IRM = None
 
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
-            rm_file = os.path.join(matDir, ringmode, 'GoldenCouplingEmittance.mat')
+            rm_file = os.path.join(
+                matDir, ringmode, 'GoldenCouplingEmittance.mat')
             print 'emitfb: loadMatrix', ringmode, rm_file
 
             RM_load=loadmat(rm_file)
@@ -556,7 +559,8 @@ class vefb_server:
         # apply filter (IIR) if required
         if use_filter:
             filter_frac = self.iir_frac_pv.get()
-            filtered = filter_frac * vemit + (1-filter_frac) * self.vemit_filtered
+            filtered = filter_frac * vemit + \
+                (1-filter_frac) * self.vemit_filtered
             vemit_used = filtered if use_filter else vemit
             self.vemit_filtered = filtered
         else:
