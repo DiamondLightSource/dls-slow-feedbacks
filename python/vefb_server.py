@@ -84,7 +84,7 @@ class VEFBStatus:
     # Error reading from/writing to magnet or with magnet drive levels.
     MAGNET_ERROR = 9
 
-    # Camera are in recovery. Feedback suspended.
+    # Cameras are in recovery. Feedback suspended.
     RECOVERING_CAMERAS = 10
 
     # No value from emittance IOC. Feedback suspended.
@@ -169,7 +169,7 @@ class SkewQuadrupoles:
                        self.seti_drvhs.values,
                        self.squad_pvs):
             if a >= b:
-                print "drive check", "DRVH >= DRVL", c
+                print "drive check", "DRVH <= DRVL", c
                 return False
         return True
 
