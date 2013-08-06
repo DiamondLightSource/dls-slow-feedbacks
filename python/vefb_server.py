@@ -96,6 +96,9 @@ class VEFBStatus:
     # Feedback stops.
     PERSISTENT_EMITTANCE_ERRORS = 12
 
+    # Applying corrections is having no effect.
+    # Feedback stops before skew quads driven to bad position.
+    HAVING_NO_EFFECT  = 13
 
 #################################  Monitors  ###################################
 
@@ -268,7 +271,8 @@ class vefb_server:
         self.IRM = None
         self.last = None
         self.vemit_filtered = VEFBConstants.VEMIT_TARGET_INITIAL
-        self.last_status = VEFBStatus.OK
+        self.last_status = VEFBStatus.OK 
+        self.delta = 0
 
         self.recovering_cameras = False
 
@@ -276,6 +280,7 @@ class vefb_server:
         self.error_time = 0
         self.current_time = time.time()
         self.recovery_start_time = self.current_time
+        self.sum_delta_oor = 0
 
         self.monitors()
         self.records()
@@ -396,6 +401,8 @@ class vefb_server:
     def handle_status(self, status, do_correction):
 
         status = self.persistent_error_check(status)
+        status = self.no_effect_check(status)
+
 
         if self.last_status != status:
             print 'vefb status change', self.last_status, '->', status
@@ -447,6 +454,26 @@ class vefb_server:
             status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS
 
         self.current_time = current_time
+
+        return status
+
+
+    def no_effect_check(self, status):
+        if not self.enabled or status not in [ VEFBStatus.OK ]:
+            return status
+
+        if abs(self.vemit_filtered - self.vemit_target_pv.get()) > self.vemit_acceptable_error_pv.get():
+            self.sum_delta_oor += self.delta
+            print 'oor', self.vemit_filtered, self.vemit_target_pv.get(), \
+                    self.sum_delta_oor
+            if self.no_effect_error_enable_pv.get() == 1 and \
+                     abs(self.sum_delta_oor) > self.oor_squad_delta_max_pv.get():
+                print 'sum_delta_oor threshold exceeded', self.sum_delta_oor
+                status = VEFBStatus.HAVING_NO_EFFECT
+            else:
+                print 'sum_delta_oor within  threshold ', self.sum_delta_oor
+        else:
+            self.sum_delta_oor = 0
 
         return status
 
@@ -514,6 +541,7 @@ class vefb_server:
         self.error_time = 0
         if enabled:
             self.vemit_filtered = self.vemit_target_pv.get()
+            self.sum_delta_oor = 0
         self.skew_quads.use_setpoint(enabled)
 
 
@@ -594,6 +622,8 @@ class vefb_server:
                 print 'scaled ', delta, '->', -delta_max
                 delta = -delta_max
 
+        self.delta = delta
+
         # same correction applied to all skew quads
         num_squads = self.skew_quads.num
         sq_delta = delta * ones(num_squads)
@@ -642,10 +672,24 @@ class vefb_server:
                 initial_value = VEFBConstants.VEMIT_TARGET_ERR_MAX_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
+        self.vemit_acceptable_error_pv = builder.aOut(
+                "VEMIT_ACCEPTABLE_ERR",
+                initial_value = 0.1, #VEFBConstants.VEMIT_TARGET_ERR_MAX_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
+
+        self.oor_squad_delta_max_pv = builder.aOut(
+                "NO_EFFECT_SQUAD_DELTA_MAX",
+                initial_value = 0.02, #VEFBConstants.SQUAD_DELTA_MAX_INITIAL,
+                PREC = 4, EGU = "A")
+
         self.vemit_target_pv = builder.aOut(
                 "VEMIT_TARGET",
                 initial_value = VEFBConstants.VEMIT_TARGET_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
+
+        self.no_effect_error_enable_pv = builder.mbbOut(
+                "NO_EFFECT_ERRORS", ("DISABLED", 0), ("ENABLED", 1),
+                 initial_value = 1)
 
         self.max_error_time_pv = builder.aOut(
                 "MAX_ERROR_TIME",
@@ -693,6 +737,7 @@ class vefb_server:
              ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
              ("Persistent emittance err",
                  VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
+             ("Having no effect", VEFBStatus.HAVING_NO_EFFECT, "MAJOR"),
              initial_value = VEFBStatus.OK)
 
 
