@@ -654,7 +654,7 @@ class vefb_server:
 
         self.max_recovery_time_pv = builder.aOut(
                 "MAX_RECOVERY_TIME",
-                initial_value = VEFBConstants.MAX_ERROR_TIME_INITIAL,
+                initial_value = VEFBConstants.MAX_RECOVERY_TIME_INITIAL,
                 DRVL = 0.0, PREC = 1, EGU = "s")
 
         self.min_camera_recovery_time_pv = builder.aOut(
