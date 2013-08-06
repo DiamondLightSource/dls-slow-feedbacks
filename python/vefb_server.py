@@ -13,7 +13,7 @@ class VEFBConstants:
     AFRAC_INITIAL = 0.15
     IIRF_PARAM_INITIAL = 0.25
     MAX_TS_AGE = 0.35
-    PS_DELTA_MAX_INITIAL = 0.01
+    SQUAD_DELTA_MAX_INITIAL = 0.01
     VEMIT_TARGET_ERR_MAX_INITIAL = 1.0
     MAX_ERROR_TIME_INITIAL = 24.0
     MAX_RECOVERY_TIME_INITIAL = 120.0
@@ -673,7 +673,7 @@ class vefb_server:
 
         self.squad_delta_max_pv = builder.aOut(
                 "SQUAD_DELTA_MAX",
-                initial_value = VEFBConstants.PS_DELTA_MAX_INITIAL,
+                initial_value = VEFBConstants.SQUAD_DELTA_MAX_INITIAL,
                 PREC = 4, EGU = "A")
 
 
