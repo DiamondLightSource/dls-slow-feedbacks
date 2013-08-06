@@ -83,6 +83,7 @@ class VEFBStatus:
     MISSING_CALC_PARAMETERS = 8
 
     # Error reading from/writing to magnet or with magnet drive levels.
+    # Feedback stops if running.
     MAGNET_ERROR = 9
 
     # Cameras are in recovery. Feedback suspended.
@@ -122,7 +123,7 @@ class WFMonitor:
     def __init__(self, names, dtype=double):
         self.names = names
         self.ok = False
-        self.oks = array([False for i in names], dtype = bool)
+        self.oks = zeros(len(names), dtype=bool)
         self.values = zeros(len(names), dtype=dtype)
         self.timestamps = zeros(len(names))
         camonitor(names, self.on_update,
@@ -134,7 +135,7 @@ class WFMonitor:
             self.values[index] = +value
             self.timestamps[index] = value.timestamp
         else:
-            self.values[index] = 0
+            self.values[index] = nan
             self.timestamps[index] = time.time()
         self.ok = all(self.oks)
 
@@ -595,7 +596,7 @@ class vefb_server:
 
         # same correction applied to all skew quads
         num_squads = self.skew_quads.num
-        sq_delta = array([ delta ] * num_squads)
+        sq_delta = delta * ones(num_squads)
 
         if apply_calc:
             # apply correction to skew quads
