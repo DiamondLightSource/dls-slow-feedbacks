@@ -6,6 +6,7 @@ from cothread.catools import *
 from cothread import Spawn, Sleep, WaitForQuit
 import mml
 
+
 class sofb(object):
 
     def __init__(self):
@@ -53,10 +54,10 @@ class sofb(object):
         irm = self.get_irm(hen, ven, bpmen, self.threshold)
 
         bpmx = caget(mml.ao["bpmx"].readback)[bpmen]
-        hcm = caget(mml.ao["hcm"].readback[hen])
+        hcm = caget(mml.ao["hcm"].setpoint[hen])
 
         bpmy = caget(mml.ao["bpmy"].readback)[bpmen]
-        vcm = caget(mml.ao["vcm"].readback[ven])
+        vcm = caget(mml.ao["vcm"].setpoint[ven])
 
         hdelta = dot(irm[0], bpmx)
         hdelta = hdelta * self.scale(hdelta)
