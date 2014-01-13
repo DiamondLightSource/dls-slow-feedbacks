@@ -23,6 +23,11 @@ TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
 CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 INJECTION_PV = 'SR-CS-FILL-01:COUNTDOWN'
 
+# Our IOC name
+IOC = 'SR-CS-TCFB-01'
+
+# Amount we allow tune feedback to change the current by
+MAX_CURRENT_RANGE = 300
 
 def load_magnet_pvs(mat_file):
     '''
@@ -35,6 +40,15 @@ def load_magnet_pvs(mat_file):
         mag_pvs.extend([str(pv)[:-2] for pv in pvset])
     return mag_pvs
 
+def rename_pvs(pvs):
+    new_pvs = []
+    for pv in pvs:
+        parts = pv.split('-')
+        cell = parts[0][2:4]
+        new_pv = IOC + ':' + cell + parts[2] + parts[3]
+        new_pvs.append(new_pv)
+
+    return new_pvs
 
 def load_tune_rm(mat_file):
     '''
@@ -68,7 +82,7 @@ class TunefbServer(object):
     '''
 
     PERIOD = 1.0
-    MIN_CURRENT = 1.0
+    MIN_CURRENT = -1.0
 
     def __init__(self, mode):
         '''Fetch data from files and set up soft IOC.'''
@@ -86,6 +100,7 @@ class TunefbServer(object):
 
         # Load data from files (and on ringmode change)
         self.mag_pvs = None
+        self.local_pvs = None
         self.mag_limits = None
         self.rm = None
         self.irm = None
@@ -93,6 +108,15 @@ class TunefbServer(object):
         if self.set_datadir not in mode.listeners:
             mode.add_listener(self.set_datadir)
 
+        self.mag_pvs = load_magnet_pvs(os.path.join(self.dataroot, 'SRI0913', 'TunePvs.mat'))
+        self.local_pvs = rename_pvs(self.mag_pvs)
+        # Magnet setpoint PVs
+        self.mag_seti_pvs = [pv + ':I' for pv in self.local_pvs]
+
+        # Magnet current limits
+        self.mag_limits = [
+            numpy.array([-MAX_CURRENT_RANGE for pv in self.local_pvs]),
+            numpy.array([ MAX_CURRENT_RANGE for pv in self.local_pvs])]
         # Initalise EPICS records
         self.records()
 
@@ -100,16 +124,9 @@ class TunefbServer(object):
         '''Load required data from files in datadir.'''
         # Load data from file
         mode_dir = os.path.join(self.dataroot, datadir)
-        mag_pvs = load_magnet_pvs(os.path.join(mode_dir, 'TunePvs.mat'))
         self.rm = load_tune_rm(os.path.join(mode_dir, 'GoldenTuneResp.mat'))
 
-        # Magnet setpoint PVs
-        self.mag_seti_pvs = [pv + ':SETI' for pv in mag_pvs]
 
-        # Magnet current limits
-        self.mag_limits = [
-            numpy.array(caget([pv + ':IMIN' for pv in mag_pvs])),
-            numpy.array(caget([pv + ':IMAX' for pv in mag_pvs]))]
 
         # Invert response matrix
         self.irm = numpy.linalg.pinv(self.rm)
@@ -152,13 +169,14 @@ class TunefbServer(object):
         reliable.'''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity != 0 for tune in tunes]):
-            raise TunefbException(TUNE_VALIDITY_ERROR)
+            pass
+            #raise TunefbException(TUNE_VALIDITY_ERROR)
         # Move tunes to numpyarray after severity check
-        tunes = numpy.array(tunes)
-        if any(tunes > self.tunes_max):
-            raise TunefbException(TUNE_RANGE_ERROR)
-        if any(tunes < self.tunes_min):
-            raise TunefbException(TUNE_RANGE_ERROR)
+#        tunes = numpy.array(tunes)
+#        if any(tunes > self.tunes_max):
+#            raise TunefbException(TUNE_RANGE_ERROR)
+#        if any(tunes < self.tunes_min):
+#            raise TunefbException(TUNE_RANGE_ERROR)
 
         tune_deltas = self.golden_tunes - tunes
         print 'Actual tune deltas', tune_deltas
@@ -250,7 +268,7 @@ class TunefbServer(object):
 
     def records(self):
         '''Setup iocbuilder to create required records.'''
-        builder.SetDeviceName('SR-CS-TCFB-01')
+        builder.SetDeviceName(IOC)
         self.afrac_pv = builder.aOut(
                 'AFRAC', initial_value=self.afrac,
                 on_update=self.set_afrac, PREC=4)
@@ -288,3 +306,10 @@ class TunefbServer(object):
         builder.aOut(
                 'CURRENT', initial_value=1,
                 PREC=4)
+
+        # fetch values from the PVs we will be mirroring, before
+        # starting up.
+        # TODO: currently just getting some values for testing
+        remote_values = caget([pv + ':SETI' for pv in self.mag_pvs])
+        for pv, value in zip(self.local_pvs, remote_values):
+            builder.aOut(pv.split(':')[1] + ':I', initial_value=value)
