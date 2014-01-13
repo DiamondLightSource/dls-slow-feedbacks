@@ -43,6 +43,7 @@ def load_magnet_pvs(txt_file):
             mag_pvs.append(line.strip())
     return mag_pvs
 
+
 def rename_pvs(pvs):
     new_pvs = []
     for pv in pvs:
@@ -52,6 +53,7 @@ def rename_pvs(pvs):
         new_pvs.append(new_pv)
 
     return new_pvs
+
 
 def load_tune_rm(mat_file):
     '''
@@ -171,14 +173,13 @@ class TunefbServer(object):
         reliable.'''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity != 0 for tune in tunes]):
-            pass
-            #raise TunefbException(TUNE_VALIDITY_ERROR)
+            raise TunefbException(TUNE_VALIDITY_ERROR)
         # Move tunes to numpyarray after severity check
-#        tunes = numpy.array(tunes)
-#        if any(tunes > self.tunes_max):
-#            raise TunefbException(TUNE_RANGE_ERROR)
-#        if any(tunes < self.tunes_min):
-#            raise TunefbException(TUNE_RANGE_ERROR)
+        tunes = numpy.array(tunes)
+        if any(tunes > self.tunes_max):
+            raise TunefbException(TUNE_RANGE_ERROR)
+        if any(tunes < self.tunes_min):
+            raise TunefbException(TUNE_RANGE_ERROR)
 
         tune_deltas = self.golden_tunes - tunes
         print 'Actual tune deltas', tune_deltas

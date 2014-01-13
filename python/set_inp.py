@@ -1,4 +1,9 @@
 #!/dls_sw/work/R3.14.11/support/pythonSoftIoc/pythonIoc
+'''
+Simple script to set OFFSET1.INP for each magnet used in tune feedback.
+
+Each .INP is set to the local PV mirrored in our IOC.
+'''
 
 from pkg_resources import require
 require('cothread')
