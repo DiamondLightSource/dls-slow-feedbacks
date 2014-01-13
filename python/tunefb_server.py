@@ -1,4 +1,6 @@
-import os, cothread, numpy, scipy, scipy.io
+import os
+import numpy, scipy, scipy.io
+import cothread
 from cothread.catools import caput, caget, FORMAT_TIME
 from softioc import builder
 
@@ -16,28 +18,30 @@ UNEXPECTED_ERROR = 'Unexpected error'
 # PV names
 TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
             'SR21C-DI-TMBF-02:TUNE:TUNE']
-CURRENT_PV = 'SR-CS-TCFB-01:CURRENT'
+# TODO: useful to use our own PV for testing
+#CURRENT_PV = 'SR-CS-TCFB-01:CURRENT'
+CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 INJECTION_PV = 'SR-CS-FILL-01:COUNTDOWN'
 
 
-def load_magnet_pvs(file):
+def load_magnet_pvs(mat_file):
     '''
     Load corrector magnet PVs from the specific format
     in the file.
     '''
-    raw_pvs = scipy.io.loadmat(file)
+    raw_pvs = scipy.io.loadmat(mat_file)
     mag_pvs = []
     for pvset in raw_pvs['ans'][0]:
         mag_pvs.extend([str(pv)[:-2] for pv in pvset])
     return mag_pvs
 
 
-def load_tune_rm(file):
+def load_tune_rm(mat_file):
     '''
     Load response matrix from the specific format found
     in the specified file.
     '''
-    raw_rms = scipy.io.loadmat(file)
+    raw_rms = scipy.io.loadmat(mat_file)
     # Construct complete response matrix.
     rmx = []
     rmy = []
@@ -50,6 +54,9 @@ def load_tune_rm(file):
 
 
 class TunefbException(Exception):
+    '''
+    Exception for use by tune feedback.
+    '''
     pass
 
 
@@ -61,6 +68,7 @@ class TunefbServer(object):
     '''
 
     PERIOD = 1.0
+    MIN_CURRENT = 1.0
 
     def __init__(self, mode):
         '''Fetch data from files and set up soft IOC.'''
@@ -70,13 +78,11 @@ class TunefbServer(object):
         self.last_error = NO_ERROR
 
         # Tune data
-        self.golden_tunes = numpy.array([0.201, 0.371]) # CHANGE TO NULL
+        # TODO: should not provide default values.
+        self.golden_tunes = numpy.array([0.201, 0.371])
         self.mag_delta_max = numpy.array([0.1])
         self.tunes_max = numpy.array([0.25, 0.42])
         self.tunes_min = numpy.array([0.15, 0.32])
-
-        # Current checking values
-        self.min_current = 0.1
 
         # Load data from files (and on ringmode change)
         self.mag_pvs = None
@@ -93,9 +99,9 @@ class TunefbServer(object):
     def set_datadir(self, datadir):
         '''Load required data from files in datadir.'''
         # Load data from file
-        dir = os.path.join(self.dataroot, datadir)
-        mag_pvs = load_magnet_pvs(os.path.join(dir, 'TunePvs.mat'))
-        self.rm = load_tune_rm(os.path.join(dir, 'GoldenTuneResp.mat'))
+        mode_dir = os.path.join(self.dataroot, datadir)
+        mag_pvs = load_magnet_pvs(os.path.join(mode_dir, 'TunePvs.mat'))
+        self.rm = load_tune_rm(os.path.join(mode_dir, 'GoldenTuneResp.mat'))
 
         # Magnet setpoint PVs
         self.mag_seti_pvs = [pv + ':SETI' for pv in mag_pvs]
@@ -128,21 +134,22 @@ class TunefbServer(object):
                 self.error_pv.set(str(e))
                 print 'Error:', e
             except Exception, e:
-                print "Unexpected exception:", e
+                print 'Unexpected exception:', e
                 self.power_pv.set(False)
                 self.error_pv.set(UNEXPECTED_ERROR)
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
-        if caget(CURRENT_PV) < self.min_current:
+        if caget(CURRENT_PV) < self.MIN_CURRENT:
             raise TunefbException(LOW_CURRENT_ERROR)
 
     def injecting(self):
         '''Check if topup injection is occurring.'''
         return caget(INJECTION_PV) == 0
 
-    def get_delta_tunes(self):
-        '''Update values for delta_tunes.'''
+    def get_tune_deltas(self):
+        '''Update values for tune deltas, checking if the values are
+        reliable.'''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity != 0 for tune in tunes]):
             raise TunefbException(TUNE_VALIDITY_ERROR)
@@ -153,17 +160,18 @@ class TunefbServer(object):
         if any(tunes < self.tunes_min):
             raise TunefbException(TUNE_RANGE_ERROR)
 
-        delta_tunes = self.golden_tunes - tunes
-        print "determined tune delta", delta_tunes
-        return delta_tunes
+        tune_deltas = self.golden_tunes - tunes
+        print 'Actual tune deltas', tune_deltas
+        return tune_deltas
 
     def apply_correction(self, deltas):
         '''Put delta correction to magnets.'''
         # Scale values over the step current limit
         if any(abs(deltas) > self.mag_delta_max):
-            deltas *= self.mag_delta_max / abs(deltas).max()
+            factor = self.mag_delta_max / abs(deltas).max()
+            deltas *= factor
             self.error_pv.set(MAGNET_DELTA_ERROR)
-            print 'Using clipping factor', self.mag_delta_max / abs(deltas).max()
+            print 'Using clipping factor', factor
 
         # Get the current setpoint and apply the correction
         mag_vals = numpy.array(caget(self.mag_seti_pvs))
@@ -173,23 +181,33 @@ class TunefbServer(object):
         if any(mag_vals > self.mag_limits[1]):
             raise TunefbException(MAGNET_CURRENT_ERROR)
 
-        print "theoretical tune delta", numpy.dot(self.rm, deltas)
-        # actually should caput mag_vals, deltas printed for debug only
-        print 'calculated delta current:\n', deltas
+        print 'Theoretical tune correction', numpy.dot(self.rm, deltas)
+        # TODO: useful for testing
+        #print 'Calculated current deltas:\n', deltas
         caput(self.mag_seti_pvs, mag_vals)
 
     def correct(self):
-        tunes_delta = self.get_delta_tunes()
-        deltas = self.afrac * numpy.dot(self.irm, tunes_delta)
-        self.apply_correction(deltas)
+        '''
+        Determine the tune difference and calculate the current
+        deltas to be applied to the magnet power supplies.
+        '''
+        tune_deltas = self.get_tune_deltas()
+        mag_deltas = self.afrac * numpy.dot(self.irm, tune_deltas)
+        self.apply_correction(mag_deltas)
 
     def checked_correction(self):
         '''Calculate and then apply a correction, subject to checks.'''
         self.check_current()
         if not self.injecting():
             self.correct()
+        else:
+            print "Pausing for injection."
 
     def unchecked_correction(self, dummy):
+        '''
+        Calculate and apply correction without checking current
+        and injection status.
+        '''
         try:
             self.correct()
             print 'completed single correction'
@@ -197,8 +215,8 @@ class TunefbServer(object):
             print 'Error:', e
             self.error_pv.set(str(e))
         except Exception, e:
-            print "Unexpected exception:", e
-            self.error_pv.set('Unexpected error')
+            print 'Unexpected exception:', e
+            self.error_pv.set(UNEXPECTED_ERROR)
 
     def reset(self, dummy):
         '''Reset the error pv.'''
@@ -230,22 +248,17 @@ class TunefbServer(object):
     def set_mag_delta_max(self, value):
         self.mag_delta_max = value
 
-    def set_delta_h_tune(self, value):
-        self.tunes_delta_max[0] = value
-
-    def set_delta_v_tune(self, value):
-        self.tunes_delta_max[1] = value
-
     def records(self):
         '''Setup iocbuilder to create required records.'''
-        builder.SetDeviceName("SR-CS-TCFB-01")
+        builder.SetDeviceName('SR-CS-TCFB-01')
         self.afrac_pv = builder.aOut(
-                'AFRAC', initial_value=self.afrac, on_update=self.set_afrac,PREC=4)
+                'AFRAC', initial_value=self.afrac,
+                on_update=self.set_afrac, PREC=4)
         self.power_pv = builder.boolOut(
-                'ONOFF', "OFF", "ON", initial_value=False)
+                'ONOFF', 'OFF', 'ON', initial_value=False)
         self.error_pv = builder.stringOut(
                 'ERROR', initial_value=NO_ERROR)
-        self.unchecked_correction_pv= builder.aOut(
+        self.unchecked_correction_pv = builder.aOut(
                 'CORR', initial_value=0,
                 on_update=self.unchecked_correction, always_update=True)
         self.reset_pv = builder.aOut(
@@ -271,7 +284,7 @@ class TunefbServer(object):
         builder.aOut(
                 'IMAX', initial_value=self.mag_delta_max,
                 on_update=self.set_mag_delta_max, PREC=4)
-        # testing
+        # TODO: useful for testing
         builder.aOut(
                 'CURRENT', initial_value=1,
                 PREC=4)
