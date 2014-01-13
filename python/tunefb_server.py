@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 import numpy, scipy, scipy.io
 import cothread
 from cothread.catools import caput, caget, FORMAT_TIME
@@ -119,7 +120,7 @@ class TunefbServer(object):
         # Tune data
         # TODO: should not provide default values.
         self.golden_tunes = numpy.array([0.201, 0.371])
-        self.mag_delta_max = numpy.array([0.1])
+        self.mag_delta_max = numpy.array([0.01])
         self.tunes_max = numpy.array([0.25, 0.42])
         self.tunes_min = numpy.array([0.15, 0.32])
         self.tunes = numpy.zeros(2)
@@ -192,8 +193,9 @@ class TunefbServer(object):
                 self.error_pv.set(str(e))
                 log.warn('Error: %s' % str(e))
             except Exception, e:
-                # stop feedback
+                # stop feedback and print stack trace
                 log.warn('Unexpected exception: %s' %str(e))
+                traceback.print_exc()
                 self.power_pv.set(False)
                 self.error_pv.set(UNEXPECTED_ERROR)
 
@@ -215,7 +217,7 @@ class TunefbServer(object):
         reliable.
         '''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
-        if any([tune.severity != 0 for tune in tunes]):
+        if any([tune.severity == 3 for tune in tunes]):
             raise TunefbInvalid(TUNE_VALIDITY_ERROR)
         # this will work as long as the TMBF updates the tune PVs
         # more often than self.PERIOD
@@ -236,7 +238,7 @@ class TunefbServer(object):
         if any(abs(deltas) > self.mag_delta_max):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
-            self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor[0]))
+            self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor))
             log.debug('Using clipping factor: %s' % factor)
 
         # Add correction to total values
