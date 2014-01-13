@@ -161,9 +161,9 @@ class TunefbServer(object):
         mag_vals = numpy.array(caget(self.mag_pvs))
         mag_vals += deltas
         if any(mag_vals < self.mag_limits[0]):
-            raise Exception(MAGNET_CURRENT_ERROR)
+            raise TunefbException(MAGNET_CURRENT_ERROR)
         if any(mag_vals > self.mag_limits[1]):
-            raise Exception(MAGNET_CURRENT_ERROR)
+            raise TunefbException(MAGNET_CURRENT_ERROR)
 
         print "retrieved tune delta", numpy.dot(self.rm, deltas)
         # actually should caput mag_vals
