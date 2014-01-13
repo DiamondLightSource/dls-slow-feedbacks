@@ -16,7 +16,7 @@ class tunefb_server(object):
         self.tune_pvs = ['SR21C-DI-TMBF-01:TUNE:TUNE','SR21C-DI-TMBF-02:TUNE:TUNE']
         self.golden_tunes = numpy.array([0.201, 0.371])
         self.max_delta_tunes = numpy.array([0.1, 0.1])
-        self.max_tune_variance = numpy.array([0.1, 0.1])
+        self.max_tune_variance = numpy.array([0.0000000000000000000001, 0.1])
         self.delta_tunes = self.golden_tunes - numpy.array(caget(self.tune_pvs))
 
         # Current checking values
@@ -88,11 +88,15 @@ class tunefb_server(object):
         [caput(x[0], x[1]) for x in zip(self.mag_pvs, mag_vals)]
 
     def do_correction(self):
-        self.check_current()
-        if not self.isInjectionOccuring():
-            self.refresh_delta_tunes()
-            deltas = [numpy.dot(irm, self.delta_tunes) for irm in self.irms]
-            self.apply_correction(deltas)
+        try:
+            self.check_current()
+            if not self.isInjectionOccuring():
+                self.refresh_delta_tunes()
+                deltas = [numpy.dot(irm, self.delta_tunes) for irm in self.irms]
+                self.apply_correction(deltas)
+        except Exception, e:
+            self.set_power(0)
+            print 'Error:', e
 
     def set_power(self, power):
         self.power = power
