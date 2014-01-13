@@ -5,11 +5,12 @@ from softioc import builder
 
 # Errors
 NO_ERROR = 'No Errors'
-MAGNET_CURRENT_ERROR = 'Magnet current exceeds tolerance'
-MAGNET_DELTA_ERROR = 'Magnet current limit is causing scaling'
+MAGNET_CURRENT_ERROR = 'Magnet current above tolerances'
+MAGNET_DELTA_ERROR = 'Magnet current step is causing scaling'
 TUNE_RANGE_ERROR = 'Tunes are outside allowable range'
 TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
 LOW_CURRENT_ERROR = 'Current is too low'
+UNEXPECTED_ERROR = 'Unexpected error'
 
 
 # PV names
@@ -27,7 +28,7 @@ def load_magnet_pvs(file):
     raw_pvs = scipy.io.loadmat(file)
     mag_pvs = []
     for pvset in raw_pvs['ans'][0]:
-        mag_pvs.extend([str(pv) for pv in pvset])
+        mag_pvs.extend([str(pv)[:-2] for pv in pvset])
     return mag_pvs
 
 
@@ -91,16 +92,18 @@ class TunefbServer(object):
 
     def set_datadir(self, datadir):
         '''Load required data from files in datadir.'''
-        print "set_datadir"
+        # Load data from file
         dir = os.path.join(self.dataroot, datadir)
-
-        self.mag_pvs = load_magnet_pvs(os.path.join(dir, 'TunePvs.mat'))
+        mag_pvs = load_magnet_pvs(os.path.join(dir, 'TunePvs.mat'))
         self.rm = load_tune_rm(os.path.join(dir, 'GoldenTuneResp.mat'))
+
+        # Magnet setpoint PVs
+        self.mag_seti_pvs = [pv + ':SETI' for pv in mag_pvs]
 
         # Magnet current limits
         self.mag_limits = [
-            numpy.array(caget([pv + 'MIN' for pv in self.mag_pvs])),
-            numpy.array(caget([pv + 'MAX' for pv in self.mag_pvs]))]
+            numpy.array(caget([pv + ':IMIN' for pv in mag_pvs])),
+            numpy.array(caget([pv + ':IMAX' for pv in mag_pvs]))]
 
         # Invert response matrix
         self.irm = numpy.linalg.pinv(self.rm)
@@ -127,7 +130,7 @@ class TunefbServer(object):
             except Exception, e:
                 print "Unexpected exception:", e
                 self.power_pv.set(False)
-                self.error_pv.set('Unexpected error')
+                self.error_pv.set(UNEXPECTED_ERROR)
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
@@ -136,7 +139,7 @@ class TunefbServer(object):
 
     def injecting(self):
         '''Check if topup injection is occurring.'''
-        return (caget(INJECTION_PV) == 0)
+        return caget(INJECTION_PV) == 0
 
     def get_delta_tunes(self):
         '''Update values for delta_tunes.'''
@@ -163,7 +166,7 @@ class TunefbServer(object):
             print 'Using clipping factor', self.mag_delta_max / abs(deltas).max()
 
         # Get the current setpoint and apply the correction
-        mag_vals = numpy.array(caget(self.mag_pvs))
+        mag_vals = numpy.array(caget(self.mag_seti_pvs))
         mag_vals += deltas
         if any(mag_vals < self.mag_limits[0]):
             raise TunefbException(MAGNET_CURRENT_ERROR)
@@ -173,7 +176,7 @@ class TunefbServer(object):
         print "theoretical tune delta", numpy.dot(self.rm, deltas)
         # actually should caput mag_vals, deltas printed for debug only
         print 'calculated delta current:\n', deltas
-        #caput(self.mag_pvs, mag_vals)
+        #caput(self.mag_seti_pvs, mag_vals)
 
     def correct(self):
         tunes_delta = self.get_delta_tunes()
