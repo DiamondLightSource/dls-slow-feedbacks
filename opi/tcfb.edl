@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1091
-y 281
+x 1095
+y 305
 w 344
-h 368
+h 400
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -31,7 +31,7 @@ major 4
 minor 0
 release 0
 x 8
-y 304
+y 336
 w 328
 h 24
 lineColor index 13
@@ -44,10 +44,10 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 10
-y 306
+y 338
 w 324
 h 20
 controlPv "SR-CS-TCFB-01:ERROR"
@@ -98,7 +98,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 282
 y 50
@@ -120,7 +120,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 218
 y 50
@@ -190,7 +190,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 218
 y 146
@@ -229,7 +229,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 218
 y 114
@@ -268,7 +268,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 218
 y 82
@@ -292,7 +292,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 0
 y 0
 w 344
@@ -344,9 +344,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 240
+y 272
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -354,7 +354,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "RUN"
+  "LOOP CORRECTION"
 }
 endObjectProperties
 
@@ -363,7 +363,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 208
 w 200
@@ -382,9 +382,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 272
+y 304
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -400,10 +400,10 @@ endObjectProperties
 object activeButtonClass
 beginObjectProperties
 major 4
-minor 1
+minor 0
 release 0
 x 216
-y 240
+y 272
 w 120
 h 24
 fgColor index 14
@@ -424,10 +424,10 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 1
+minor 0
 release 0
 x 216
-y 272
+y 304
 w 120
 h 24
 fgColor index 14
@@ -448,7 +448,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 80
 w 200
@@ -466,7 +466,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 282
 y 82
@@ -506,7 +506,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 112
 w 200
@@ -524,7 +524,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 282
 y 114
@@ -563,7 +563,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 282
 y 146
@@ -587,7 +587,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 144
 w 200
@@ -625,7 +625,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 48
 w 200
@@ -646,7 +646,7 @@ major 4
 minor 1
 release 0
 x 216
-y 336
+y 368
 w 120
 h 24
 fgColor index 46
@@ -663,7 +663,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
 y 176
 w 200
@@ -697,7 +697,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 218
 y 210
@@ -720,7 +720,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 218
 y 178
@@ -743,7 +743,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 6
+minor 5
 release 0
 x 282
 y 178
@@ -760,5 +760,47 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 240
+w 200
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "SINGLE CORRECTION"
+}
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 216
+y 240
+w 120
+h 24
+fgColor index 14
+onColor index 3
+offColor index 3
+topShadowColor index 0
+botShadowColor index 14
+controlPv "SR-CS-TCFB-01:CORR"
+pressValue "1"
+onLabel "CORRECT"
+offLabel "CORRECT"
+3d
+font "helvetica-bold-r-14.0"
 endObjectProperties
 
