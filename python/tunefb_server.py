@@ -1,4 +1,5 @@
 import os
+import time
 import numpy, scipy, scipy.io
 import cothread
 from cothread.catools import caput, caget, FORMAT_TIME
@@ -10,15 +11,14 @@ NO_ERROR = 'No Errors'
 MAGNET_CURRENT_ERROR = 'Magnet current above tolerances'
 TUNE_RANGE_ERROR = 'Tunes are outside allowable range'
 TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
+TUNE_UPDATE_ERROR = 'Tune PV not updated'
 LOW_CURRENT_ERROR = 'Current is too low'
 UNEXPECTED_ERROR = 'Unexpected error'
 
 
 # Status
-NO_STATUS = 'No Status'
 FEEDBACK_OFF = 'Feedback off'
 FEEDBACK_ON = 'Feedback running'
-INJECTING_STATUS = 'Gating around injection'
 CLIPPING_STATUS = 'Correction scaled down by factor'
 
 
@@ -28,7 +28,6 @@ TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
 # TODO: useful to use our own PV for testing
 #CURRENT_PV = 'SR-CS-TCFB-01:CURRENT'
 CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
-INJECTION_PV = 'SR-CS-FILL-01:COUNTDOWN'
 
 DATADIR = '/home/uxj42447/software/fastfeedback.data'
 
@@ -99,7 +98,7 @@ class TunefbServer(object):
     '''
 
     PERIOD = 1.0
-    MIN_CURRENT = -1.0
+    MIN_CURRENT = 1.0
 
     def __init__(self, mode):
         '''Fetch data from files and set up soft IOC.'''
@@ -114,6 +113,8 @@ class TunefbServer(object):
         self.mag_delta_max = numpy.array([0.1])
         self.tunes_max = numpy.array([0.25, 0.42])
         self.tunes_min = numpy.array([0.15, 0.32])
+        self.tunes = numpy.zeros(2)
+        self.tune_deltas = numpy.zeros(2)
 
         # Load magnet PVs from file in this directory.
         pydir = os.path.dirname(os.path.realpath(__file__))
@@ -175,7 +176,7 @@ class TunefbServer(object):
                 # skip one correction
                 if self.status_pv.get() != str(e):
                     self.status_pv.set(str(e))
-                    print "Tune feedback paused:", e
+                    print 'Tune feedback paused:', e
             except TunefbError, e:
                 # stop feedback
                 self.power_pv.set(False)
@@ -192,10 +193,12 @@ class TunefbServer(object):
         if caget(CURRENT_PV) < self.MIN_CURRENT:
             raise TunefbError(LOW_CURRENT_ERROR)
 
-    def check_injection(self):
-        '''Check if topup injection is occurring.'''
-        if caget(INJECTION_PV) == 0:
-            raise TunefbInvalid(INJECTION_STATUS)
+    def check_tune_range(self):
+        '''Check if the measured tunes are within the allowed range.'''
+        if any(self.tunes > self.tunes_max):
+            raise TunefbError(TUNE_RANGE_ERROR)
+        if any(self.tunes < self.tunes_min):
+            raise TunefbError(TUNE_RANGE_ERROR)
 
     def get_tune_deltas(self):
         '''Update values for tune deltas, checking if the values are
@@ -203,16 +206,18 @@ class TunefbServer(object):
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity != 0 for tune in tunes]):
             raise TunefbInvalid(TUNE_VALIDITY_ERROR)
+        # this will work as long as the TMBF updates the tune PVs
+        # more often than self.PERIOD
+        last_check = time.time() - self.PERIOD
+        if any([tune.timestamp < last_check for tune in tunes]):
+            raise TunefbInvalid(TUNE_UPDATE_ERROR)
         # Move tunes to numpyarray after severity check
         tunes = numpy.array(tunes)
-        if any(tunes > self.tunes_max):
-            raise TunefbError(TUNE_RANGE_ERROR)
-        if any(tunes < self.tunes_min):
-            raise TunefbError(TUNE_RANGE_ERROR)
-
-        tune_deltas = self.golden_tunes - tunes
-        print 'Actual tune deltas', tune_deltas
-        return tune_deltas
+        print 'Tune delta before last correction %s' % str(self.tune_deltas)
+        print 'Tune change since last correction %s' % str(tunes - self.tunes)
+        self.tunes = tunes
+        self.tune_deltas = self.golden_tunes - self.tunes
+        print 'Actual tune deltas', self.tune_deltas
 
     def apply_correction(self, deltas):
         '''Put delta correction to magnets.'''
@@ -236,21 +241,21 @@ class TunefbServer(object):
         # TODO: useful for testing
         #print 'Calculated current deltas:\n', deltas
         caput(self.mag_ctrl_pvs, self.integrated_current)
-        print "total tune change:", self.integrated_tunes
+        print 'Total tune change from feedback', self.integrated_tunes
 
     def correct(self):
         '''
         Determine the tune difference and calculate the current
         deltas to be applied to the magnet power supplies.
         '''
-        tune_deltas = self.get_tune_deltas()
-        mag_deltas = self.afrac * numpy.dot(self.irm, tune_deltas)
+        mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
         self.apply_correction(mag_deltas)
 
     def checked_correction(self):
         '''Calculate and then apply a correction, subject to checks.'''
         self.check_current()
-        self.check_injection()
+        self.get_tune_deltas()
+        self.check_tune_range()
         self.correct()
 
     def unchecked_correction(self, dummy):
@@ -259,6 +264,7 @@ class TunefbServer(object):
         and injection status.
         '''
         try:
+            self.get_tune_deltas()
             self.correct()
             print 'completed single correction'
         except (TunefbInvalid, TunefbError), e:
