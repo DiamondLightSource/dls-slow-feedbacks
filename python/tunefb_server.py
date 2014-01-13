@@ -13,10 +13,12 @@ class tunefb_server(object):
         self.power = 1
 
         # Tune data
-        self.tune_pvs = ['SR21C-DI-TMBF-01:TUNE:TUNE','SR21C-DI-TMBF-02:TUNE:TUNE']
+        self.tune_pvs = [
+                'SR21C-DI-TMBF-01:TUNE:TUNE',
+                'SR21C-DI-TMBF-02:TUNE:TUNE']
         self.golden_tunes = numpy.array([0.201, 0.371])
         self.max_delta_tunes = numpy.array([0.1, 0.1])
-        self.max_tune_variance = numpy.array([0.0000000000000000000001, 0.1])
+        self.max_tune_variance = numpy.array([0.1, 0.1])
         self.delta_tunes = self.golden_tunes - numpy.array(caget(self.tune_pvs))
 
         # Current checking values
@@ -39,7 +41,8 @@ class tunefb_server(object):
 
         # Magnet pv names
         raw_pvs = scipy.io.loadmat(os.path.join(dir, 'TunePvs.mat'))
-        self.mag_pvs = [[pv.encode() for pv in pvs] for pvs in raw_pvs['ans'][0]]
+        self.mag_pvs = [
+                [pv.encode() for pv in pvs] for pvs in raw_pvs['ans'][0]]
 
         # Magnet current limits
         self.mag_limits = [[
@@ -66,7 +69,7 @@ class tunefb_server(object):
         if caget(self.current_pv) < self.min_current:
             raise Exception('Current to low')
 
-    def isInjectionOccuring(self):
+    def is_injection_occuring(self):
         if caget(self.injection_pv) == 0:
             return True
         return False
@@ -83,16 +86,21 @@ class tunefb_server(object):
         mag_vals = [numpy.array(caget(pvs)) for pvs in self.mag_pvs]
         for i, delta in enumerate(deltas):
             mag_vals[i] += delta
-        if numpy.array([(x[0] > x[1][1]).any() or (x[0] < x[1][0]).any() for x in zip(mag_vals, self.mag_limits)]).any():
+        if numpy.array([
+                (x[0] > x[1][1]).any()
+                or (x[0] < x[1][0]).any()
+                for x in zip(mag_vals, self.mag_limits)]).any():
             raise Exception('Magnet current values exceed tolerances')
         [caput(x[0], x[1]) for x in zip(self.mag_pvs, mag_vals)]
 
     def do_correction(self):
         try:
             self.check_current()
-            if not self.isInjectionOccuring():
+            if not self.is_injection_occuring():
                 self.refresh_delta_tunes()
-                deltas = [numpy.dot(irm, self.delta_tunes) for irm in self.irms]
+                deltas = [
+                    numpy.dot(irm, self.delta_tunes)
+                    for irm in self.irms]
                 self.apply_correction(deltas)
         except Exception, e:
             self.set_power(0)
