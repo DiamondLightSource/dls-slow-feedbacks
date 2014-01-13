@@ -5,6 +5,13 @@ import cothread
 from cothread.catools import caput, caget, FORMAT_TIME
 from softioc import builder
 
+# set up logging
+import logging as log
+LOG_FORMAT = '%(asctime)s %(levelname)s %(message)s'
+LOG_LEVEL = log.DEBUG
+log.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
+numpy.set_printoptions(precision=3)
+
 
 # Errors
 NO_ERROR = 'No Errors'
@@ -178,15 +185,15 @@ class TunefbServer(object):
                 # skip one correction
                 if self.status_pv.get() != str(e):
                     self.status_pv.set(str(e))
-                    print 'Tune feedback paused:', e
+                    log.warn('Tune feedback paused: %s' % str(e))
             except TunefbError, e:
                 # stop feedback
                 self.power_pv.set(False)
                 self.error_pv.set(str(e))
-                print 'Error:', e
+                log.warn('Error: %s' % str(e))
             except Exception, e:
                 # stop feedback
-                print 'Unexpected exception:', e
+                log.warn('Unexpected exception: %s' %str(e))
                 self.power_pv.set(False)
                 self.error_pv.set(UNEXPECTED_ERROR)
 
@@ -217,11 +224,11 @@ class TunefbServer(object):
             raise TunefbInvalid(TUNE_UPDATE_ERROR)
         # Move tunes to numpyarray after severity check
         tunes = numpy.array(tunes)
-        print 'Tune delta before last correction %s' % str(self.tune_deltas)
-        print 'Tune change since last correction %s' % str(tunes - self.tunes)
+        log.debug('Tune delta before last correction %s' % self.tune_deltas)
+        log.debug('Tune change since last correction %s' % str(tunes - self.tunes))
         self.tunes = tunes
         self.tune_deltas = self.golden_tunes - self.tunes
-        print 'Actual tune deltas', self.tune_deltas
+        log.debug('Actual tune deltas %s' % self.tune_deltas)
 
     def apply_correction(self, deltas):
         '''Put delta correction to magnets, clipping if neccassary.'''
@@ -230,7 +237,7 @@ class TunefbServer(object):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
             self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor[0]))
-            print 'Using clipping factor', factor
+            log.debug('Using clipping factor: %s' % factor)
 
         # Add correction to total values
         self.integrated_current += deltas
@@ -240,12 +247,12 @@ class TunefbServer(object):
             raise TunefbError(MAGNET_CURRENT_ERROR)
 
         calc_tune_corr = numpy.dot(self.rm, deltas)
-        print 'Theoretical tune correction', calc_tune_corr
+        log.debug('Theoretical tune correction %s' % str(calc_tune_corr))
         self.integrated_tunes += calc_tune_corr
         # TODO: useful for testing
-        #print 'Calculated current deltas:\n', deltas
+        #log.debug('Calculated current deltas:\n', deltas)
         caput(self.mag_ctrl_pvs, self.integrated_current)
-        print 'Total tune change from feedback', self.integrated_tunes
+        log.debug('Total tune change from feedback %s' % str(self.integrated_tunes))
 
     def correct(self):
         '''
@@ -273,12 +280,12 @@ class TunefbServer(object):
         try:
             self.refresh_tune_deltas()
             self.correct()
-            print 'Completed single correction'
+            log.debug('Completed single correction')
         except (TunefbInvalid, TunefbError), e:
-            print 'Error:', e
+            log.warn('Error: %s' % str(e))
             self.error_pv.set(str(e))
         except Exception, e:
-            print 'Unexpected exception:', e
+            log.warn('Unexpected exception: %s' % str(e))
             self.error_pv.set(UNEXPECTED_ERROR)
 
     def reset(self, dummy):
