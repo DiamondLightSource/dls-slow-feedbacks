@@ -56,7 +56,6 @@ class tunefb_server(object):
         self.rm = None
         self.irm = None
         self.dataroot = '/home/uxj42447/software/fastfeedback.data'
-        self.set_datadir('SRI0913')
         if self.set_datadir not in mode.listeners:
             mode.add_listener(self.set_datadir)
 
