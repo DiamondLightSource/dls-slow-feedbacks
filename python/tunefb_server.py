@@ -176,7 +176,7 @@ class TunefbServer(object):
         print "theoretical tune delta", numpy.dot(self.rm, deltas)
         # actually should caput mag_vals, deltas printed for debug only
         print 'calculated delta current:\n', deltas
-        #caput(self.mag_seti_pvs, mag_vals)
+        caput(self.mag_seti_pvs, mag_vals)
 
     def correct(self):
         tunes_delta = self.get_delta_tunes()
