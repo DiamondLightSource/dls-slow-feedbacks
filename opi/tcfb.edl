@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 399
-y 231
+x 401
+y 257
 w 344
 h 400
 font "helvetica-bold-r-14.0"
@@ -147,6 +147,7 @@ controlPv "SR21C-DI-TMBF-02:TUNE:TUNE"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
+fgAlarm
 bgColor index 5
 limitsFromDb
 nullColor index 0
@@ -169,6 +170,7 @@ controlPv "SR21C-DI-TMBF-01:TUNE:TUNE"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
+fgAlarm
 bgColor index 5
 limitsFromDb
 nullColor index 0
