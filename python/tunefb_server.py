@@ -25,14 +25,16 @@ CLIPPING_STATUS = 'Correction scaled down by factor'
 # PV names
 TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
             'SR21C-DI-TMBF-02:TUNE:TUNE']
-# TODO: useful to use our own PV for testing
-#CURRENT_PV = 'SR-CS-TCFB-01:CURRENT'
 CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 
+
+# Configuration directory
 DATADIR = '/home/uxj42447/software/fastfeedback.data'
+
 
 # Our IOC name
 IOC = 'SR-CS-TCFB-01'
+
 
 # Amount we allow tune feedback to change the current by
 MAX_CURRENT_RANGE = 10
@@ -51,6 +53,7 @@ def load_magnet_pvs(txt_file):
 
 
 def rename_pvs(pvs):
+    '''Rename quadrople pv names for use as local pvs.'''
     new_pvs = []
     for pv in pvs:
         parts = pv.split('-')
@@ -102,7 +105,6 @@ class TunefbServer(object):
 
     def __init__(self, mode):
         '''Fetch data from files and set up soft IOC.'''
-
         # Initial values for PVs
         self.afrac = 0.2
         self.last_error = NO_ERROR
@@ -200,9 +202,11 @@ class TunefbServer(object):
         if any(self.tunes < self.tunes_min):
             raise TunefbError(TUNE_RANGE_ERROR)
 
-    def get_tune_deltas(self):
-        '''Update values for tune deltas, checking if the values are
-        reliable.'''
+    def refresh_tune_deltas(self):
+        '''
+        Update values for tune deltas, checking if the values are
+        reliable.
+        '''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity != 0 for tune in tunes]):
             raise TunefbInvalid(TUNE_VALIDITY_ERROR)
@@ -220,7 +224,7 @@ class TunefbServer(object):
         print 'Actual tune deltas', self.tune_deltas
 
     def apply_correction(self, deltas):
-        '''Put delta correction to magnets.'''
+        '''Put delta correction to magnets, clipping if neccassary.'''
         # Scale values over the step current limit
         if any(abs(deltas) > self.mag_delta_max):
             factor = self.mag_delta_max / abs(deltas).max()
@@ -235,9 +239,9 @@ class TunefbServer(object):
         if any(self.integrated_current > self.mag_limits[1]):
             raise TunefbError(MAGNET_CURRENT_ERROR)
 
-        tune_corr = numpy.dot(self.rm, deltas)
-        print 'Theoretical tune correction', tune_corr
-        self.integrated_tunes += tune_corr
+        calc_tune_corr = numpy.dot(self.rm, deltas)
+        print 'Theoretical tune correction', calc_tune_corr
+        self.integrated_tunes += calc_tune_corr
         # TODO: useful for testing
         #print 'Calculated current deltas:\n', deltas
         caput(self.mag_ctrl_pvs, self.integrated_current)
@@ -245,28 +249,31 @@ class TunefbServer(object):
 
     def correct(self):
         '''
-        Determine the tune difference and calculate the current
-        deltas to be applied to the magnet power supplies.
+        Calculate the current deltas and then apply them
+        to the magnet power supplies.
         '''
         mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
         self.apply_correction(mag_deltas)
 
     def checked_correction(self):
-        '''Calculate and then apply a correction, subject to checks.'''
+        '''
+        Calculate and then apply a correction, will throw an execption
+        in the event of an invalid or error state.
+        '''
         self.check_current()
-        self.get_tune_deltas()
+        self.refresh_tune_deltas()
         self.check_tune_range()
         self.correct()
 
     def unchecked_correction(self, dummy):
         '''
-        Calculate and apply correction without checking current
-        and injection status.
+        Calculate and apply correction without checking beam current.
+        Catches all invalid and error states.
         '''
         try:
-            self.get_tune_deltas()
+            self.refresh_tune_deltas()
             self.correct()
-            print 'completed single correction'
+            print 'Completed single correction'
         except (TunefbInvalid, TunefbError), e:
             print 'Error:', e
             self.error_pv.set(str(e))
@@ -278,7 +285,6 @@ class TunefbServer(object):
         '''Reset the error pv.'''
         self.error_pv.set(NO_ERROR)
         self.reset_pv.set(0)
-        print 'reset called', dummy
 
     def set_afrac(self, value):
         self.afrac = value
@@ -342,10 +348,6 @@ class TunefbServer(object):
         builder.aOut(
                 'IMAX', initial_value=self.mag_delta_max,
                 on_update=self.set_mag_delta_max, PREC=4)
-        # TODO: useful for testing
-        builder.aOut(
-                'CURRENT', initial_value=1,
-                PREC=4)
 
         # initialise each current PV to the value from the remote
         # PV that it will be starting from
