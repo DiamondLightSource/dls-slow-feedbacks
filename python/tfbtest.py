@@ -32,7 +32,7 @@ from softioc import pvlog
 # feedback parameters internally.
 mode = rffb_server.ringmode()
 
-tunefb = tunefb_server.tunefb_server(mode)
+tunefb = tunefb_server.TunefbServer(mode)
 
 # All records created, can now fire up the IOC.
 builder.LoadDatabase()

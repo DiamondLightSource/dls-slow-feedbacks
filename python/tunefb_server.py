@@ -23,10 +23,40 @@ CURRENT_PV = 'SR-CS-TCFB-01:CURRENT'
 INJECTION_PV = 'SR-CS-FILL-01:COUNTDOWN'
 
 
+def load_magnet_pvs(file):
+    '''
+    Load corrector magnet PVs from the specific format
+    in the file.
+    '''
+    raw_pvs = scipy.io.loadmat(file)
+    mag_pvs = []
+    for pvset in raw_pvs['ans'][0]:
+        mag_pvs.extend([str(pv) for pv in pvset])
+    return mag_pvs
+
+
+def load_tune_rm(file):
+    '''
+    Load response matrix from the specific format found
+    in the specified file.
+    '''
+    raw_rms = scipy.io.loadmat(file)
+    # Construct complete response matrix.
+    rmx = []
+    rmy = []
+    for raw_rm in raw_rms['Rmat'][0]:
+        raw_rmx = raw_rm[0][0][0][0]
+        raw_rmy = raw_rm[0][0][0][1]
+        rmx.extend(raw_rmx)
+        rmy.extend(raw_rmy)
+    return numpy.array([rmx, rmy])
+
+
 class TunefbException(Exception):
     pass
 
-class tunefb_server(object):
+
+class TunefbServer(object):
     """
     Server for tune feedback. Creates PVs, and monitors and then
     corrects tune towards a setpoint.
@@ -53,6 +83,8 @@ class tunefb_server(object):
         self.min_current = 0.1
 
         # Load data from files (and on ringmode change)
+        self.mag_pvs = None
+        self.mag_limits = None
         self.rm = None
         self.irm = None
         self.dataroot = '/home/uxj42447/software/fastfeedback.data'
@@ -66,35 +98,20 @@ class tunefb_server(object):
         self.reset_pv = None
         self.records()
 
-
     def set_datadir(self, datadir):
         """Load required data from files in datadir."""
         print "set_datadir"
         dir = os.path.join(self.dataroot, datadir)
 
-        # Magnet pv names
-        raw_pvs = scipy.io.loadmat(os.path.join(dir, 'TunePvs.mat'))
-        self.mag_pvs = [
-                [pv.encode() for pv in pvs] for pvs in raw_pvs['ans'][0]]
+        self.mag_pvs = load_magnet_pvs(os.path.join(dir, 'TunePvs.mat'))
+        self.rm = load_tune_rm(os.path.join(dir, 'GoldenTuneResp.mat'))
 
         # Magnet current limits
-        self.mag_limits = [[
-            numpy.array(caget([pv + 'MIN' for pv in pvs])),
-            numpy.array(caget([pv + 'MAX' for pv in pvs]))]
-            for pvs in self.mag_pvs]
+        self.mag_limits = [
+            numpy.array(caget([pv + 'MIN' for pv in self.mag_pvs])),
+            numpy.array(caget([pv + 'MAX' for pv in self.mag_pvs]))]
 
-        # Load matrix file
-        raw_rms = scipy.io.loadmat(os.path.join(dir, 'GoldenTuneResp.mat'))
-        # Construct complete response matrix.
-        rmx = []
-        rmy = []
-        for raw_rm in raw_rms['Rmat'][0]:
-            raw_rmx = raw_rm[0][0][0][0]
-            raw_rmy = raw_rm[0][0][0][1]
-            rmx.extend(raw_rmx)
-            rmy.extend(raw_rmy)
-        self.rm = numpy.array([rmx, rmy])
-        # Invert
+        # Invert response matrix
         self.irm = numpy.linalg.pinv(self.rm)
 
     def init(self):
@@ -127,9 +144,8 @@ class tunefb_server(object):
     def refresh_delta_tunes(self):
         """Update values for self.delta_tunes."""
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
-        if all([tune.severity != 0 for tune in tunes]):
-            #raise TunefbException(TUNE_VALIDITY_ERROR)
-            pass
+        if any([tune.severity != 0 for tune in tunes]):
+            raise TunefbException(TUNE_VALIDITY_ERROR)
         self.delta_tunes = self.golden_tunes - numpy.array(tunes)
         if any(tunes > self.max_tunes):
             raise TunefbException(TUNE_RANGE_ERROR)
@@ -141,19 +157,16 @@ class tunefb_server(object):
 
     def apply_correction(self, deltas):
         """Put delta correction to magnets."""
-        mag_vals = [numpy.array(caget(pvs)) for pvs in self.mag_pvs]
-#        for i, delta in enumerate(deltas):
-#            mag_vals[i] += delta
-#        if any([
-#                (x[0] > x[1][1]).any() or (x[0] < x[1][0]).any()
-#                for x in zip(mag_vals, self.mag_limits)]):
-#            raise Exception(MAGNET_CURRENT_ERROR)
-        mag_pvs= []
-        for pvset in self.mag_pvs:
-            mag_pvs.extend(pvset)
+        mag_vals = numpy.array(caget(self.mag_pvs))
+        mag_vals += deltas
+        if any(mag_vals < self.mag_limits[0]):
+            raise Exception(MAGNET_CURRENT_ERROR)
+        if any(mag_vals > self.mag_limits[1]):
+            raise Exception(MAGNET_CURRENT_ERROR)
 
         print "retrieved tune delta", numpy.dot(self.rm, deltas)
-        [caput(x[0], x[1]) for x in zip(mag_pvs, deltas)]
+        # actually should caput mag_vals
+        caput(self.mag_pvs, deltas)
 
     def do_correction(self):
         """Calculate and then apply a correction, subject to checks."""
