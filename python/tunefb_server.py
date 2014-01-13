@@ -4,7 +4,7 @@ require('numpy')
 require('scipy')
 
 import os, cothread, scipy, numpy, scipy.io
-from cothread.catools import caput, caget
+from cothread.catools import caput, caget, FORMAT_TIME
 from softioc import builder
 
 
@@ -13,6 +13,7 @@ NO_ERROR = 'No Errors'
 MAGNET_CURRENT_ERROR = 'Magnet current exceeds tolerance'
 TUNE_RANGE_ERROR = 'Tunes are outside allowable range'
 TUNE_DELTA_ERROR = 'Tunes are varying to rapidly'
+TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
 LOW_CURRENT_ERROR = 'Current is to low'
 
 
@@ -113,8 +114,11 @@ class tunefb_server(object):
 
     def refresh_delta_tunes(self):
         """Update values for self.delta_tunes."""
-        tunes = numpy.array(caget(self.tune_pvs))
-        self.delta_tunes = self.golden_tunes - tunes
+        tunes = caget(self.tune_pvs, format=FORMAT_TIME)
+        if all([tune.severity != 0 for tune in tunes]):
+            #raise Exception(TUNE_VALIDITY_ERROR)
+            pass
+        self.delta_tunes = self.golden_tunes - numpy.array(tunes)
         if (tunes > self.max_tunes).any():
             raise Exception(TUNE_RANGE_ERROR)
         if (tunes < self.min_tunes).any():
@@ -127,10 +131,9 @@ class tunefb_server(object):
         mag_vals = [numpy.array(caget(pvs)) for pvs in self.mag_pvs]
         for i, delta in enumerate(deltas):
             mag_vals[i] += delta
-        if numpy.array([
-                (x[0] > x[1][1]).any()
-                or (x[0] < x[1][0]).any()
-                for x in zip(mag_vals, self.mag_limits)]).any():
+        if any([
+                (x[0] > x[1][1]).any() or (x[0] < x[1][0]).any()
+                for x in zip(mag_vals, self.mag_limits)]):
             raise Exception(MAGNET_CURRENT_ERROR)
         #[caput(x[0], x[1]) for x in zip(self.mag_pvs, mag_vals)]
 
