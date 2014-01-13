@@ -16,7 +16,9 @@ UNEXPECTED_ERROR = 'Unexpected error'
 
 # Status
 NO_STATUS = 'No Status'
-INJECTING_STATUS = 'Gating around injecection'
+FEEDBACK_OFF = 'Feedback off'
+FEEDBACK_ON = 'Feedback running'
+INJECTING_STATUS = 'Gating around injection'
 CLIPPING_STATUS = 'Correction scaled down by factor'
 
 
@@ -34,7 +36,7 @@ DATADIR = '/home/uxj42447/software/fastfeedback.data'
 IOC = 'SR-CS-TCFB-01'
 
 # Amount we allow tune feedback to change the current by
-MAX_CURRENT_RANGE = 300
+MAX_CURRENT_RANGE = 10
 
 
 def load_magnet_pvs(txt_file):
@@ -77,12 +79,17 @@ def load_tune_rm(mat_file):
     return numpy.array([rmx, rmy])
 
 
-class TunefbException(Exception):
+class TunefbInvalid(Exception):
     '''
-    Exception for use by tune feedback.
+    Exception used to pause tune feedback.
     '''
     pass
 
+class TunefbError(Exception):
+    '''
+    Exception used to stop tune feedback.
+    '''
+    pass
 
 class TunefbServer(object):
 
@@ -122,7 +129,13 @@ class TunefbServer(object):
             mode.add_listener(self.set_datadir)
 
         # Magnet setpoint PVs
-        self.mag_seti_pvs = [pv + ':I' for pv in self.local_pvs]
+        self.mag_ctrl_pvs = [pv + ':I' for pv in self.local_pvs]
+
+        # fetch values from the PVs we will be mirroring, before
+        # starting up.
+        self.startup_currents = caget([pv + ':OFFSET1' for pv in self.mag_pvs])
+        self.integrated_current = self.startup_currents
+        self.integrated_tunes = numpy.zeros(2)
 
         # Magnet current limits
         self.mag_limits = [
@@ -155,11 +168,21 @@ class TunefbServer(object):
             try:
                 if self.power_pv.get():
                     self.checked_correction()
-            except TunefbException, e:
+                    self.status_pv.set(FEEDBACK_ON)
+                else:
+                    self.status_pv.set(FEEDBACK_OFF)
+            except TunefbInvalid, e:
+                # skip one correction
+                if self.status_pv.get() != str(e):
+                    self.status_pv.set(str(e))
+                    print "Tune feedback paused:", e
+            except TunefbError, e:
+                # stop feedback
                 self.power_pv.set(False)
                 self.error_pv.set(str(e))
                 print 'Error:', e
             except Exception, e:
+                # stop feedback
                 print 'Unexpected exception:', e
                 self.power_pv.set(False)
                 self.error_pv.set(UNEXPECTED_ERROR)
@@ -167,24 +190,25 @@ class TunefbServer(object):
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
         if caget(CURRENT_PV) < self.MIN_CURRENT:
-            raise TunefbException(LOW_CURRENT_ERROR)
+            raise TunefbError(LOW_CURRENT_ERROR)
 
-    def injecting(self):
+    def check_injection(self):
         '''Check if topup injection is occurring.'''
-        return caget(INJECTION_PV) == 0
+        if caget(INJECTION_PV) == 0:
+            raise TunefbInvalid(INJECTION_STATUS)
 
     def get_tune_deltas(self):
         '''Update values for tune deltas, checking if the values are
         reliable.'''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity != 0 for tune in tunes]):
-            raise TunefbException(TUNE_VALIDITY_ERROR)
+            raise TunefbInvalid(TUNE_VALIDITY_ERROR)
         # Move tunes to numpyarray after severity check
         tunes = numpy.array(tunes)
         if any(tunes > self.tunes_max):
-            raise TunefbException(TUNE_RANGE_ERROR)
+            raise TunefbError(TUNE_RANGE_ERROR)
         if any(tunes < self.tunes_min):
-            raise TunefbException(TUNE_RANGE_ERROR)
+            raise TunefbError(TUNE_RANGE_ERROR)
 
         tune_deltas = self.golden_tunes - tunes
         print 'Actual tune deltas', tune_deltas
@@ -199,18 +223,20 @@ class TunefbServer(object):
             self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor[0]))
             print 'Using clipping factor', factor
 
-        # Get the current setpoint and apply the correction
-        mag_vals = numpy.array(caget(self.mag_seti_pvs))
-        mag_vals += deltas
-        if any(mag_vals < self.mag_limits[0]):
-            raise TunefbException(MAGNET_CURRENT_ERROR)
-        if any(mag_vals > self.mag_limits[1]):
-            raise TunefbException(MAGNET_CURRENT_ERROR)
+        # Add correction to total values
+        self.integrated_current += deltas
+        if any(self.integrated_current < self.mag_limits[0]):
+            raise TunefbError(MAGNET_CURRENT_ERROR)
+        if any(self.integrated_current > self.mag_limits[1]):
+            raise TunefbError(MAGNET_CURRENT_ERROR)
 
-        print 'Theoretical tune correction', numpy.dot(self.rm, deltas)
+        tune_corr = numpy.dot(self.rm, deltas)
+        print 'Theoretical tune correction', tune_corr
+        self.integrated_tunes += tune_corr
         # TODO: useful for testing
         #print 'Calculated current deltas:\n', deltas
-        caput(self.mag_seti_pvs, mag_vals)
+        caput(self.mag_ctrl_pvs, self.integrated_current)
+        print "total tune change:", self.integrated_tunes
 
     def correct(self):
         '''
@@ -224,11 +250,8 @@ class TunefbServer(object):
     def checked_correction(self):
         '''Calculate and then apply a correction, subject to checks.'''
         self.check_current()
-        if not self.injecting():
-            self.correct()
-        else:
-            self.status_pv.set(INJECTING_STATUS)
-            print "Pausing for injection."
+        self.check_injection()
+        self.correct()
 
     def unchecked_correction(self, dummy):
         '''
@@ -238,7 +261,7 @@ class TunefbServer(object):
         try:
             self.correct()
             print 'completed single correction'
-        except TunefbException, e:
+        except (TunefbInvalid, TunefbError), e:
             print 'Error:', e
             self.error_pv.set(str(e))
         except Exception, e:
@@ -284,7 +307,7 @@ class TunefbServer(object):
         self.power_pv = builder.boolOut(
                 'ONOFF', 'OFF', 'ON', initial_value=False)
         self.status_pv = builder.stringOut(
-                'STATUS', initial_value=NO_STATUS)
+                'STATUS', initial_value=FEEDBACK_OFF)
         self.error_pv = builder.stringOut(
                 'ERROR', initial_value=NO_ERROR)
         self.unchecked_correction_pv = builder.aOut(
@@ -306,7 +329,7 @@ class TunefbServer(object):
                 on_update=self.set_min_v_tune, PREC=4)
         builder.aOut(
                 'TUNE:HMIN', initial_value=self.tunes_min[0],
-                on_update=self.set_min_v_tune, PREC=4)
+                on_update=self.set_min_h_tune, PREC=4)
         builder.aOut(
                 'TUNE:VMIN', initial_value=self.tunes_min[1],
                 on_update=self.set_min_v_tune, PREC=4)
@@ -318,9 +341,7 @@ class TunefbServer(object):
                 'CURRENT', initial_value=1,
                 PREC=4)
 
-        # fetch values from the PVs we will be mirroring, before
-        # starting up.
-        # TODO: currently just getting some values for testing
-        remote_values = caget([pv + ':SETI' for pv in self.mag_pvs])
-        for pv, value in zip(self.local_pvs, remote_values):
+        # initialise each current PV to the value from the remote
+        # PV that it will be starting from
+        for pv, value in zip(self.local_pvs, self.startup_currents):
             builder.aOut(pv.split(':')[1] + ':I', initial_value=value)
