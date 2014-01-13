@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 401
-y 257
+x 1260
+y 320
 w 344
-h 400
+h 464
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -23,6 +23,58 @@ showGrid
 snapToGrid
 gridSize 8
 endScreenProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 368
+w 328
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "STATUS"
+}
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 400
+w 328
+h 24
+
+beginGroup
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 400
+w 328
+h 24
+lineColor index 13
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+endGroup
+
+endObjectProperties
 
 # (Rectangle)
 object activeRectangleClass
@@ -77,28 +129,6 @@ lineColor index 13
 fill
 fillColor index 5
 lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 10
-y 338
-w 324
-h 20
-controlPv "SR-CS-TCFB-01:ERROR"
-format "string"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-limitsFromDb
-nullColor index 0
-newPos
-objType "controls"
 endObjectProperties
 
 # (Rectangle)
@@ -648,25 +678,6 @@ value {
 }
 endObjectProperties
 
-# (Exit Button)
-object activeExitButtonClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 216
-y 368
-w 120
-h 24
-fgColor index 46
-bgColor index 3
-topShadowColor index 0
-botShadowColor index 14
-label "EXIT"
-font "helvetica-medium-r-12.0"
-3d
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -765,5 +776,68 @@ onLabel "CORRECT"
 offLabel "CORRECT"
 3d
 font "helvetica-bold-r-14.0"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 10
+y 338
+w 324
+h 20
+controlPv "SR-CS-TCFB-01:ERROR"
+format "string"
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+limitsFromDb
+nullColor index 0
+newPos
+objType "controls"
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 216
+y 432
+w 120
+h 24
+fgColor index 46
+bgColor index 3
+topShadowColor index 0
+botShadowColor index 14
+label "EXIT"
+font "helvetica-medium-r-12.0"
+3d
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 10
+y 402
+w 324
+h 20
+controlPv "SR-CS-TCFB-01:STATUS"
+format "string"
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+limitsFromDb
+nullColor index 0
+newPos
+objType "controls"
 endObjectProperties
 

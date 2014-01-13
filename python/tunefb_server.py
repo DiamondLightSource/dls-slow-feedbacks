@@ -8,11 +8,16 @@ from softioc import builder
 # Errors
 NO_ERROR = 'No Errors'
 MAGNET_CURRENT_ERROR = 'Magnet current above tolerances'
-MAGNET_DELTA_ERROR = 'Magnet current step is causing scaling'
 TUNE_RANGE_ERROR = 'Tunes are outside allowable range'
 TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
 LOW_CURRENT_ERROR = 'Current is too low'
 UNEXPECTED_ERROR = 'Unexpected error'
+
+
+# Status
+NO_STATUS = 'No Status'
+INJECTING_STATUS = 'Gating around injecection'
+CLIPPING_STATUS = 'Correction scaled down by factor'
 
 
 # PV names
@@ -191,7 +196,7 @@ class TunefbServer(object):
         if any(abs(deltas) > self.mag_delta_max):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
-            self.error_pv.set(MAGNET_DELTA_ERROR)
+            self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor[0]))
             print 'Using clipping factor', factor
 
         # Get the current setpoint and apply the correction
@@ -222,6 +227,7 @@ class TunefbServer(object):
         if not self.injecting():
             self.correct()
         else:
+            self.status_pv.set(INJECTING_STATUS)
             print "Pausing for injection."
 
     def unchecked_correction(self, dummy):
@@ -277,6 +283,8 @@ class TunefbServer(object):
                 on_update=self.set_afrac, PREC=4)
         self.power_pv = builder.boolOut(
                 'ONOFF', 'OFF', 'ON', initial_value=False)
+        self.status_pv = builder.stringOut(
+                'STATUS', initial_value=NO_STATUS)
         self.error_pv = builder.stringOut(
                 'ERROR', initial_value=NO_ERROR)
         self.unchecked_correction_pv = builder.aOut(
