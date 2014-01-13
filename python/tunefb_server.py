@@ -23,21 +23,24 @@ TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
 CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 INJECTION_PV = 'SR-CS-FILL-01:COUNTDOWN'
 
+DATADIR = '/home/uxj42447/software/fastfeedback.data'
+
 # Our IOC name
 IOC = 'SR-CS-TCFB-01'
 
 # Amount we allow tune feedback to change the current by
 MAX_CURRENT_RANGE = 300
 
-def load_magnet_pvs(mat_file):
+
+def load_magnet_pvs(txt_file):
     '''
     Load corrector magnet PVs from the specific format
     in the file.
     '''
-    raw_pvs = scipy.io.loadmat(mat_file)
     mag_pvs = []
-    for pvset in raw_pvs['ans'][0]:
-        mag_pvs.extend([str(pv)[:-2] for pv in pvset])
+    with open(txt_file) as f:
+        for line in f:
+            mag_pvs.append(line.strip())
     return mag_pvs
 
 def rename_pvs(pvs):
@@ -98,18 +101,19 @@ class TunefbServer(object):
         self.tunes_max = numpy.array([0.25, 0.42])
         self.tunes_min = numpy.array([0.15, 0.32])
 
+        # Load magnet PVs from file in this directory.
+        pydir = os.path.dirname(os.path.realpath(__file__))
+        pvs_file = os.path.join(pydir, 'TunePvs.txt')
+        self.mag_pvs = load_magnet_pvs(pvs_file)
+        self.local_pvs = rename_pvs(self.mag_pvs)
+
         # Load data from files (and on ringmode change)
-        self.mag_pvs = None
-        self.local_pvs = None
-        self.mag_limits = None
         self.rm = None
         self.irm = None
-        self.dataroot = '/home/uxj42447/software/fastfeedback.data'
+        self.dataroot = DATADIR
         if self.set_datadir not in mode.listeners:
             mode.add_listener(self.set_datadir)
 
-        self.mag_pvs = load_magnet_pvs(os.path.join(self.dataroot, 'SRI0913', 'TunePvs.mat'))
-        self.local_pvs = rename_pvs(self.mag_pvs)
         # Magnet setpoint PVs
         self.mag_seti_pvs = [pv + ':I' for pv in self.local_pvs]
 
@@ -125,8 +129,6 @@ class TunefbServer(object):
         # Load data from file
         mode_dir = os.path.join(self.dataroot, datadir)
         self.rm = load_tune_rm(os.path.join(mode_dir, 'GoldenTuneResp.mat'))
-
-
 
         # Invert response matrix
         self.irm = numpy.linalg.pinv(self.rm)
