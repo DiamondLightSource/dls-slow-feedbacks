@@ -12,20 +12,24 @@ from softioc import builder
 NO_ERROR = 'No Errors'
 MAGNET_CURRENT_ERROR = 'Magnet current exceeds tolerance'
 TUNE_RANGE_ERROR = 'Tunes are outside allowable range'
-TUNE_DELTA_ERROR = 'Tunes are varying to rapidly'
+TUNE_DELTA_ERROR = 'Tunes are varying too rapidly'
 TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
-LOW_CURRENT_ERROR = 'Current is to low'
+LOW_CURRENT_ERROR = 'Current is too low'
+
+
+TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
+            'SR21C-DI-TMBF-02:TUNE:TUNE']
+CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
+INJECTION_PV = 'SR-CS-FILL-01:COUNTDOWN'
 
 
 class tunefb_server(object):
-
     """
     Server for tune feedback. Creates PVs, and monitors and then
     corrects tune towards a setpoint.
     """
-
     def __init__(self, mode):
-        """Initalise values."""
+        """Initialise values."""
 
         # Initial values for PVs
         self.power = 1
@@ -33,27 +37,19 @@ class tunefb_server(object):
         self.last_error = NO_ERROR
 
         # Tune data
-        self.tune_pvs = [
-                'SR21C-DI-TMBF-01:TUNE:TUNE',
-                'SR21C-DI-TMBF-02:TUNE:TUNE']
         self.golden_tunes = numpy.array([0.201, 0.371])
         self.max_delta_tunes = numpy.array([0.1, 0.1])
         self.max_tunes = self.golden_tunes + 0.1
         self.min_tunes = self.golden_tunes - 0.1
         self.delta_tunes = (self.golden_tunes -
-                numpy.array(caget(self.tune_pvs)))
+                numpy.array(caget(TUNE_PVS)))
 
         # Current checking values
-        self.current_pv = 'SR-DI-DCCT-01:SIGNAL'
         self.min_current = 0.1
 
-        # Injection checking values
-        self.injection_pv = 'SR-CS-FILL-01:COUNTDOWN'
-
         # Load data from files (and on ringmode change)
-        self.rmx = []
-        self.rmy = []
-        self.irm = []
+        self.rm = None
+        self.irm = None
         self.dataroot = '/home/uxj42447/software/fastfeedback.data'
         self.set_datadir('SRI0913')
         if self.set_datadir not in mode.listeners:
@@ -82,20 +78,17 @@ class tunefb_server(object):
             numpy.array(caget([pv + 'MAX' for pv in pvs]))]
             for pvs in self.mag_pvs]
 
-        # Inverse response matricies
+        # Inverse response matrices
         raw_rms = scipy.io.loadmat(os.path.join(dir, 'GoldenTuneResp.mat'))
-        self.irm = []
-        self.rmx = []
-        self.rmy = []
+        rmx = []
+        rmy = []
         for raw_rm in raw_rms['Rmat'][0]:
-            rmx = raw_rm[0][0][0][0]
-            rmy = raw_rm[0][0][0][1]
-            self.rmx.extend(rmx)
-            self.rmy.extend(rmy)
-        self.rm = numpy.array([self.rmx, self.rmy])
-        print "rm", self.rm.shape
+            raw_rmx = raw_rm[0][0][0][0]
+            raw_rmy = raw_rm[0][0][0][1]
+            rmx.extend(raw_rmx)
+            rmy.extend(raw_rmy)
+        self.rm = numpy.array([rmx, rmy])
         self.irm = numpy.linalg.pinv(self.rm)
-        print "irm", self.irm.shape
 
     def init(self):
         """Spawn a new thread to run the main ioc loop."""
@@ -103,7 +96,7 @@ class tunefb_server(object):
 
     def tick(self):
         """Top level loop in the ioc, if it terminates then
-        a restart of the ioc is required. Therefore, it is appropraite
+        a restart of the ioc is required. Therefore, it is appropriate
         to catch all exceptions.
         """
         while True:
@@ -115,19 +108,19 @@ class tunefb_server(object):
                 print 'Error:', e
 
     def check_current(self):
-        """Check if current is greater than a minium current."""
-        if caget(self.current_pv) < self.min_current:
+        """Check if current is greater than a mininum current."""
+        if caget(CURRENT_PV) < self.min_current:
             raise Exception(LOW_CURRENT_ERROR)
 
     def is_injection_occurring(self):
         """Check if topup injection is occurring."""
-        if caget(self.injection_pv) == 0:
+        if caget(INJECTION_PV) == 0:
             return True
         return False
 
     def refresh_delta_tunes(self):
         """Update values for self.delta_tunes."""
-        tunes = caget(self.tune_pvs, format=FORMAT_TIME)
+        tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if all([tune.severity != 0 for tune in tunes]):
             #raise Exception(TUNE_VALIDITY_ERROR)
             pass
@@ -138,7 +131,7 @@ class tunefb_server(object):
             raise Exception(TUNE_RANGE_ERROR)
         if (abs(self.delta_tunes) > self.max_delta_tunes).any():
             raise Exception(TUNE_DELTA_ERROR)
-        self.delta_tunes = (1,1)
+        print "determined tune delta", self.delta_tunes
 
     def apply_correction(self, deltas):
         """Put delta correction to magnets."""
@@ -153,7 +146,7 @@ class tunefb_server(object):
         for pvset in self.mag_pvs:
             mag_pvs.extend(pvset)
 
-        print "retrieved", numpy.dot(self.rm, deltas)
+        print "retrieved tune delta", numpy.dot(self.rm, deltas)
         [caput(x[0], x[1]) for x in zip(mag_pvs, deltas)]
 
     def do_correction(self):
@@ -163,8 +156,8 @@ class tunefb_server(object):
             if not self.is_injection_occurring():
                 self.refresh_delta_tunes()
                 deltas = numpy.dot(self.irm, self.delta_tunes)
-                print "deltaed"
-                #deltas = [delta*self.afrac for delta in deltas]
+                print "afrac", self.afrac
+                deltas = deltas * self.afrac
                 self.apply_correction(deltas)
         except Exception, e:
             self.power_pv.set(0)
