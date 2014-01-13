@@ -51,6 +51,9 @@ class tunefb_server(object):
         self.injection_pv = 'SR-CS-FILL-01:COUNTDOWN'
 
         # Load data from files (and on ringmode change)
+        self.rmx = []
+        self.rmy = []
+        self.irm = []
         self.dataroot = '/home/uxj42447/software/fastfeedback.data'
         self.set_datadir('SRI0913')
         if self.set_datadir not in mode.listeners:
@@ -65,6 +68,7 @@ class tunefb_server(object):
 
     def set_datadir(self, datadir):
         """Load required data from files in datadir."""
+        print "set_datadir"
         dir = os.path.join(self.dataroot, datadir)
 
         # Magnet pv names
@@ -80,9 +84,18 @@ class tunefb_server(object):
 
         # Inverse response matricies
         raw_rms = scipy.io.loadmat(os.path.join(dir, 'GoldenTuneResp.mat'))
-        self.irms = []
+        self.irm = []
+        self.rmx = []
+        self.rmy = []
         for raw_rm in raw_rms['Rmat'][0]:
-            self.irms.append((numpy.linalg.pinv(raw_rm[0][0][0])))
+            rmx = raw_rm[0][0][0][0]
+            rmy = raw_rm[0][0][0][1]
+            self.rmx.extend(rmx)
+            self.rmy.extend(rmy)
+        self.rm = numpy.array([self.rmx, self.rmy])
+        print "rm", self.rm.shape
+        self.irm = numpy.linalg.pinv(self.rm)
+        print "irm", self.irm.shape
 
     def init(self):
         """Spawn a new thread to run the main ioc loop."""
@@ -125,17 +138,23 @@ class tunefb_server(object):
             raise Exception(TUNE_RANGE_ERROR)
         if (abs(self.delta_tunes) > self.max_delta_tunes).any():
             raise Exception(TUNE_DELTA_ERROR)
+        self.delta_tunes = (1,1)
 
     def apply_correction(self, deltas):
         """Put delta correction to magnets."""
         mag_vals = [numpy.array(caget(pvs)) for pvs in self.mag_pvs]
-        for i, delta in enumerate(deltas):
-            mag_vals[i] += delta
-        if any([
-                (x[0] > x[1][1]).any() or (x[0] < x[1][0]).any()
-                for x in zip(mag_vals, self.mag_limits)]):
-            raise Exception(MAGNET_CURRENT_ERROR)
-        #[caput(x[0], x[1]) for x in zip(self.mag_pvs, mag_vals)]
+#        for i, delta in enumerate(deltas):
+#            mag_vals[i] += delta
+#        if any([
+#                (x[0] > x[1][1]).any() or (x[0] < x[1][0]).any()
+#                for x in zip(mag_vals, self.mag_limits)]):
+#            raise Exception(MAGNET_CURRENT_ERROR)
+        mag_pvs= []
+        for pvset in self.mag_pvs:
+            mag_pvs.extend(pvset)
+
+        print "retrieved", numpy.dot(self.rm, deltas)
+        [caput(x[0], x[1]) for x in zip(mag_pvs, deltas)]
 
     def do_correction(self):
         """Calculate and then apply a correction, subject to checks."""
@@ -143,9 +162,9 @@ class tunefb_server(object):
             self.check_current()
             if not self.is_injection_occurring():
                 self.refresh_delta_tunes()
-                deltas = [
-                    numpy.dot(irm, self.delta_tunes) for irm in self.irms]
-                deltas = [delta*self.afrac for delta in deltas]
+                deltas = numpy.dot(self.irm, self.delta_tunes)
+                print "deltaed"
+                #deltas = [delta*self.afrac for delta in deltas]
                 self.apply_correction(deltas)
         except Exception, e:
             self.power_pv.set(0)
