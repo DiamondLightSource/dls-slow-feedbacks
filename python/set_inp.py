@@ -11,14 +11,19 @@ require('scipy')
 require('numpy')
 require('iocbuilder')
 
-#from cothread.catools import caput
+from cothread.catools import caput
 from tunefb_server import load_magnet_pvs, rename_pvs
+import sys, os
 
-PVS_FILE = '/home/uxj42447/software/fastfeedback.data/SRI0913/TunePvs.mat'
 
-def caput(pvs, values):
-    for pv, val in zip(pvs, values):
-        print '%s   %s' % (pv, val)
+PYDIR = os.path.dirname(os.path.realpath(__file__))
+PVS_FILE = os.path.join(PYDIR, 'TunePvs.txt')
+
+# provide an argument to enter test mode
+if len(sys.argv) > 1:
+    def caput(pvs, values):
+        for pv, val in zip(pvs, values):
+            print '%s   %s' % (pv, val)
 
 
 mag_pvs = load_magnet_pvs(PVS_FILE)
