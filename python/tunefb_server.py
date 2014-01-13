@@ -16,20 +16,25 @@ TUNE_DELTA_ERROR = 'Tunes are varying too rapidly'
 TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
 LOW_CURRENT_ERROR = 'Current is too low'
 
-
+# PV names
 TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
             'SR21C-DI-TMBF-02:TUNE:TUNE']
-CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
+CURRENT_PV = 'SR-CS-TCFB-01:CURRENT'
 INJECTION_PV = 'SR-CS-FILL-01:COUNTDOWN'
 
+
+class TunefbException(Exception):
+    pass
 
 class tunefb_server(object):
     """
     Server for tune feedback. Creates PVs, and monitors and then
     corrects tune towards a setpoint.
     """
+    PERIOD = 1.0
+
     def __init__(self, mode):
-        """Initialise values."""
+        """Fetch data from files and set up soft IOC."""
 
         # Initial values for PVs
         self.power = 1
@@ -62,6 +67,7 @@ class tunefb_server(object):
         self.reset_pv = None
         self.records()
 
+
     def set_datadir(self, datadir):
         """Load required data from files in datadir."""
         print "set_datadir"
@@ -78,8 +84,9 @@ class tunefb_server(object):
             numpy.array(caget([pv + 'MAX' for pv in pvs]))]
             for pvs in self.mag_pvs]
 
-        # Inverse response matrices
+        # Load matrix file
         raw_rms = scipy.io.loadmat(os.path.join(dir, 'GoldenTuneResp.mat'))
+        # Construct complete response matrix.
         rmx = []
         rmy = []
         for raw_rm in raw_rms['Rmat'][0]:
@@ -88,6 +95,7 @@ class tunefb_server(object):
             rmx.extend(raw_rmx)
             rmy.extend(raw_rmy)
         self.rm = numpy.array([rmx, rmy])
+        # Invert
         self.irm = numpy.linalg.pinv(self.rm)
 
     def init(self):
@@ -100,37 +108,36 @@ class tunefb_server(object):
         to catch all exceptions.
         """
         while True:
+            cothread.Sleep(self.PERIOD)
             try:
                 if self.power:
                     self.do_correction()
-                cothread.Sleep(1.0)
             except Exception, e:
-                print 'Error:', e
+                print "Unexpected exception:", e
+                self.power_pv.set(0)
 
     def check_current(self):
         """Check if current is greater than a mininum current."""
         if caget(CURRENT_PV) < self.min_current:
-            raise Exception(LOW_CURRENT_ERROR)
+            raise TunefbException(LOW_CURRENT_ERROR)
 
-    def is_injection_occurring(self):
+    def injecting(self):
         """Check if topup injection is occurring."""
-        if caget(INJECTION_PV) == 0:
-            return True
-        return False
+        return (caget(INJECTION_PV) == 0)
 
     def refresh_delta_tunes(self):
         """Update values for self.delta_tunes."""
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if all([tune.severity != 0 for tune in tunes]):
-            #raise Exception(TUNE_VALIDITY_ERROR)
+            #raise TunefbException(TUNE_VALIDITY_ERROR)
             pass
         self.delta_tunes = self.golden_tunes - numpy.array(tunes)
-        if (tunes > self.max_tunes).any():
-            raise Exception(TUNE_RANGE_ERROR)
-        if (tunes < self.min_tunes).any():
-            raise Exception(TUNE_RANGE_ERROR)
-        if (abs(self.delta_tunes) > self.max_delta_tunes).any():
-            raise Exception(TUNE_DELTA_ERROR)
+        if any(tunes > self.max_tunes):
+            raise TunefbException(TUNE_RANGE_ERROR)
+        if any(tunes < self.min_tunes):
+            raise TunefbException(TUNE_RANGE_ERROR)
+        if any(abs(self.delta_tunes) > self.max_delta_tunes):
+            raise TunefbException(TUNE_DELTA_ERROR)
         print "determined tune delta", self.delta_tunes
 
     def apply_correction(self, deltas):
@@ -153,16 +160,16 @@ class tunefb_server(object):
         """Calculate and then apply a correction, subject to checks."""
         try:
             self.check_current()
-            if not self.is_injection_occurring():
+            if not self.injecting():
                 self.refresh_delta_tunes()
                 deltas = numpy.dot(self.irm, self.delta_tunes)
                 print "afrac", self.afrac
                 deltas = deltas * self.afrac
                 self.apply_correction(deltas)
-        except Exception, e:
+        except TunefbException, e:
             self.power_pv.set(0)
             self.error_pv.set(e.__str__())
-            print 'Error', e
+            print 'Error:', e
 
     def reset(self, dummy):
         """Reset the error pv."""
@@ -239,3 +246,7 @@ class tunefb_server(object):
         builder.aOut(
                 'TUNE:VDELTA', initial_value=self.max_delta_tunes[1],
                 on_update=self.set_delta_v_tune, PREC=4)
+        # testing
+        builder.aOut(
+                'CURRENT', initial_value=1,
+                PREC=4)
