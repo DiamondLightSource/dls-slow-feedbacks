@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1095
-y 305
+x 399
+y 231
 w 344
 h 400
 font "helvetica-bold-r-14.0"
@@ -23,6 +23,45 @@ showGrid
 snapToGrid
 gridSize 8
 endScreenProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 216
+y 176
+w 120
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 218
+y 178
+w 116
+h 20
+controlPv "SR-CS-TCFB-01:IMAX"
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
 
 # (Rectangle)
 object activeRectangleClass
@@ -136,38 +175,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 280
-y 176
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 216
-y 176
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
 endObjectProperties
 
 # (Rectangle)
@@ -673,7 +680,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "MAX TUNE STEP"
+  "MAX CURRENT STEP"
 }
 endObjectProperties
 
@@ -704,52 +711,6 @@ y 210
 w 116
 h 20
 controlPv "SR-CS-TCFB-01:AFRAC"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 218
-y 178
-w 52
-h 20
-controlPv "SR-CS-TCFB-01:TUNE:HDELTA"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 282
-y 178
-w 52
-h 20
-controlPv "SR-CS-TCFB-01:TUNE:VDELTA"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14

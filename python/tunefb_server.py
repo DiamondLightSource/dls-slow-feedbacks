@@ -6,8 +6,8 @@ from softioc import builder
 # Errors
 NO_ERROR = 'No Errors'
 MAGNET_CURRENT_ERROR = 'Magnet current exceeds tolerance'
+MAGNET_DELTA_ERROR = 'Magnet current limit is causing scaling'
 TUNE_RANGE_ERROR = 'Tunes are outside allowable range'
-TUNE_DELTA_ERROR = 'Tunes are varying too rapidly'
 TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
 LOW_CURRENT_ERROR = 'Current is too low'
 
@@ -70,7 +70,7 @@ class TunefbServer(object):
 
         # Tune data
         self.golden_tunes = numpy.array([0.201, 0.371]) # CHANGE TO NULL
-        self.tunes_delta_max = numpy.array([0.005, 0.005])
+        self.mag_delta_max = numpy.array([0.1])
         self.tunes_max = numpy.array([0.25, 0.42])
         self.tunes_min = numpy.array([0.15, 0.32])
 
@@ -151,13 +151,18 @@ class TunefbServer(object):
             raise TunefbException(TUNE_RANGE_ERROR)
 
         delta_tunes = self.golden_tunes - tunes
-        if any(abs(delta_tunes) > self.tunes_delta_max):
-            raise TunefbException(TUNE_DELTA_ERROR)
         print "determined tune delta", delta_tunes
         return delta_tunes
 
     def apply_correction(self, deltas):
         '''Put delta correction to magnets.'''
+        # Scale values over the step current limit
+        if any(abs(deltas) > self.mag_delta_max):
+            deltas *= self.mag_delta_max / abs(deltas).max()
+            self.error_pv.set(MAGNET_DELTA_ERROR)
+            print 'Using clipping factor', self.mag_delta_max / abs(deltas).max()
+
+        # Get the current setpoint and apply the correction
         mag_vals = numpy.array(caget(self.mag_pvs))
         mag_vals += deltas
         if any(mag_vals < self.mag_limits[0]):
@@ -165,9 +170,10 @@ class TunefbServer(object):
         if any(mag_vals > self.mag_limits[1]):
             raise TunefbException(MAGNET_CURRENT_ERROR)
 
-        print "retrieved tune delta", numpy.dot(self.rm, deltas)
-        # actually should caput mag_vals
-        caput(self.mag_pvs, deltas)
+        print "theoretical tune delta", numpy.dot(self.rm, deltas)
+        # actually should caput mag_vals, deltas printed for debug only
+        print 'calculated delta current:\n', deltas
+        #caput(self.mag_pvs, mag_vals)
 
     def correct(self):
         tunes_delta = self.get_delta_tunes()
@@ -181,8 +187,15 @@ class TunefbServer(object):
             self.correct()
 
     def unchecked_correction(self, dummy):
-        self.correct()
-        print 'completed single correction'
+        try:
+            self.correct()
+            print 'completed single correction'
+        except TunefbException, e:
+            print 'Error:', e
+            self.error_pv.set(str(e))
+        except Exception, e:
+            print "Unexpected exception:", e
+            self.error_pv.set('Unexpected error')
 
     def reset(self, dummy):
         '''Reset the error pv.'''
@@ -211,6 +224,9 @@ class TunefbServer(object):
     def set_min_v_tune(self, value):
         self.tunes_min[1] = value
 
+    def set_mag_delta_max(self, value):
+        self.mag_delta_max = value
+
     def set_delta_h_tune(self, value):
         self.tunes_delta_max[0] = value
 
@@ -221,7 +237,7 @@ class TunefbServer(object):
         '''Setup iocbuilder to create required records.'''
         builder.SetDeviceName("SR-CS-TCFB-01")
         self.afrac_pv = builder.aOut(
-                'AFRAC', initial_value=0.2, on_update=self.set_afrac,PREC=4)
+                'AFRAC', initial_value=self.afrac, on_update=self.set_afrac,PREC=4)
         self.power_pv = builder.boolOut(
                 'ONOFF', "OFF", "ON", initial_value=False)
         self.error_pv = builder.stringOut(
@@ -250,11 +266,8 @@ class TunefbServer(object):
                 'TUNE:VMIN', initial_value=self.tunes_min[1],
                 on_update=self.set_min_v_tune, PREC=4)
         builder.aOut(
-                'TUNE:HDELTA', initial_value=self.tunes_delta_max[0],
-                on_update=self.set_delta_h_tune, PREC=4)
-        builder.aOut(
-                'TUNE:VDELTA', initial_value=self.tunes_delta_max[1],
-                on_update=self.set_delta_v_tune, PREC=4)
+                'IMAX', initial_value=self.mag_delta_max,
+                on_update=self.set_mag_delta_max, PREC=4)
         # testing
         builder.aOut(
                 'CURRENT', initial_value=1,
