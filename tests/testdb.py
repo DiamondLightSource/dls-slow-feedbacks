@@ -17,7 +17,7 @@ from mml import ao
 from scipy.io import loadmat
 
 dirname = \
-    "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata/SR"
+    "/dls_sw/work/common/matlab/mml/machine/diamondopsdata/SR"
 bpmresp = loadmat(os.path.join(dirname, "GoldenBPMResp"))
 disp = loadmat(os.path.join(dirname, "GoldenDisp"))
 dispx = disp["BPMxDisp"]["Data"][0,0]

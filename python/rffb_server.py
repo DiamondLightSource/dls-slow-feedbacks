@@ -48,7 +48,7 @@ class rffb_server(object):
         self.period = 10
         self.datadir = "SR"
         self.dataroot = \
-            "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
+            "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
 
         # use MML database
         self.rad_over_A = mml.ao["hcm"].hw2physics

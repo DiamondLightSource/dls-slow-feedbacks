@@ -15,7 +15,7 @@ class sofb_server(object):
         self.power = 0
         self.records()
         self.dataroot = \
-            "/home/diamond/common/matlab/middlelayer/2-0/machine/diamondopsdata"
+            "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
 
         mode.add_listener(self.set_datadir)
 
