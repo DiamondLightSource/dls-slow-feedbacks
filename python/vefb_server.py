@@ -19,7 +19,8 @@ class VEFBConstants:
     MAX_RECOVERY_TIME_INITIAL = 120.0
     MIN_CAM_RECOVERY_TIME_INITIAL = 35.0
     MAX_CAM_RECOVERY_TIME_INITIAL = 50.0
-
+    NO_EFFECT_SQUAD_DELTA_MAX_INITIAL = 0.02
+    VEMIT_ACCEPTABLE_ERR_INITIAL = 0.1
 
 class EmittanceStatus:
     # Successful emittance calculation.
@@ -674,12 +675,12 @@ class vefb_server:
 
         self.vemit_acceptable_error_pv = builder.aOut(
                 "VEMIT_ACCEPTABLE_ERR",
-                initial_value = 0.1, #VEFBConstants.VEMIT_TARGET_ERR_MAX_INITIAL,
+                initial_value = VEFBConstants.VEMIT_ACCEPTABLE_ERR_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
         self.oor_squad_delta_max_pv = builder.aOut(
                 "NO_EFFECT_SQUAD_DELTA_MAX",
-                initial_value = 0.02, #VEFBConstants.SQUAD_DELTA_MAX_INITIAL,
+                initial_value = VEFBConstants.NO_EFFECT_SQUAD_DELTA_MAX_INITIAL,
                 PREC = 4, EGU = "A")
 
         self.vemit_target_pv = builder.aOut(
