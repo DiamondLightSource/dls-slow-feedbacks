@@ -15,6 +15,7 @@ class VEFBConstants:
     MAX_TS_AGE = 0.35
     SQUAD_DELTA_MAX_INITIAL = 0.01
     VEMIT_TARGET_ERR_MAX_INITIAL = 1.0
+    NO_VALUE_TIMEOUT_INITIAL = 2.0
     MAX_ERROR_TIME_INITIAL = 24.0
     MAX_RECOVERY_TIME_INITIAL = 120.0
     MIN_CAM_RECOVERY_TIME_INITIAL = 35.0
@@ -80,7 +81,7 @@ class VEFBStatus:
     # Emittance value outside tolerable values. Feedback suspended.
     BAD_EMITTANCE_VALUE = 7
 
-    # A paremeter required for feedback to run. Feedback stopped/won't start.
+    # A parameter required for feedback to run. Feedback stopped/won't start.
     MISSING_CALC_PARAMETERS = 8
 
     # Error reading from/writing to magnet or with magnet drive levels.
@@ -154,6 +155,9 @@ class SkewQuadrupoles:
         self.sum_delta = zeros(self.num)
         self._use_setpoint = False
 
+        self.last_levels_ok_fail = None
+        self.last_drvl_fail = None
+        self.last_drvh_fail = None
 
     @property
     def num(self):
@@ -171,12 +175,15 @@ class SkewQuadrupoles:
 
 
     def drive_levels_ok(self):
-        for a,b, c in zip(self.seti_drvls.values,
+        for a,b,c in zip(self.seti_drvls.values,
                        self.seti_drvhs.values,
                        self.squad_pvs):
             if a >= b:
-                print "drive check", "DRVH <= DRVL", c
+                if self.last_levels_ok_fail != c:
+                    print "drive check", "DRVH <= DRVL", c
+                    self.last_levels_ok_fail = c
                 return False
+        self.last_levels_ok_fail = None
         return True
 
 
@@ -200,15 +207,24 @@ class SkewQuadrupoles:
 
         for i in range(self.num):
             if values[i] < self.drvls[i]:
-                print "DRVL check", self.squad_pvs[i], \
-                    ": New SQUAD value", values[i], "< DRVL", drvls[i]
+                if self.last_drvl_fail != i:
+                    print "DRVL check", self.squad_pvs[i], \
+                        ": New SQUAD value", values[i], "< DRVL", drvls[i]
+                    self.last_drvl_fail = i
+                    self.last_drvh_fail = None
                 return False
 
         for i in range(self.num):
             if values[i] > self.drvhs[i]:
-                print "DRVH check", self.squad_pvs[i], \
-                    ": New SQUAD value", values[i], "> DRVH", self.drvhs[i]
+                if self.last_drvh_fail != i:
+                    print "DRVH check", self.squad_pvs[i], \
+                        ": New SQUAD value", values[i], "> DRVH", self.drvhs[i]
+                    self.last_drvh_fail = i
+                    self.last_drvl_fail = None
                 return False
+
+        self.last_drvl_fail = None
+        self.last_drvh_fail = None
 
         return True
 
@@ -272,7 +288,8 @@ class vefb_server:
         self.IRM = None
         self.last = None
         self.vemit_filtered = VEFBConstants.VEMIT_TARGET_INITIAL
-        self.last_status = VEFBStatus.OK 
+        self.last_status = VEFBStatus.OK
+        self.last_calc_status = VEFBStatus.OK 
         self.delta = 0
 
         self.recovering_cameras = False
@@ -282,6 +299,7 @@ class vefb_server:
         self.current_time = time.time()
         self.recovery_start_time = self.current_time
         self.sum_delta_oor = 0
+        self.no_value_start_time = self.current_time
 
         self.monitors()
         self.records()
@@ -318,8 +336,7 @@ class vefb_server:
             try:
                 cothread.Sleep(self.time_step)
                 current_time = time.time()
-                do_correction = self.enabled
-                self.run_once(do_correction)
+                self.run_once(self.enabled)
 
             except:
                 print 'Vemit FB raised unexpected exception'
@@ -328,13 +345,16 @@ class vefb_server:
 
 
     def run_single(self, value):
-        print 'single correct'
-        try:
-            self.run_once(True, True)
-        except:
-            print 'Vemit FB raised unexpected exception'
-            traceback.print_exc()
-            self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
+        if not self.enabled:
+            print 'single correct'
+            try:
+                self.run_once(True, True)
+            except:
+                print 'Vemit FB raised unexpected exception'
+                traceback.print_exc()
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
+        else:
+             print 'single correct disabled in loopback mode'
 
 
     def run_once(self, do_correction, single = False):
@@ -343,11 +363,9 @@ class vefb_server:
         self.check_camera_state()
 
         if not self.have_stored_beam():
-            print 'no stored beam'
             status = VEFBStatus.NO_STORED_BEAM
 
         elif not self.skew_quads.check_state():
-            print 'skew quad error'
             status = VEFBStatus.MAGNET_ERROR
 
         elif self.recovering_cameras:
@@ -357,8 +375,6 @@ class vefb_server:
             status = VEFBStatus.INJECTING
 
         elif self.emittance_status_bad():
-            print 'emittance status %d not ok, but not fatal yet - skip' \
-                    % self.emit_status.value
             status = VEFBStatus.EMITTANCE_WARNING
 
         else:
@@ -368,6 +384,8 @@ class vefb_server:
                 status = self.loop_correct()
             else:
                 status = self.calc_only()
+
+        self.vemit_filtered_pv.set(self.vemit_filtered)
 
         self.handle_status(status, do_correction)       
 
@@ -404,14 +422,31 @@ class vefb_server:
         status = self.persistent_error_check(status)
         status = self.no_effect_check(status)
 
+        calc_status = status
+        status = self.filter_errors(status, do_correction)
 
         if self.last_status != status:
-            print 'vefb status change', self.last_status, '->', status
-            if status == VEFBStatus.OK:
-                print 'OK again'
-        self.last_status = status
 
-        self.calc_status_pv.set(status)
+            print 'vefb status change', self.last_status, '->', status
+            
+            if status == VEFBStatus.NO_STORED_BEAM:
+                print 'no stored beam'
+
+            elif status ==  VEFBStatus.MAGNET_ERROR:
+                print 'magnet error'
+
+            elif status ==  VEFBStatus.EMITTANCE_WARNING:
+                print 'emittance status %d not ok, but not fatal yet - skip' \
+                        % self.emit_status.value
+
+            elif status == VEFBStatus.OK:
+                print 'OK again'
+
+
+        self.last_status = status
+        self.last_calc_status = calc_status
+
+        self.calc_status_pv.set(calc_status)
         if status in [ VEFBStatus.OK,
                        VEFBStatus.INJECTING,
                        VEFBStatus.EMITTANCE_WARNING,
@@ -463,18 +498,41 @@ class vefb_server:
         if not self.enabled or status not in [ VEFBStatus.OK ]:
             return status
 
-        if abs(self.vemit_filtered - self.vemit_target_pv.get()) > self.vemit_acceptable_error_pv.get():
+        err = abs(self.vemit_filtered - self.vemit_target_pv.get())
+
+        if err > self.vemit_acceptable_error_pv.get():
             self.sum_delta_oor += self.delta
-            print 'oor', self.vemit_filtered, self.vemit_target_pv.get(), \
-                    self.sum_delta_oor
+            print 'oor v:%.2f t:%.2f me:%.2f' % (self.vemit_filtered,
+                     self.vemit_target_pv.get(), 
+                     self.vemit_acceptable_error_pv.get() )
             if self.no_effect_error_enable_pv.get() == 1 and \
                      abs(self.sum_delta_oor) > self.oor_squad_delta_max_pv.get():
-                print 'sum_delta_oor threshold exceeded', self.sum_delta_oor
+                print 'sum_delta_oor %.6f exceeds threshold %.6f' \
+                         % ( self.sum_delta_oor, self.oor_squad_delta_max_pv.get())
                 status = VEFBStatus.HAVING_NO_EFFECT
             else:
-                print 'sum_delta_oor within  threshold ', self.sum_delta_oor
+                print 'sum_delta_oor %.6f within threshold %.6f' \
+                         % ( self.sum_delta_oor, self.oor_squad_delta_max_pv.get())
         else:
             self.sum_delta_oor = 0
+
+        return status
+
+
+    def filter_errors(self, status, do_correction):
+        if status in [ VEFBStatus.NO_EMITTANCE_VALUE ]:
+             if self.last_calc_status not in [ VEFBStatus.NO_EMITTANCE_VALUE ]:
+                 self.no_value_start_time = self.current_time - VEFBConstants.MAX_TS_AGE
+             else:    
+                 no_value_time = (self.current_time - self.no_value_start_time)
+                 if no_value_time < self.no_value_timeout.get():
+                     status = VEFBStatus.OK
+                 elif do_correction:
+                     print 'No value for %.2f. Exceeds threshold (%.2f)' \
+                             % ( no_value_time, self.no_value_timeout.get() )
+
+        else:
+            self.no_value_start_time = self.current_time
 
         return status
 
@@ -526,7 +584,6 @@ class vefb_server:
 
     def emittance_status_bad(self):
         if not self.emit_status.ok:
-            print 'Emit Status PV not ok'
             return False
         return self.emit_status.value not in \
             [ EmittanceStatus.OK,
@@ -565,7 +622,6 @@ class vefb_server:
     def do_calc(self, apply_calc, use_filter=True, check_limits=True):
 
         if not self.calc_parameters_ok():
-            print 'No matrix'
             return VEFBStatus.MISSING_CALC_PARAMETERS
 
         target = self.vemit_target_pv.get()
@@ -577,19 +633,20 @@ class vefb_server:
 
         # Timestamps ok?
         if age > VEFBConstants.MAX_TS_AGE:
-            print 'vemit ts too old - skip'
             return VEFBStatus.NO_EMITTANCE_VALUE
 
         # values ok?
         if check_limits:
             vmax = target + self.vemit_err_max_pv.get()
             if vemit > vmax:
-                print 'vemit too high - skip', vemit, 'MAX ', vmax
+                if apply_calc:
+                     print 'vemit too high - skip', vemit, 'MAX ', vmax
                 return VEFBStatus.BAD_EMITTANCE_VALUE
 
             vmin = target - self.vemit_err_max_pv.get()
             if vemit < vmin:
-                print 'vemit too low - skip', 'vemit ', vemit, 'MIN ', vmin
+                if apply_calc:
+                    print 'vemit too low - skip', 'vemit ', vemit, 'MIN ', vmin
                 return VEFBStatus.BAD_EMITTANCE_VALUE
 
         # apply filter (IIR) if required
@@ -613,14 +670,14 @@ class vefb_server:
                 return VEFBStatus.MAGNET_DELTA_ERROR
         else:
             if delta_max <= 0:
-                print 'max delta non positive'
+                if apply_calc: print 'max delta non positive'
                 return VEFBStatus.MAGNET_DELTA_ERROR
 
             if delta > delta_max:
-                print 'scaled ', delta, '->', delta_max
+                if apply_calc: print 'scaled ', delta, '->', delta_max
                 delta = delta_max
             elif delta < -delta_max:
-                print 'scaled ', delta, '->', -delta_max
+                if apply_calc: print 'scaled ', delta, '->', -delta_max
                 delta = -delta_max
 
         self.delta = delta
@@ -688,9 +745,19 @@ class vefb_server:
                 initial_value = VEFBConstants.VEMIT_TARGET_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
 
+        self.vemit_filtered_pv = builder.aOut(
+                "VEMIT_FILTERED",
+                initial_value = VEFBConstants.VEMIT_TARGET_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
+
         self.no_effect_error_enable_pv = builder.mbbOut(
                 "NO_EFFECT_ERRORS", ("DISABLED", 0), ("ENABLED", 1),
                  initial_value = 1)
+
+        self.no_value_timeout = builder.aOut(
+                "NO_VALUE_TIMEOUT",
+                initial_value = VEFBConstants.NO_VALUE_TIMEOUT_INITIAL,
+                DRVL = 0.0, PREC = 1, EGU = "s")
 
         self.max_error_time_pv = builder.aOut(
                 "MAX_ERROR_TIME",
@@ -720,7 +787,6 @@ class vefb_server:
                 "SQUAD_DELTA_MAX",
                 initial_value = VEFBConstants.SQUAD_DELTA_MAX_INITIAL,
                 PREC = 4, EGU = "A")
-
 
         self.status_pv = builder.mbbIn("STATUS",
              ("Ok", VEFBStatus.OK),
