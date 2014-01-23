@@ -748,7 +748,7 @@ class vefb_server:
         self.vemit_filtered_pv = builder.aOut(
                 "VEMIT_FILTERED",
                 initial_value = VEFBConstants.VEMIT_TARGET_INITIAL,
-                DRVH = 100.0, DRVL = 0.0, PREC = "1", EGU = "pm rad")
+                DRVH = 100.0, DRVL = 0.0, PREC = "2", EGU = "pm rad")
 
         self.no_effect_error_enable_pv = builder.mbbOut(
                 "NO_EFFECT_ERRORS", ("DISABLED", 0), ("ENABLED", 1),
