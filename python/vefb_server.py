@@ -523,6 +523,7 @@ class vefb_server:
         if status in [ VEFBStatus.NO_EMITTANCE_VALUE ]:
              if self.last_calc_status not in [ VEFBStatus.NO_EMITTANCE_VALUE ]:
                  self.no_value_start_time = self.current_time - VEFBConstants.MAX_TS_AGE
+                 status = VEFBStatus.OK
              else:    
                  no_value_time = (self.current_time - self.no_value_start_time)
                  if no_value_time < self.no_value_timeout.get():
