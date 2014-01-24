@@ -23,6 +23,7 @@ class VEFBConstants:
     NO_EFFECT_SQUAD_DELTA_MAX_INITIAL = 0.02
     VEMIT_ACCEPTABLE_ERR_INITIAL = 0.1
 
+
 class EmittanceStatus:
     # Successful emittance calculation.
     OK              = 0
@@ -427,21 +428,9 @@ class vefb_server:
 
         if self.last_status != status:
 
-            print 'vefb status change', self.last_status, '->', status
-            
-            if status == VEFBStatus.NO_STORED_BEAM:
-                print 'no stored beam'
-
-            elif status ==  VEFBStatus.MAGNET_ERROR:
-                print 'magnet error'
-
-            elif status ==  VEFBStatus.EMITTANCE_WARNING:
-                print 'emittance status %d not ok, but not fatal yet - skip' \
-                        % self.emit_status.value
-
-            elif status == VEFBStatus.OK:
-                print 'OK again'
-
+            print 'vefb status change %d (%s) -> %d (%s)' % (self.last_status,
+                     self.status_to_string(self.last_status),
+                     status, self.status_to_string(status) )
 
         self.last_status = status
         self.last_calc_status = calc_status
@@ -502,7 +491,7 @@ class vefb_server:
 
         if err > self.vemit_acceptable_error_pv.get():
             self.sum_delta_oor += self.delta
-            print 'oor v:%.2f t:%.2f me:%.2f' % (self.vemit_filtered,
+            print 'vemit oor v:%.2f t:%.2f me:%.2f' % (self.vemit_filtered,
                      self.vemit_target_pv.get(), 
                      self.vemit_acceptable_error_pv.get() )
             if self.no_effect_error_enable_pv.get() == 1 and \
@@ -529,7 +518,7 @@ class vefb_server:
                  if no_value_time < self.no_value_timeout.get():
                      status = VEFBStatus.OK
                  elif do_correction:
-                     print 'No value for %.2f. Exceeds threshold (%.2f)' \
+                     print 'No emit value for %.2f. Exceeds threshold (%.2f)' \
                              % ( no_value_time, self.no_value_timeout.get() )
 
         else:
@@ -789,7 +778,7 @@ class vefb_server:
                 initial_value = VEFBConstants.SQUAD_DELTA_MAX_INITIAL,
                 PREC = 4, EGU = "A")
 
-        self.status_pv = builder.mbbIn("STATUS",
+        calc_status_pv_values = [
              ("Ok", VEFBStatus.OK),
              ("Injecting", VEFBStatus.INJECTING),
              ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
@@ -804,26 +793,26 @@ class vefb_server:
              ("Recovering cameras", VEFBStatus.RECOVERING_CAMERAS, "MINOR"),
              ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
              ("Persistent emittance err",
-                 VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
-             ("Having no effect", VEFBStatus.HAVING_NO_EFFECT, "MAJOR"),
-             initial_value = VEFBStatus.OK)
+                 VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR")]
 
+        status_pv_values = calc_status_pv_values + \
+             [("Having no effect", VEFBStatus.HAVING_NO_EFFECT, "MAJOR")]
+
+        self.status_lookup = dict(
+            [(value[1], value[0]) for value in status_pv_values])
+
+        print self.status_lookup
+
+        self.status_pv = builder.mbbIn("STATUS",
+            initial_value = VEFBStatus.OK, *status_pv_values)
 
         self.calc_status_pv = builder.mbbIn("CALC_STATUS",
-             ("Ok", VEFBStatus.OK),
-             ("Injecting", VEFBStatus.INJECTING),
-             ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
-             ("Unknown error", VEFBStatus.UNKNOWN_ERROR, "MINOR"),
-             ("No stored beam", VEFBStatus.NO_STORED_BEAM, "MINOR"),
-             ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MINOR"),
-             ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MINOR"),
-             ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
-             ("Missing calc parameters",
-                  VEFBStatus.MISSING_CALC_PARAMETERS, "MINOR"),
-             ("Magnet Error", VEFBStatus.MAGNET_ERROR, "MINOR"),
-             ("Recovering cameras", VEFBStatus.RECOVERING_CAMERAS, "MINOR"),
-             ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
-             ("Persistent emittance err",
-                 VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
-             initial_value = VEFBStatus.OK)
+            initial_value = VEFBStatus.OK, *calc_status_pv_values)
+
+
+    def status_to_string(self, status):
+        return self.status_lookup[status] if \
+             status in self.status_lookup else "Unknown Status"
+
+
 
