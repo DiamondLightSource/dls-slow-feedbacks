@@ -779,21 +779,20 @@ class vefb_server:
                 PREC = 4, EGU = "A")
 
         calc_status_pv_values = [
-             ("Ok", VEFBStatus.OK),
-             ("Injecting", VEFBStatus.INJECTING),
-             ("Bad emittance status", VEFBStatus.EMITTANCE_WARNING, "MINOR"),
-             ("Unknown error", VEFBStatus.UNKNOWN_ERROR, "MAJOR"),
-             ("No stored beam", VEFBStatus.NO_STORED_BEAM, "MAJOR"),
-             ("Ring mode change", VEFBStatus.RING_MODE_CHANGE, "MAJOR"),
-             ("Magnet delta error", VEFBStatus.MAGNET_DELTA_ERROR, "MAJOR"),
-             ("Bad emittance value", VEFBStatus.BAD_EMITTANCE_VALUE, "MINOR"),
-             ("Missing calc parameters",
-                 VEFBStatus.MISSING_CALC_PARAMETERS, "MAJOR"),
-             ("Magnet Error", VEFBStatus.MAGNET_ERROR, "MAJOR"),
-             ("Recovering cameras", VEFBStatus.RECOVERING_CAMERAS, "MINOR"),
-             ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
-             ("Persistent emittance err",
-                 VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR")]
+             ("Ok",                       VEFBStatus.OK),
+             ("Injecting",                VEFBStatus.INJECTING),
+             ("Bad emittance status",     VEFBStatus.EMITTANCE_WARNING,           "MINOR"),
+             ("Unknown error",            VEFBStatus.UNKNOWN_ERROR,               "MAJOR"),
+             ("No stored beam",           VEFBStatus.NO_STORED_BEAM,              "MAJOR"),
+             ("Ring mode change",         VEFBStatus.RING_MODE_CHANGE,            "MAJOR"),
+             ("Magnet delta error",       VEFBStatus.MAGNET_DELTA_ERROR,          "MAJOR"),
+             ("Bad emittance value",      VEFBStatus.BAD_EMITTANCE_VALUE,         "MINOR"),
+             ("Missing calc parameters",  VEFBStatus.MISSING_CALC_PARAMETERS,     "MAJOR"),
+             ("Magnet Error",             VEFBStatus.MAGNET_ERROR,                "MAJOR"),
+             ("Recovering cameras",       VEFBStatus.RECOVERING_CAMERAS,          "MINOR"),
+             ("No emittance value",       VEFBStatus.NO_EMITTANCE_VALUE,          "MINOR"),
+             ("Persistent emittance err", VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR")]
+
 
         status_pv_values = calc_status_pv_values + \
              [("Having no effect", VEFBStatus.HAVING_NO_EFFECT, "MAJOR")]
