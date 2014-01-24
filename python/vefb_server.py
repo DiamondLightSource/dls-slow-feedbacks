@@ -536,12 +536,12 @@ class vefb_server:
 
             if recovery_time > min_recovery_timeout and \
                     self.camera_recovery_complete():
-                print 'camera recovery successful after %g seconds' \
+                print 'camera recovery successful after %.1f seconds' \
                         % recovery_time
                 self.recovering_cameras = False
 
             elif recovery_time > max_recovery_timeout:
-                print 'camera recovery timeout %g seconds exceeded' \
+                print 'camera recovery timeout %.1f seconds exceeded' \
                         % max_recovery_timeout
                 self.recovering_cameras = False
 
