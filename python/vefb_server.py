@@ -800,8 +800,6 @@ class vefb_server:
         self.status_lookup = dict(
             [(value[1], value[0]) for value in status_pv_values])
 
-        print self.status_lookup
-
         self.status_pv = builder.mbbIn("STATUS",
             initial_value = VEFBStatus.OK, *status_pv_values)
 
