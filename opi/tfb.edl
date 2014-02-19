@@ -102,7 +102,7 @@ x 218
 y 178
 w 116
 h 20
-controlPv "SR-CS-TCFB-01:IDELTA"
+controlPv "SR-CS-TFB-01:IDELTA"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -235,7 +235,7 @@ x 218
 y 146
 w 52
 h 20
-controlPv "SR-CS-TCFB-01:TUNE:HMIN"
+controlPv "SR-CS-TFB-01:TUNE:HMIN"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -274,7 +274,7 @@ x 218
 y 114
 w 52
 h 20
-controlPv "SR-CS-TCFB-01:TUNE:HMAX"
+controlPv "SR-CS-TFB-01:TUNE:HMAX"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -313,7 +313,7 @@ x 218
 y 82
 w 52
 h 20
-controlPv "SR-CS-TCFB-01:TUNE:H"
+controlPv "SR-CS-TFB-01:TUNE:H"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -451,7 +451,7 @@ offColor index 3
 inconsistentColor index 14
 topShadowColor index 0
 botShadowColor index 14
-controlPv "SR-CS-TCFB-01:ONOFF"
+controlPv "SR-CS-TFB-01:ONOFF"
 onLabel "ON"
 offLabel "OFF"
 3d
@@ -474,7 +474,7 @@ onColor index 3
 offColor index 3
 topShadowColor index 0
 botShadowColor index 14
-controlPv "SR-CS-TCFB-01:RESET"
+controlPv "SR-CS-TFB-01:RESET"
 pressValue "1"
 onLabel "CLEAR"
 offLabel "CLEAR"
@@ -511,7 +511,7 @@ x 282
 y 82
 w 52
 h 20
-controlPv "SR-CS-TCFB-01:TUNE:V"
+controlPv "SR-CS-TFB-01:TUNE:V"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -569,7 +569,7 @@ x 282
 y 114
 w 52
 h 20
-controlPv "SR-CS-TCFB-01:TUNE:VMAX"
+controlPv "SR-CS-TFB-01:TUNE:VMAX"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -608,7 +608,7 @@ x 282
 y 146
 w 52
 h 20
-controlPv "SR-CS-TCFB-01:TUNE:VMIN"
+controlPv "SR-CS-TFB-01:TUNE:VMIN"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -654,7 +654,7 @@ h 0
 lineColor index 17
 fillColor index 45
 lineWidth 0
-visPv "SR-CS-TCFB-01:ONOFF"
+visPv "SR-CS-TFB-01:ONOFF"
 visMin "1"
 visMax "2"
 endObjectProperties
@@ -723,7 +723,7 @@ x 218
 y 210
 w 116
 h 20
-controlPv "SR-CS-TCFB-01:AFRAC"
+controlPv "SR-CS-TFB-01:AFRAC"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -770,7 +770,7 @@ onColor index 3
 offColor index 3
 topShadowColor index 0
 botShadowColor index 14
-controlPv "SR-CS-TCFB-01:CORR"
+controlPv "SR-CS-TFB-01:CORR"
 pressValue "1"
 onLabel "CORRECT"
 offLabel "CORRECT"
@@ -788,7 +788,7 @@ x 10
 y 338
 w 324
 h 20
-controlPv "SR-CS-TCFB-01:ERROR"
+controlPv "SR-CS-TFB-01:ERROR"
 format "string"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
@@ -829,7 +829,7 @@ x 10
 y 402
 w 324
 h 20
-controlPv "SR-CS-TCFB-01:STATUS"
+controlPv "SR-CS-TFB-01:STATUS"
 format "string"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
