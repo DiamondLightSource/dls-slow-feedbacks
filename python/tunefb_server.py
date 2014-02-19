@@ -45,10 +45,6 @@ GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 IOC = 'SR-CS-TCFB-01'
 
 
-# Amount we allow tune feedback to change the current by
-MAX_CURRENT_RANGE = 10
-
-
 def load_magnet_pvs(txt_file):
     '''
     Load corrector magnet PVs from the specific format
@@ -109,13 +105,13 @@ class TunefbServer(object):
     corrects tune towards a setpoint.
     '''
 
-    PERIOD = 1.0
-    MIN_CURRENT = 1.0
-
     def __init__(self, mode):
         '''Fetch data from files and set up soft IOC.'''
         # Initial values for PVs
         self.afrac = 0.2
+        self.max_current_range = 1.0
+        self.min_beam_current = 1.0
+        self.period = 1.0
         self.last_error = NO_ERROR
 
         # Tune data - Golden tunes are set from ringmode
@@ -154,8 +150,8 @@ class TunefbServer(object):
 
         # Magnet current limits
         self.mag_limits = [
-            numpy.array([-MAX_CURRENT_RANGE for pv in self.local_pvs]),
-            numpy.array([ MAX_CURRENT_RANGE for pv in self.local_pvs])]
+            numpy.array([-self.max_current_range for pv in self.local_pvs]),
+            numpy.array([ self.max_current_range for pv in self.local_pvs])]
 
         # Initalise EPICS records
         self.records()
@@ -190,7 +186,7 @@ class TunefbServer(object):
         to catch all exceptions.
         '''
         while True:
-            cothread.Sleep(self.PERIOD)
+            cothread.Sleep(self.period)
             try:
                 if self.power_pv.get():
                     self.checked_correction()
@@ -216,7 +212,7 @@ class TunefbServer(object):
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
-        if caget(CURRENT_PV) < self.MIN_CURRENT:
+        if caget(CURRENT_PV) < self.min_beam_current:
             raise TunefbError(LOW_CURRENT_ERROR)
 
     def check_tune_range(self):
@@ -235,8 +231,8 @@ class TunefbServer(object):
         if any([tune.severity == 3 for tune in tunes]):
             raise TunefbInvalid(TUNE_VALIDITY_ERROR)
         # This will succeed as long as the TMBF updates the tune PVs
-        # more often than self.PERIOD
-        last_check = time.time() - self.PERIOD
+        # more often than self.period
+        last_check = time.time() - self.period
         if any([tune.timestamp < last_check for tune in tunes]):
             raise TunefbInvalid(TUNE_UPDATE_ERROR)
         # Move tunes to numpyarray after severity check
@@ -320,6 +316,15 @@ class TunefbServer(object):
     def set_afrac(self, value):
         self.afrac = value
 
+    def set_max_current_range(self, value):
+        self.max_current_range = value
+
+    def set_min_beam_current(self, value):
+        self.min_beam_current = value
+
+    def set_period(self, value):
+        self.period = value
+
     def set_tune_h(self, value):
         self.golden_tunes[0] = value
 
@@ -371,6 +376,15 @@ class TunefbServer(object):
                 'AFRAC', initial_value=self.afrac,
                 on_update=self.set_afrac, PREC=4)
         builder.aOut(
+                'PERIOD', initial_value=self.period,
+                on_update=self.set_period, PREC=4)
+        builder.aOut(
+                'ILIM', initial_value=self.max_current_range,
+                on_update=self.set_max_current_range, PREC=4)
+        builder.aOut(
+                'BEAMMIN', initial_value=self.min_beam_current,
+                on_update=self.set_min_beam_current, PREC=4)
+        builder.aOut(
                 'TUNE:HMAX', initial_value=self.tunes_max[0],
                 on_update=self.set_max_h_tune, PREC=4)
         builder.aOut(
@@ -383,7 +397,7 @@ class TunefbServer(object):
                 'TUNE:VMIN', initial_value=self.tunes_min[1],
                 on_update=self.set_min_v_tune, PREC=4)
         builder.aOut(
-                'IMAX', initial_value=self.mag_delta_max,
+                'IDELTA', initial_value=self.mag_delta_max,
                 on_update=self.set_mag_delta_max, PREC=4)
 
         # initialise each current PV to the value from the remote

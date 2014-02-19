@@ -102,7 +102,7 @@ x 218
 y 178
 w 116
 h 20
-controlPv "SR-CS-TCFB-01:IMAX"
+controlPv "SR-CS-TCFB-01:IDELTA"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
