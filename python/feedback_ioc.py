@@ -24,9 +24,7 @@ import rffb_server
 import magnets
 import sofb_server
 import vefb_server
-
-sys.path.append(os.path.join(sys.path[0], "../tunechro"))
-import tcfbserver
+import tunefb_server
 
 
 # This import enables caput logging
@@ -42,10 +40,6 @@ mode = rffb_server.ringmode()
 # Monitors magnet settings and creates aggregated waveforms.
 mags = magnets.magnets_server()
 
-# Chromaticity control server.  No idea what this does and whether it actually
-# does anything at all yet.  Seems that none of the generated PVs is used.
-tcfb = tcfbserver.TuneChroServer()
-
 # Adjusts RF frequency to minimise horizontal dispersion.
 rffb = rffb_server.rffb_server(mode)
 
@@ -54,6 +48,9 @@ sofb = sofb_server.sofb_server(mode)
 
 # Vertical emittance feedback.
 vefb = vefb_server.vefb_server(mode)
+
+# Tune feedback.
+tunefb = tunefb_server.TunefbServer(mode)
 
 
 # Create mirror PV for FOFB status to reduce overall load on vxWorks IOCs.
@@ -79,6 +76,6 @@ mags.init()
 rffb.init()
 sofb.init()
 vefb.init()
-
+tunefb.init()
 
 softioc.interactive_ioc(globals())
