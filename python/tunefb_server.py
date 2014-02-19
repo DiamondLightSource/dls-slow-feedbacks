@@ -37,7 +37,7 @@ CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 
 
 # Configuration directory
-DATADIR = '/home/uxj42447/software/fastfeedback.data'
+DATADIR = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata'
 GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 
 
