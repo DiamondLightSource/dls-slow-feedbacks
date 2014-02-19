@@ -396,7 +396,8 @@ class TunefbServer(object):
                 'AGGREGATE', initial_value=0,
                 on_update=self.aggregate_setpoints)
         self.reset_integrated_current_pv = builder.aOut(
-                'RESETCORR', initial_value=0, on_update=self.reset_integrated_current)
+                'RESETCORR', initial_value=0,
+                on_update=self.reset_integrated_current)
         self.tune_h_pv = builder.aOut(
                 'TUNE:H', initial_value=self.golden_tunes[0],
                 on_update=self.set_tune_h, PREC=4)
