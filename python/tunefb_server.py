@@ -199,6 +199,7 @@ class TunefbServer(object):
                 if self.power_pv.get():
                     self.checked_correction()
                     self.status_pv.set(FEEDBACK_ON)
+                    self.error_pv.set(NO_ERROR)
                 else:
                     self.status_pv.set(FEEDBACK_OFF)
             except TunefbInvalid, e:
