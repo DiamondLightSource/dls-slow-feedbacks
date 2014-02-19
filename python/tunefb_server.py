@@ -266,6 +266,8 @@ class TunefbServer(object):
         calc_tune_corr = numpy.dot(self.rm, deltas)
         log.info('Theoretical tune correction %s' % str(calc_tune_corr))
         self.integrated_tunes += calc_tune_corr
+        self.tune_int_h_pv.set(self.integrated_tunes[0])
+        self.tune_int_h_pv.set(self.integrated_tunes[1])
         log.debug('Calculated current deltas:\n%s' % str(deltas))
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
@@ -348,6 +350,12 @@ class TunefbServer(object):
         self.tune_h_pv = builder.aOut(
                 'TUNE:H', initial_value=self.golden_tunes[0],
                 on_update=self.set_tune_h, PREC=4)
+        self.tune_int_h_pv = builder.aOut(
+                'TUNE:HINT', initial_value=self.integrated_tunes[0],
+                PREC=4)
+        self.tune_int_v_pv = builder.aOut(
+                'TUNE:VINT', initial_value=self.integrated_tunes[1],
+                PREC=4)
         self.tune_v_pv = builder.aOut(
                 'TUNE:V', initial_value=self.golden_tunes[1],
                 on_update=self.set_tune_v, PREC=4)
