@@ -863,8 +863,8 @@ commandLabel {
   1 "Remove from Quad IOCs"
 }
 command {
-  0 "/home/uxj42447/software/CS-DI-IOC-09/python/set_inp.py redirect"
-  1 "/home/uxj42447/software/CS-DI-IOC-09/python/set_inp.py reset"
+  0 "$(here)/../python/set_inp.py redirect"
+  1 "$(here)/../python/set_inp.py reset"
 }
 endObjectProperties
 
