@@ -128,7 +128,9 @@ h 24
 lineColor index 13
 fill
 fillColor index 5
+fillAlarm
 lineWidth 2
+alarmPv "SR-CS-TFB-01:ERROR"
 endObjectProperties
 
 # (Rectangle)
@@ -784,10 +786,10 @@ beginObjectProperties
 major 4
 minor 5
 release 0
-x 10
-y 338
-w 324
-h 20
+x 12
+y 340
+w 320
+h 16
 controlPv "SR-CS-TFB-01:ERROR"
 format "string"
 font "helvetica-bold-r-14.0"

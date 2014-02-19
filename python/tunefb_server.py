@@ -4,7 +4,8 @@ import traceback
 import numpy, scipy, scipy.io
 import cothread
 from cothread.catools import caget, caput, FORMAT_TIME
-from softioc import builder
+from softioc import builder, alarm
+
 
 # Set up logging
 import logging as log
@@ -208,14 +209,14 @@ class TunefbServer(object):
             except TunefbError, e:
                 # stop feedback
                 self.power_pv.set(False)
-                self.error_pv.set(str(e))
+                self.error_pv.set(str(e), severity=alarm.MAJOR_ALARM)
                 log.error('%s' % str(e))
             except Exception, e:
                 # stop feedback and print stack trace
                 log.warn('Unexpected exception: %s' %str(e))
                 traceback.print_exc()
                 self.power_pv.set(False)
-                self.error_pv.set(UNEXPECTED_ERROR)
+                self.error_pv.set(UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
@@ -235,7 +236,7 @@ class TunefbServer(object):
         reliable.
         '''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
-        if any([tune.severity == 3 for tune in tunes]):
+        if any([tune.severity == alarm.INVALID_ALARM for tune in tunes]):
             raise TunefbInvalid(TUNE_VALIDITY_ERROR)
         # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.period
@@ -307,13 +308,13 @@ class TunefbServer(object):
             log.info('Completed single correction')
         except TunefbInvalid, e:
             log.warn('Error: %s' % str(e))
-            self.error_pv.set(str(e))
+            self.error_pv.set(str(e), severity=alarm.MINOR_ALARM)
         except TunefbError, e:
             log.error('Error: %s' % str(e))
-            self.error_pv.set(str(e))
+            self.error_pv.set(str(e), severity=alarm.MAJOR_ALARM)
         except Exception, e:
             log.warn('Unexpected exception: %s' % str(e))
-            self.error_pv.set(UNEXPECTED_ERROR)
+            self.error_pv.set(UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
 
     def reset(self, dummy):
         '''Reset the error pv.'''
@@ -384,9 +385,9 @@ class TunefbServer(object):
         builder.SetDeviceName(IOC)
         self.power_pv = builder.boolOut(
                 'ONOFF', 'OFF', 'ON', initial_value=False)
-        self.status_pv = builder.stringOut(
+        self.status_pv = builder.stringIn(
                 'STATUS', initial_value=FEEDBACK_OFF)
-        self.error_pv = builder.stringOut(
+        self.error_pv = builder.stringIn(
                 'ERROR', initial_value=NO_ERROR)
         self.reset_pv = builder.aOut(
                 'RESET', initial_value=0, on_update=self.reset)
