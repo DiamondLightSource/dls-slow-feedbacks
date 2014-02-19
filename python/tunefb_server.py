@@ -318,7 +318,6 @@ class TunefbServer(object):
         self.mag_limits = [
             numpy.array([-self.max_current_range for pv in self.local_pvs]),
             numpy.array([ self.max_current_range for pv in self.local_pvs])]
-        print self.mag_limits
 
     def set_min_beam_current(self, value):
         self.min_beam_current = value
