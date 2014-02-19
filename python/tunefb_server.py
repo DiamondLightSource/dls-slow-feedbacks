@@ -201,7 +201,7 @@ class TunefbServer(object):
                 # skip one correction
                 if self.status_pv.get() != str(e):
                     self.status_pv.set(str(e))
-                    log.warn('Tune feedback paused: %s' % str(e))
+                    log.info('Tune feedback paused: %s' % str(e))
             except TunefbError, e:
                 # stop feedback
                 self.power_pv.set(False)
@@ -302,8 +302,11 @@ class TunefbServer(object):
             self.refresh_tune_deltas()
             self.correct()
             log.info('Completed single correction')
-        except (TunefbInvalid, TunefbError), e:
+        except TunefbInvalid, e:
             log.warn('Error: %s' % str(e))
+            self.error_pv.set(str(e))
+        except TunefbError, e:
+            log.error('Error: %s' % str(e))
             self.error_pv.set(str(e))
         except Exception, e:
             log.warn('Unexpected exception: %s' % str(e))
