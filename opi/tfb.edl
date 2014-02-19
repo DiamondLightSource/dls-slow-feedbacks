@@ -857,14 +857,18 @@ topShadowColor index 0
 botShadowColor index 14
 font "helvetica-bold-r-14.0"
 buttonLabel "SETUP"
-numCmds 2
+numCmds 4
 commandLabel {
   0 "Forward to Quad IOCs"
   1 "Remove from Quad IOCs"
+  2 "Aggregate to Setpoints"
+  3 "Zero Offsets"
 }
 command {
   0 "$(here)/../python/set_inp.py redirect"
   1 "$(here)/../python/set_inp.py reset"
+  2 "caput SR-CS-TFB-01:AGGREGATE 1"
+  3 "caput SR-CS-TFB-01:RESETCORR 1"
 }
 endObjectProperties
 

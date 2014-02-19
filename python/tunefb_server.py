@@ -3,7 +3,7 @@ import time
 import traceback
 import numpy, scipy, scipy.io
 import cothread
-from cothread.catools import caget, FORMAT_TIME
+from cothread.catools import caget, caput, FORMAT_TIME
 from softioc import builder
 
 # Set up logging
@@ -320,6 +320,29 @@ class TunefbServer(object):
         self.error_pv.set(NO_ERROR)
         self.reset_pv.set(0)
 
+    def reset_integrated_current(self, value):
+        '''Set all integrated currents to zero.'''
+        if value:
+            self.reset_integrated_current_pv.set(0)
+            # Set our local PVs and currents to zero
+            self.integrated_current = [0 for _ in self.integrated_current]
+            for pv in self.mirror_pvs:
+                pv.set(0)
+            log.warn('Reset all integrated currents to zero')
+
+    def aggregate_setpoints(self, value):
+        '''Move offsets from this ioc to the quadrupole setpoints.'''
+        if value:
+            self.aggregate_pv.set(0)
+            # Forward setpoint values one at a time to prevent beam dump
+            for i, pv in enumerate(self.mag_pvs):
+                pv = pv + ':SETI'
+                caput(pv, caget(pv) + self.integrated_current[i])
+                self.mirror_pvs[i].set(0)
+                self.integrated_current[i] = 0
+                cothread.Yield()
+            log.warn('Aggregated offsets into setpoints')
+
     def set_afrac(self, value):
         self.afrac = value
 
@@ -367,6 +390,11 @@ class TunefbServer(object):
                 'ERROR', initial_value=NO_ERROR)
         self.reset_pv = builder.aOut(
                 'RESET', initial_value=0, on_update=self.reset)
+        self.aggregate_pv = builder.aOut(
+                'AGGREGATE', initial_value=0,
+                on_update=self.aggregate_setpoints)
+        self.reset_integrated_current_pv = builder.aOut(
+                'RESETCORR', initial_value=0, on_update=self.reset_integrated_current)
         self.tune_h_pv = builder.aOut(
                 'TUNE:H', initial_value=self.golden_tunes[0],
                 on_update=self.set_tune_h, PREC=4)
