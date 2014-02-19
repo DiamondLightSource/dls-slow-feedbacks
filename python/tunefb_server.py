@@ -8,7 +8,7 @@ from softioc import builder
 
 # Set up logging
 import logging as log
-LOG_FORMAT = 'TCFB: %(asctime)s %(levelname)s %(message)s'
+LOG_FORMAT = 'TCFB: %(levelname)s %(message)s'
 LOG_LEVEL = log.WARNING
 log.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 numpy.set_printoptions(precision=4)
