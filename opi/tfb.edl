@@ -849,7 +849,7 @@ minor 2
 release 0
 x 8
 y 432
-w 104
+w 96
 h 24
 fgColor index 29
 bgColor index 3
@@ -865,6 +865,28 @@ commandLabel {
 command {
   0 "$(here)/../python/set_inp.py redirect"
   1 "$(here)/../python/set_inp.py reset"
+}
+endObjectProperties
+
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 112
+y 432
+w 96
+h 24
+fgColor index 29
+bgColor index 3
+topShadowColor index 0
+botShadowColor index 14
+font "helvetica-bold-r-14.0"
+buttonLabel "HELP"
+numCmds 1
+command {
+  0 "firefox http://confluence.diamond.ac.uk/display/CHLP/Tune+Feedback+Documentation"
 }
 endObjectProperties
 
