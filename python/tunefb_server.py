@@ -6,7 +6,7 @@ import cothread
 from cothread.catools import caget, FORMAT_TIME
 from softioc import builder
 
-# set up logging
+# Set up logging
 import logging as log
 LOG_FORMAT = '%(asctime)s %(levelname)s %(message)s'
 LOG_LEVEL = log.INFO
@@ -234,7 +234,7 @@ class TunefbServer(object):
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity == 3 for tune in tunes]):
             raise TunefbInvalid(TUNE_VALIDITY_ERROR)
-        # this will work as long as the TMBF updates the tune PVs
+        # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.PERIOD
         last_check = time.time() - self.PERIOD
         if any([tune.timestamp < last_check for tune in tunes]):
@@ -242,7 +242,8 @@ class TunefbServer(object):
         # Move tunes to numpyarray after severity check
         tunes = numpy.array(tunes)
         log.info('Tune delta before last correction %s' % self.tune_deltas)
-        log.info('Tune change since last correction %s' % str(tunes - self.tunes))
+        log.info(
+            'Tune change since last correction %s' % str(tunes - self.tunes))
         self.tunes = tunes
         self.tune_deltas = self.golden_tunes - self.tunes
         log.info('Actual tune deltas %s' % self.tune_deltas)
@@ -271,7 +272,8 @@ class TunefbServer(object):
         log.debug('Calculated current deltas:\n%s' % str(deltas))
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
-        log.info('Total tune change from feedback %s' % str(self.integrated_tunes))
+        log.info(
+            'Total tune change from feedback %s' % str(self.integrated_tunes))
 
     def correct(self):
         '''
@@ -384,4 +386,5 @@ class TunefbServer(object):
         # initialise each current PV to the value from the remote
         # PV from which it will be starting
         for pv, value in zip(self.local_pvs, self.startup_currents):
-            self.mirror_pvs.append(builder.aOut(pv.split(':')[1] + ':I', initial_value=value))
+            self.mirror_pvs.append(
+                    builder.aOut(pv.split(':')[1] + ':I', initial_value=value))
