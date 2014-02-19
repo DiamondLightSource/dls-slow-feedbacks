@@ -38,6 +38,7 @@ CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 
 # Configuration directory
 DATADIR = '/home/uxj42447/software/fastfeedback.data'
+GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 
 
 # Our IOC name
@@ -117,9 +118,8 @@ class TunefbServer(object):
         self.afrac = 0.2
         self.last_error = NO_ERROR
 
-        # Tune data
-        # TODO: should not provide default values.
-        self.golden_tunes = numpy.array([0.201, 0.371])
+        # Tune data - Golden tunes are set from ringmode
+        self.golden_tunes = numpy.array([0.0, 0.0])
         self.mag_delta_max = numpy.array([0.01])
         self.tunes_max = numpy.array([0.25, 0.42])
         self.tunes_min = numpy.array([0.15, 0.32])
@@ -156,11 +156,22 @@ class TunefbServer(object):
         self.mag_limits = [
             numpy.array([-MAX_CURRENT_RANGE for pv in self.local_pvs]),
             numpy.array([ MAX_CURRENT_RANGE for pv in self.local_pvs])]
+
         # Initalise EPICS records
         self.records()
 
     def set_datadir(self, datadir):
         '''Load required data from files in datadir.'''
+        # Load tune config file into environment
+        env = {}
+        execfile(GOLDEN_TUNE_CONFIG, env)
+
+        # Select correct tune based on ringmode
+        tune_h = env['X_tune_' + datadir] * 0.0001
+        tune_v = env['Y_tune_' + datadir] * 0.0001
+        self.tune_h_pv.set(tune_h)
+        self.tune_v_pv.set(tune_v)
+
         # Load data from file
         mode_dir = os.path.join(self.dataroot, datadir)
         self.rm = load_tune_rm(os.path.join(mode_dir, 'GoldenTuneResp.mat'))
@@ -340,10 +351,10 @@ class TunefbServer(object):
                 on_update=self.unchecked_correction, always_update=True)
         self.reset_pv = builder.aOut(
                 'RESET', initial_value=0, on_update=self.reset)
-        builder.aOut(
+        self.tune_h_pv = builder.aOut(
                 'TUNE:H', initial_value=self.golden_tunes[0],
                 on_update=self.set_tune_h, PREC=4)
-        builder.aOut(
+        self.tune_v_pv = builder.aOut(
                 'TUNE:V', initial_value=self.golden_tunes[1],
                 on_update=self.set_tune_v, PREC=4)
         builder.aOut(
