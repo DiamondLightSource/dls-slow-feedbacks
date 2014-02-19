@@ -42,7 +42,7 @@ GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 
 
 # Our IOC name
-IOC = 'SR-CS-TCFB-01'
+IOC = 'SR-CS-TFB-01'
 
 
 def load_magnet_pvs(txt_file):
@@ -65,7 +65,6 @@ def rename_pvs(pvs):
         cell = parts[0][2:4]
         new_pv = IOC + ':' + cell + parts[2] + parts[3]
         new_pvs.append(new_pv)
-
     return new_pvs
 
 
