@@ -263,7 +263,7 @@ class TunefbServer(object):
         log.info('Theoretical tune correction %s' % str(calc_tune_corr))
         self.integrated_tunes += calc_tune_corr
         self.tune_int_h_pv.set(self.integrated_tunes[0])
-        self.tune_int_h_pv.set(self.integrated_tunes[1])
+        self.tune_int_v_pv.set(self.integrated_tunes[1])
         log.debug('Calculated current deltas:\n%s' % str(deltas))
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
