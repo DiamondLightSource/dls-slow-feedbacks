@@ -45,6 +45,10 @@ GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 IOC = 'SR-CS-TFB-01'
 
 
+# Constants
+DELTA_TUNE_TOLERANCE = 0.02
+
+
 def load_magnet_pvs(txt_file):
     '''
     Load corrector magnet PVs from the specific format
@@ -164,6 +168,12 @@ class TunefbServer(object):
         tune_v = env['Y_tune_' + datadir] * 0.0001
         self.tune_h_pv.set(tune_h)
         self.tune_v_pv.set(tune_v)
+
+        # Set conservative min and max tune values
+        self.max_h_tune_pv.set(tune_h + DELTA_TUNE_TOLERANCE)
+        self.min_h_tune_pv.set(tune_h - DELTA_TUNE_TOLERANCE)
+        self.max_v_tune_pv.set(tune_v + DELTA_TUNE_TOLERANCE)
+        self.min_v_tune_pv.set(tune_v - DELTA_TUNE_TOLERANCE)
 
         # Load data from file
         mode_dir = os.path.join(self.dataroot, datadir)
@@ -360,15 +370,27 @@ class TunefbServer(object):
         self.tune_h_pv = builder.aOut(
                 'TUNE:H', initial_value=self.golden_tunes[0],
                 on_update=self.set_tune_h, PREC=4)
+        self.tune_v_pv = builder.aOut(
+                'TUNE:V', initial_value=self.golden_tunes[1],
+                on_update=self.set_tune_v, PREC=4)
         self.tune_int_h_pv = builder.aOut(
                 'TUNE:HINT', initial_value=self.integrated_tunes[0],
                 PREC=4)
         self.tune_int_v_pv = builder.aOut(
                 'TUNE:VINT', initial_value=self.integrated_tunes[1],
                 PREC=4)
-        self.tune_v_pv = builder.aOut(
-                'TUNE:V', initial_value=self.golden_tunes[1],
-                on_update=self.set_tune_v, PREC=4)
+        self.max_h_tune_pv = builder.aOut(
+                'TUNE:HMAX', initial_value=self.tunes_max[0],
+                on_update=self.set_max_h_tune, PREC=4)
+        self.max_v_tune_pv = builder.aOut(
+                'TUNE:VMAX', initial_value=self.tunes_max[1],
+                on_update=self.set_max_v_tune, PREC=4)
+        self.min_h_tune_pv = builder.aOut(
+                'TUNE:HMIN', initial_value=self.tunes_min[0],
+                on_update=self.set_min_h_tune, PREC=4)
+        self.min_v_tune_pv = builder.aOut(
+                'TUNE:VMIN', initial_value=self.tunes_min[1],
+                on_update=self.set_min_v_tune, PREC=4)
         builder.aOut(
                 'CORR', initial_value=0,
                 on_update=self.unchecked_correction, always_update=True)
@@ -384,18 +406,6 @@ class TunefbServer(object):
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
                 on_update=self.set_min_beam_current, PREC=4)
-        builder.aOut(
-                'TUNE:HMAX', initial_value=self.tunes_max[0],
-                on_update=self.set_max_h_tune, PREC=4)
-        builder.aOut(
-                'TUNE:VMAX', initial_value=self.tunes_max[1],
-                on_update=self.set_min_v_tune, PREC=4)
-        builder.aOut(
-                'TUNE:HMIN', initial_value=self.tunes_min[0],
-                on_update=self.set_min_h_tune, PREC=4)
-        builder.aOut(
-                'TUNE:VMIN', initial_value=self.tunes_min[1],
-                on_update=self.set_min_v_tune, PREC=4)
         builder.aOut(
                 'IDELTA', initial_value=self.mag_delta_max,
                 on_update=self.set_mag_delta_max, PREC=4)
