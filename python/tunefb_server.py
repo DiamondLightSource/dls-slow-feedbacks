@@ -337,18 +337,12 @@ class TunefbServer(object):
     def records(self):
         '''Setup iocbuilder to create required records.'''
         builder.SetDeviceName(IOC)
-        self.afrac_pv = builder.aOut(
-                'AFRAC', initial_value=self.afrac,
-                on_update=self.set_afrac, PREC=4)
         self.power_pv = builder.boolOut(
                 'ONOFF', 'OFF', 'ON', initial_value=False)
         self.status_pv = builder.stringOut(
                 'STATUS', initial_value=FEEDBACK_OFF)
         self.error_pv = builder.stringOut(
                 'ERROR', initial_value=NO_ERROR)
-        self.unchecked_correction_pv = builder.aOut(
-                'CORR', initial_value=0,
-                on_update=self.unchecked_correction, always_update=True)
         self.reset_pv = builder.aOut(
                 'RESET', initial_value=0, on_update=self.reset)
         self.tune_h_pv = builder.aOut(
@@ -357,6 +351,12 @@ class TunefbServer(object):
         self.tune_v_pv = builder.aOut(
                 'TUNE:V', initial_value=self.golden_tunes[1],
                 on_update=self.set_tune_v, PREC=4)
+        builder.aOut(
+                'CORR', initial_value=0,
+                on_update=self.unchecked_correction, always_update=True)
+        builder.aOut(
+                'AFRAC', initial_value=self.afrac,
+                on_update=self.set_afrac, PREC=4)
         builder.aOut(
                 'TUNE:HMAX', initial_value=self.tunes_max[0],
                 on_update=self.set_max_h_tune, PREC=4)
