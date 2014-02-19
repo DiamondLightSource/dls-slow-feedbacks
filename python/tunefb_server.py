@@ -3,15 +3,15 @@ import time
 import traceback
 import numpy, scipy, scipy.io
 import cothread
-from cothread.catools import caput, caget, FORMAT_TIME
+from cothread.catools import caget, FORMAT_TIME
 from softioc import builder
 
 # set up logging
 import logging as log
 LOG_FORMAT = '%(asctime)s %(levelname)s %(message)s'
-LOG_LEVEL = log.DEBUG
+LOG_LEVEL = log.INFO
 log.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
-numpy.set_printoptions(precision=3)
+numpy.set_printoptions(precision=4)
 
 
 # Errors
@@ -132,6 +132,10 @@ class TunefbServer(object):
         self.mag_pvs = load_magnet_pvs(pvs_file)
         self.local_pvs = rename_pvs(self.mag_pvs)
 
+        # List of references to locally hosted mirror PVs, created
+        # in self.records()
+        self.mirror_pvs = []
+
         # Load data from files (and on ringmode change)
         self.rm = None
         self.irm = None
@@ -191,7 +195,7 @@ class TunefbServer(object):
                 # stop feedback
                 self.power_pv.set(False)
                 self.error_pv.set(str(e))
-                log.warn('Error: %s' % str(e))
+                log.error('%s' % str(e))
             except Exception, e:
                 # stop feedback and print stack trace
                 log.warn('Unexpected exception: %s' %str(e))
@@ -226,11 +230,11 @@ class TunefbServer(object):
             raise TunefbInvalid(TUNE_UPDATE_ERROR)
         # Move tunes to numpyarray after severity check
         tunes = numpy.array(tunes)
-        log.debug('Tune delta before last correction %s' % self.tune_deltas)
-        log.debug('Tune change since last correction %s' % str(tunes - self.tunes))
+        log.info('Tune delta before last correction %s' % self.tune_deltas)
+        log.info('Tune change since last correction %s' % str(tunes - self.tunes))
         self.tunes = tunes
         self.tune_deltas = self.golden_tunes - self.tunes
-        log.debug('Actual tune deltas %s' % self.tune_deltas)
+        log.info('Actual tune deltas %s' % self.tune_deltas)
 
     def apply_correction(self, deltas):
         '''Put delta correction to magnets, clipping if neccassary.'''
@@ -239,7 +243,7 @@ class TunefbServer(object):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
             self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor))
-            log.debug('Using clipping factor: %s' % factor)
+            log.info('Using clipping factor: %s' % factor)
 
         # Add correction to total values
         self.integrated_current += deltas
@@ -249,12 +253,12 @@ class TunefbServer(object):
             raise TunefbError(MAGNET_CURRENT_ERROR)
 
         calc_tune_corr = numpy.dot(self.rm, deltas)
-        log.debug('Theoretical tune correction %s' % str(calc_tune_corr))
+        log.info('Theoretical tune correction %s' % str(calc_tune_corr))
         self.integrated_tunes += calc_tune_corr
-        # TODO: useful for testing
-        #log.debug('Calculated current deltas:\n', deltas)
-        caput(self.mag_ctrl_pvs, self.integrated_current)
-        log.debug('Total tune change from feedback %s' % str(self.integrated_tunes))
+        log.debug('Calculated current deltas:\n%s' % str(deltas))
+        for pv, current in zip(self.mirror_pvs, self.integrated_current):
+            pv.set(current)
+        log.info('Total tune change from feedback %s' % str(self.integrated_tunes))
 
     def correct(self):
         '''
@@ -282,7 +286,7 @@ class TunefbServer(object):
         try:
             self.refresh_tune_deltas()
             self.correct()
-            log.debug('Completed single correction')
+            log.info('Completed single correction')
         except (TunefbInvalid, TunefbError), e:
             log.warn('Error: %s' % str(e))
             self.error_pv.set(str(e))
@@ -359,6 +363,6 @@ class TunefbServer(object):
                 on_update=self.set_mag_delta_max, PREC=4)
 
         # initialise each current PV to the value from the remote
-        # PV that it will be starting from
+        # PV from which it will be starting
         for pv, value in zip(self.local_pvs, self.startup_currents):
-            builder.aOut(pv.split(':')[1] + ':I', initial_value=value)
+            self.mirror_pvs.append(builder.aOut(pv.split(':')[1] + ':I', initial_value=value))
