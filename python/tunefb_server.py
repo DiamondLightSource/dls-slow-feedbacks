@@ -148,9 +148,7 @@ class TunefbServer(object):
         self.integrated_tunes = numpy.zeros(2)
 
         # Magnet current limits
-        self.mag_limits = [
-            numpy.array([-self.max_current_range for pv in self.local_pvs]),
-            numpy.array([ self.max_current_range for pv in self.local_pvs])]
+        self.set_max_current_range(self.max_current_range)
 
         # Initalise EPICS records
         self.records()
@@ -317,6 +315,10 @@ class TunefbServer(object):
 
     def set_max_current_range(self, value):
         self.max_current_range = value
+        self.mag_limits = [
+            numpy.array([-self.max_current_range for pv in self.local_pvs]),
+            numpy.array([ self.max_current_range for pv in self.local_pvs])]
+        print self.mag_limits
 
     def set_min_beam_current(self, value):
         self.min_beam_current = value
