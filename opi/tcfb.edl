@@ -841,3 +841,30 @@ newPos
 objType "controls"
 endObjectProperties
 
+# (Shell Command)
+object shellCmdClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 8
+y 432
+w 104
+h 24
+fgColor index 29
+bgColor index 3
+topShadowColor index 0
+botShadowColor index 14
+font "helvetica-bold-r-14.0"
+buttonLabel "SETUP"
+numCmds 2
+commandLabel {
+  0 "Forward to Quad IOCs"
+  1 "Remove from Quad IOCs"
+}
+command {
+  0 "/home/uxj42447/software/CS-DI-IOC-09/python/set_inp.py redirect"
+  1 "/home/uxj42447/software/CS-DI-IOC-09/python/set_inp.py reset"
+}
+endObjectProperties
+
