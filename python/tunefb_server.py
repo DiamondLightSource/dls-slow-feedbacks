@@ -262,6 +262,9 @@ class TunefbServer(object):
             self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor))
             log.info('Using clipping factor: %s' % factor)
 
+        # Refresh integrated currents so they match there PVs
+        self.integrated_current = [pv.get() for pv in self.mirror_pvs]
+
         # Add correction to total values
         self.integrated_current += deltas
         if any(self.integrated_current < self.mag_limits[0]):
