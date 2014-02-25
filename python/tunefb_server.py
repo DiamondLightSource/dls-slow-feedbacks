@@ -113,7 +113,7 @@ class TunefbServer(object):
         '''Fetch data from files and set up soft IOC.'''
         # Initial values for PVs
         self.afrac = 0.2
-        self.max_current_range = 1.0
+        self.max_current_range = 0.1
         self.min_beam_current = 1.0
         self.period = 1.0
         self.last_error = NO_ERROR
