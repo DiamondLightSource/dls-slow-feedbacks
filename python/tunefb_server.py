@@ -253,7 +253,7 @@ class TunefbServer(object):
         self.tune_deltas = self.golden_tunes - self.tunes
         log.info('Actual tune deltas %s' % self.tune_deltas)
 
-    def apply_correction(self, deltas):
+    def scale_deltas(self, deltas):
         '''Put delta correction to magnets, clipping if neccassary.'''
         # Scale values over the step current limit
         if any(abs(deltas) > self.mag_delta_max):
@@ -261,35 +261,29 @@ class TunefbServer(object):
             deltas *= factor
             self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor))
             log.info('Using clipping factor: %s' % factor)
+        return deltas
 
-        # Refresh integrated currents so they match there PVs
-        self.integrated_current = [pv.get() for pv in self.mirror_pvs]
-
-        # Add correction to total values
-        self.integrated_current += deltas
-        if any(self.integrated_current < self.mag_limits[0]):
+    def check_mag_limits(self, currents):
+        if any(currents < self.mag_limits[0]):
             raise TunefbError(MAGNET_CURRENT_ERROR)
-        if any(self.integrated_current > self.mag_limits[1]):
+        if any(currents > self.mag_limits[1]):
             raise TunefbError(MAGNET_CURRENT_ERROR)
 
+    def apply_correction(self, deltas):
+        # Calculate and publish tune correction
         calc_tune_corr = numpy.dot(self.rm, deltas)
         log.info('Theoretical tune correction %s' % str(calc_tune_corr))
         self.integrated_tunes += calc_tune_corr
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
         log.debug('Calculated current deltas:\n%s' % str(deltas))
+        # Refresh integrated currents so they match their PVs.
+        self.integrated_current = [pv.get() for pv in self.mirror_pvs]
+        self.integrated_current += deltas
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
         log.info(
             'Total tune change from feedback %s' % str(self.integrated_tunes))
-
-    def correct(self):
-        '''
-        Calculate the current deltas and then apply them
-        to the magnet power supplies.
-        '''
-        mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
-        self.apply_correction(mag_deltas)
 
     def checked_correction(self):
         '''
@@ -299,7 +293,10 @@ class TunefbServer(object):
         self.check_current()
         self.refresh_tune_deltas()
         self.check_tune_range()
-        self.correct()
+        mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
+        scaled_deltas = self.scale_deltas(mag_deltas)
+        self.check_mag_limits(self.integrated_current + scaled_deltas)
+        self.apply_correction(scaled_deltas)
 
     def unchecked_correction(self, dummy):
         '''
@@ -308,7 +305,9 @@ class TunefbServer(object):
         '''
         try:
             self.refresh_tune_deltas()
-            self.correct()
+            mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
+            scaled_deltas = self.scale_deltas(mag_deltas)
+            self.apply_correction(scaled_deltas)
             log.info('Completed single correction')
         except TunefbInvalid, e:
             log.warn('Error: %s' % str(e))
