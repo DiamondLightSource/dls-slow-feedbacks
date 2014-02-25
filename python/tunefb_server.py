@@ -23,6 +23,7 @@ TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
 TUNE_UPDATE_ERROR = 'Tune PV not updated'
 LOW_CURRENT_ERROR = 'Current is too low'
 UNEXPECTED_ERROR = 'Unexpected error'
+OFFSET_CURRENT_CHANGED = 'Offset current changed outside of tune feedback'
 
 
 # Status
@@ -278,8 +279,11 @@ class TunefbServer(object):
         self.tune_int_v_pv.set(self.integrated_tunes[1])
         log.debug('Calculated current deltas:\n%s' % str(deltas))
         # Refresh integrated currents so they match their PVs.
-        self.integrated_current = [pv.get() for pv in self.mirror_pvs]
-        self.integrated_current += deltas
+        fetched_current = numpy.array([pv.get() for pv in self.mirror_pvs])
+        if any(fetched_current - self.integrated_current):
+            log.warn(OFFSET_CURRENT_CHANGED)
+
+        self.integrated_current = fetched_current + deltas
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
         log.info(
