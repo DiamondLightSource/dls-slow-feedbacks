@@ -13,8 +13,9 @@ require('scipy')
 require('numpy')
 require('iocbuilder')
 
+import cothread
 from cothread.catools import caput
-from tunefb_server import load_magnet_pvs, rename_pvs
+from tunefb_server import load_magnet_pvs, rename_pvs, BEAM_DAMP_TIME
 import sys, os
 
 # load file from same directory as the script
@@ -41,4 +42,6 @@ else:
 
 inps = [pv + ':OFFSET1.INP' for pv in mag_pvs]
 
-caput(inps, links)
+for inp, link in zip(inps, links):
+    caput(inp, link)
+    cothread.Sleep(BEAM_DAMP_TIME * 10.)

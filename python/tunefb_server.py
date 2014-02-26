@@ -49,6 +49,7 @@ IOC = 'SR-CS-TFB-01'
 
 # Constants
 DELTA_TUNE_TOLERANCE = 0.02
+BEAM_DAMP_TIME = 0.001
 
 
 def load_magnet_pvs(txt_file):
@@ -336,6 +337,7 @@ class TunefbServer(object):
             self.integrated_current = [0 for _ in self.integrated_current]
             for pv in self.mirror_pvs:
                 pv.set(0)
+                cothread.Sleep(BEAM_DAMP_TIME * 10.)
             log.warn('Reset all integrated currents to zero')
 
     def aggregate_setpoints(self, value):
@@ -348,7 +350,7 @@ class TunefbServer(object):
                 caput(pv, caget(pv) + self.integrated_current[i])
                 self.mirror_pvs[i].set(0)
                 self.integrated_current[i] = 0
-                cothread.Yield()
+                cothread.Sleep(BEAM_DAMP_TIME * 10.)
             log.warn('Aggregated offsets into setpoints')
 
     def set_afrac(self, value):
