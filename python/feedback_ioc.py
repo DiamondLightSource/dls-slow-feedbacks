@@ -2,9 +2,9 @@
 
 import os, sys
 from pkg_resources import require
-require('cothread==2.6')
-require('scipy==0.8.0b1')
-require('iocbuilder==3.23')
+require('cothread==2.10')
+require('scipy==0.10.1')
+require('iocbuilder==3.45')
 
 
 if sys.argv[1:]:
