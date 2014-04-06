@@ -33,8 +33,8 @@ CLIPPING_STATUS = 'Correction scaled down by factor'
 
 
 # PV names
-TUNE_PVS = ['SR21C-DI-TMBF-01:TUNE:TUNE',
-            'SR21C-DI-TMBF-02:TUNE:TUNE']
+TUNE_PVS = ['SR23C-DI-TMBF-01:TUNE:TUNE',
+            'SR23C-DI-TMBF-02:TUNE:TUNE']
 CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 
 
