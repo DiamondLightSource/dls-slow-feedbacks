@@ -123,8 +123,7 @@ class TunefbServer(object):
         # Tune data - Golden tunes are set from ringmode
         self.golden_tunes = numpy.array([0.0, 0.0])
         self.mag_delta_max = numpy.array([0.01])
-        self.tunes_max = numpy.array([0.25, 0.42])
-        self.tunes_min = numpy.array([0.15, 0.32])
+        self.tunes_max_delta = numpy.array([DELTA_TUNE_TOLERANCE] * 2)
         self.tunes = numpy.zeros(2)
         self.tune_deltas = numpy.zeros(2)
 
@@ -171,12 +170,6 @@ class TunefbServer(object):
         tune_v = env['Y_tune_' + datadir] * 0.0001
         self.tune_h_pv.set(tune_h)
         self.tune_v_pv.set(tune_v)
-
-        # Set conservative min and max tune values
-        self.max_h_tune_pv.set(tune_h + DELTA_TUNE_TOLERANCE)
-        self.min_h_tune_pv.set(tune_h - DELTA_TUNE_TOLERANCE)
-        self.max_v_tune_pv.set(tune_v + DELTA_TUNE_TOLERANCE)
-        self.min_v_tune_pv.set(tune_v - DELTA_TUNE_TOLERANCE)
 
         # Load data from file
         mode_dir = os.path.join(self.dataroot, datadir)
@@ -228,9 +221,9 @@ class TunefbServer(object):
 
     def check_tune_range(self):
         '''Check if the measured tunes are within the allowed range.'''
-        if any(self.tunes > self.tunes_max):
+        if any(self.tunes - self.golden_tunes > self.tunes_max_delta):
             raise TunefbError(TUNE_RANGE_ERROR)
-        if any(self.tunes < self.tunes_min):
+        if any(self.tunes - self.golden_tunes < -self.tunes_max_delta):
             raise TunefbError(TUNE_RANGE_ERROR)
 
     def refresh_tune_deltas(self):
@@ -375,17 +368,11 @@ class TunefbServer(object):
     def set_tune_v(self, value):
         self.golden_tunes[1] = value
 
-    def set_max_h_tune(self, value):
-        self.tunes_max[0] = value
+    def set_max_h_tune_delta(self, value):
+        self.tunes_max_delta[0] = value
 
-    def set_max_v_tune(self, value):
-        self.tunes_max[1] = value
-
-    def set_min_h_tune(self, value):
-        self.tunes_min[0] = value
-
-    def set_min_v_tune(self, value):
-        self.tunes_min[1] = value
+    def set_max_v_tune_delta(self, value):
+        self.tunes_max_delta[1] = value
 
     def set_mag_delta_max(self, value):
         self.mag_delta_max = value
@@ -419,18 +406,12 @@ class TunefbServer(object):
         self.tune_int_v_pv = builder.aOut(
                 'TUNE:VINT', initial_value=self.integrated_tunes[1],
                 PREC=4)
-        self.max_h_tune_pv = builder.aOut(
-                'TUNE:HMAX', initial_value=self.tunes_max[0],
-                on_update=self.set_max_h_tune, PREC=4)
-        self.max_v_tune_pv = builder.aOut(
-                'TUNE:VMAX', initial_value=self.tunes_max[1],
-                on_update=self.set_max_v_tune, PREC=4)
-        self.min_h_tune_pv = builder.aOut(
-                'TUNE:HMIN', initial_value=self.tunes_min[0],
-                on_update=self.set_min_h_tune, PREC=4)
-        self.min_v_tune_pv = builder.aOut(
-                'TUNE:VMIN', initial_value=self.tunes_min[1],
-                on_update=self.set_min_v_tune, PREC=4)
+        self.max_h_tune_delta_pv = builder.aOut(
+                'TUNE:HDELTA', initial_value=self.tunes_max_delta[0],
+                on_update=self.set_max_h_tune_delta, PREC=4)
+        self.max_v_tune_delta_pv = builder.aOut(
+                'TUNE:VDELTA', initial_value=self.tunes_max_delta[1],
+                on_update=self.set_max_v_tune_delta, PREC=4)
         self.corr_toggle_pv = builder.aOut(
                 'CORR:TOGGLE', initial_value=0, PREC=4)
         builder.aOut(

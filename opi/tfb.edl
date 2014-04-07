@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1260
-y 320
+x 1437
+y 221
 w 344
-h 464
+h 432
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -31,7 +31,7 @@ major 4
 minor 1
 release 0
 x 8
-y 368
+y 336
 w 328
 h 24
 font "helvetica-bold-r-14.0"
@@ -50,7 +50,7 @@ major 4
 minor 0
 release 0
 x 8
-y 400
+y 368
 w 328
 h 24
 
@@ -63,7 +63,7 @@ major 4
 minor 0
 release 0
 x 8
-y 400
+y 368
 w 328
 h 24
 lineColor index 13
@@ -83,7 +83,7 @@ major 4
 minor 0
 release 0
 x 216
-y 176
+y 144
 w 120
 h 24
 lineColor index 9
@@ -99,7 +99,7 @@ major 4
 minor 5
 release 0
 x 218
-y 178
+y 146
 w 116
 h 20
 controlPv "SR-CS-TFB-01:IDELTA"
@@ -122,7 +122,7 @@ major 4
 minor 0
 release 0
 x 8
-y 336
+y 304
 w 328
 h 24
 lineColor index 13
@@ -218,45 +218,6 @@ major 4
 minor 0
 release 0
 x 216
-y 144
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 218
-y 146
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:HMIN"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 216
 y 112
 w 56
 h 24
@@ -276,7 +237,7 @@ x 218
 y 114
 w 52
 h 20
-controlPv "SR-CS-TFB-01:TUNE:HMAX"
+controlPv "SR-CS-TFB-01:TUNE:HDELTA"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -387,7 +348,7 @@ major 4
 minor 1
 release 0
 x 8
-y 272
+y 240
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -406,7 +367,7 @@ major 4
 minor 1
 release 0
 x 8
-y 208
+y 176
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -425,7 +386,7 @@ major 4
 minor 1
 release 0
 x 8
-y 304
+y 272
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -444,7 +405,7 @@ major 4
 minor 0
 release 0
 x 216
-y 272
+y 240
 w 120
 h 24
 fgColor index 14
@@ -468,7 +429,7 @@ major 4
 minor 0
 release 0
 x 216
-y 304
+y 272
 w 120
 h 24
 fgColor index 14
@@ -557,7 +518,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "MAX TUNE"
+  "MAX TUNE DELTA"
 }
 endObjectProperties
 
@@ -571,7 +532,7 @@ x 282
 y 114
 w 52
 h 20
-controlPv "SR-CS-TFB-01:TUNE:VMAX"
+controlPv "SR-CS-TFB-01:TUNE:VDELTA"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
@@ -582,65 +543,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 280
-y 144
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 282
-y 146
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:VMIN"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 144
-w 200
-h 24
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 4
-value {
-  "MIN TUNE"
-}
 endObjectProperties
 
 # (Rectangle)
@@ -687,7 +589,7 @@ major 4
 minor 1
 release 0
 x 8
-y 176
+y 144
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -706,7 +608,7 @@ major 4
 minor 0
 release 0
 x 216
-y 208
+y 176
 w 120
 h 24
 lineColor index 9
@@ -722,7 +624,7 @@ major 4
 minor 5
 release 0
 x 218
-y 210
+y 178
 w 116
 h 20
 controlPv "SR-CS-TFB-01:AFRAC"
@@ -745,7 +647,7 @@ major 4
 minor 1
 release 0
 x 8
-y 240
+y 208
 w 200
 h 24
 font "helvetica-bold-r-14.0"
@@ -764,7 +666,7 @@ major 4
 minor 0
 release 0
 x 216
-y 240
+y 208
 w 120
 h 24
 fgColor index 14
@@ -787,7 +689,7 @@ major 4
 minor 5
 release 0
 x 12
-y 340
+y 308
 w 320
 h 16
 controlPv "SR-CS-TFB-01:ERROR"
@@ -809,7 +711,7 @@ major 4
 minor 1
 release 0
 x 216
-y 432
+y 400
 w 120
 h 24
 fgColor index 46
@@ -828,7 +730,7 @@ major 4
 minor 5
 release 0
 x 10
-y 402
+y 370
 w 324
 h 20
 controlPv "SR-CS-TFB-01:STATUS"
@@ -850,7 +752,7 @@ major 4
 minor 2
 release 0
 x 8
-y 432
+y 400
 w 96
 h 24
 fgColor index 29
@@ -881,7 +783,7 @@ major 4
 minor 2
 release 0
 x 112
-y 432
+y 400
 w 96
 h 24
 fgColor index 29
