@@ -314,6 +314,7 @@ class TunefbServer(object):
             scaled_deltas = self.scale_deltas(mag_deltas)
             self.apply_correction(scaled_deltas)
             log.info('Completed single correction')
+            self.corr_toggle_pv.set(1 - self.corr_toggle_pv.get())
         except TunefbInvalid, e:
             log.warn('Error: %s' % str(e))
             self.error_pv.set(str(e), severity=alarm.MINOR_ALARM)
@@ -430,6 +431,8 @@ class TunefbServer(object):
         self.min_v_tune_pv = builder.aOut(
                 'TUNE:VMIN', initial_value=self.tunes_min[1],
                 on_update=self.set_min_v_tune, PREC=4)
+        self.corr_toggle_pv = builder.aOut(
+                'CORR:TOGGLE', initial_value=0, PREC=4)
         builder.aOut(
                 'CORR', initial_value=0,
                 on_update=self.unchecked_correction, always_update=True)
