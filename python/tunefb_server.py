@@ -15,21 +15,32 @@ log.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 numpy.set_printoptions(precision=4)
 
 
-# Errors
-NO_ERROR = 'No Errors'
-MAGNET_CURRENT_ERROR = 'Magnet current above tolerances'
-TUNE_RANGE_ERROR = 'Tunes are outside allowable range'
-TUNE_VALIDITY_ERROR = 'Tune measurement is invalid'
-TUNE_UPDATE_ERROR = 'Tune PV not updated'
-LOW_CURRENT_ERROR = 'Current is too low'
-UNEXPECTED_ERROR = 'Unexpected error'
-OFFSET_CURRENT_CHANGED = 'Offset current changed outside of tune feedback'
+OFFSET_CURRENT_CHANGED = 'Offset changed outside of TFB',
 
 
-# Status
-FEEDBACK_OFF = 'Feedback off'
-FEEDBACK_ON = 'Feedback running'
-CLIPPING_STATUS = 'Correction scaled down by factor'
+class Status(object):
+    ''' Enum for tune feedback errors.  I can't find a simpler
+        way of retaining the same information.
+    '''
+    FEEDBACK_OFF = 0
+    FEEDBACK_ON = 1
+    FEEDBACK_SCALING = 2
+    MAGNET_CURRENT = 3
+    TUNE_RANGE = 4
+    TUNE_VALIDITY = 5
+    TUNE_UPDATE = 6
+    LOW_CURRENT = 7
+    UNEXPECTED_ERROR = 8
+
+    STRINGS = {FEEDBACK_OFF:  'Feedback off',
+               FEEDBACK_ON: 'Feedback running',
+               FEEDBACK_SCALING: 'Correction scaled',
+               MAGNET_CURRENT: 'Magnet current error',
+               TUNE_RANGE: 'Tunes outside valid range',
+               TUNE_VALIDITY: 'Tune measurement invalid',
+               TUNE_UPDATE: 'Tune PV not updated',
+               LOW_CURRENT: 'Beam current is too low',
+               UNEXPECTED_ERROR: 'Unexpected error'}
 
 
 # PV names
@@ -96,13 +107,17 @@ class TunefbInvalid(Exception):
     '''
     Exception used to pause tune feedback.
     '''
-    pass
+    def __init__(self, code):
+        Exception.__init__(self, Status.STRINGS[code])
+        self.code = code
 
 class TunefbError(Exception):
     '''
     Exception used to stop tune feedback.
     '''
-    pass
+    def __init__(self, code):
+        Exception.__init__(self, Status.STRINGS[code])
+        self.code = code
 
 class TunefbServer(object):
 
@@ -118,7 +133,7 @@ class TunefbServer(object):
         self.max_current_range = 0.1
         self.min_beam_current = 1.0
         self.period = 1.0
-        self.last_error = NO_ERROR
+        self.last_error = None
 
         # Tune data - Golden tunes are set from ringmode
         self.golden_tunes = numpy.array([0.0, 0.0])
@@ -193,38 +208,35 @@ class TunefbServer(object):
             try:
                 if self.power_pv.get():
                     self.checked_correction()
-                    self.status_pv.set(FEEDBACK_ON)
-                    self.error_pv.set(NO_ERROR)
-                else:
-                    self.status_pv.set(FEEDBACK_OFF)
+                    self.status_pv.set(Status.FEEDBACK_ON)
             except TunefbInvalid, e:
                 # skip one correction
-                if self.status_pv.get() != str(e):
-                    self.status_pv.set(str(e))
+                if self.status_pv.get() != e.code:
+                    self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
                     log.info('Tune feedback paused: %s' % str(e))
             except TunefbError, e:
                 # stop feedback
                 self.power_pv.set(False)
-                self.error_pv.set(str(e), severity=alarm.MAJOR_ALARM)
+                self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
                 log.error('%s' % str(e))
             except Exception, e:
                 # stop feedback and print stack trace
                 log.warn('Unexpected exception: %s' %str(e))
                 traceback.print_exc()
                 self.power_pv.set(False)
-                self.error_pv.set(UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+                self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
         if caget(CURRENT_PV) < self.min_beam_current:
-            raise TunefbError(LOW_CURRENT_ERROR)
+            raise TunefbError(Status.LOW_CURRENT)
 
     def check_tune_range(self):
         '''Check if the measured tunes are within the allowed range.'''
         if any(self.tunes - self.golden_tunes > self.tunes_max_delta):
-            raise TunefbError(TUNE_RANGE_ERROR)
+            raise TunefbError(Status.TUNE_RANGE)
         if any(self.tunes - self.golden_tunes < -self.tunes_max_delta):
-            raise TunefbError(TUNE_RANGE_ERROR)
+            raise TunefbError(Status.TUNE_RANGE)
 
     def refresh_tune_deltas(self):
         '''
@@ -233,7 +245,7 @@ class TunefbServer(object):
         '''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         if any([tune.severity == alarm.INVALID_ALARM for tune in tunes]):
-            raise TunefbInvalid(TUNE_VALIDITY_ERROR)
+            raise TunefbInvalid(Status.TUNE_VALIDITY)
         # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.period
         last_check = time.time() - self.period
@@ -254,15 +266,15 @@ class TunefbServer(object):
         if any(abs(deltas) > self.mag_delta_max):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
-            self.status_pv.set(CLIPPING_STATUS + ': ' + str(factor))
+            self.status_pv.set(Status.SCALING)
             log.info('Using clipping factor: %s' % factor)
         return deltas
 
     def check_mag_limits(self, currents):
         if any(currents < self.mag_limits[0]):
-            raise TunefbError(MAGNET_CURRENT_ERROR)
+            raise TunefbError(Status.MAGNET_CURRENT)
         if any(currents > self.mag_limits[1]):
-            raise TunefbError(MAGNET_CURRENT_ERROR)
+            raise TunefbError(Status.MAGNET_CURRENT)
 
     def apply_correction(self, deltas):
         # Calculate and publish tune correction
@@ -309,18 +321,18 @@ class TunefbServer(object):
             log.info('Completed single correction')
             self.corr_toggle_pv.set(1 - self.corr_toggle_pv.get())
         except TunefbInvalid, e:
-            log.warn('Error: %s' % str(e))
-            self.error_pv.set(str(e), severity=alarm.MINOR_ALARM)
+            log.warn('%s' % str(e))
+            self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
         except TunefbError, e:
-            log.error('Error: %s' % str(e))
-            self.error_pv.set(str(e), severity=alarm.MAJOR_ALARM)
+            log.error('%s' % str(e))
+            self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
         except Exception, e:
             log.warn('Unexpected exception: %s' % str(e))
-            self.error_pv.set(UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
 
     def reset(self, dummy):
         '''Reset the error pv.'''
-        self.error_pv.set(NO_ERROR)
+        self.status_pv.set(Status.FEEDBACK_OFF)
         self.reset_pv.set(0)
 
     def reset_integrated_current(self, value):
@@ -382,10 +394,6 @@ class TunefbServer(object):
         builder.SetDeviceName(IOC)
         self.power_pv = builder.boolOut(
                 'ONOFF', 'OFF', 'ON', initial_value=False)
-        self.status_pv = builder.stringIn(
-                'STATUS', initial_value=FEEDBACK_OFF)
-        self.error_pv = builder.stringIn(
-                'ERROR', initial_value=NO_ERROR)
         self.reset_pv = builder.aOut(
                 'RESET', initial_value=0, on_update=self.reset)
         self.aggregate_pv = builder.aOut(
@@ -438,3 +446,7 @@ class TunefbServer(object):
         for pv, value in zip(self.local_pvs, self.startup_currents):
             self.mirror_pvs.append(
                     builder.aOut(pv.split(':')[1] + ':I', initial_value=value))
+
+        # Pass all values from the enum into the status PV
+        status_args = ['STATUS'] + [(Status.STRINGS[code], code) for code in range(9)]
+        self.status_pv = builder.mbbIn(*status_args, initial_value=Status.FEEDBACK_OFF)
