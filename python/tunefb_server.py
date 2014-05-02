@@ -208,7 +208,11 @@ class TunefbServer(object):
             try:
                 if self.power_pv.get():
                     self.checked_correction()
-                    self.status_pv.set(Status.FEEDBACK_ON)
+                    if self.status_pv.get() == Status.FEEDBACK_SCALING:
+                        self.status_pv.set(Status.FEEDBACK_ON)
+                else:
+                    if self.status_pv.get() == Status.FEEDBACK_ON:
+                        self.status_pv.set(Status.FEEDBACK_OFF)
             except TunefbInvalid, e:
                 # skip one correction
                 if self.status_pv.get() != e.code:
@@ -250,7 +254,7 @@ class TunefbServer(object):
         # more often than self.period
         last_check = time.time() - self.period
         if any([tune.timestamp < last_check for tune in tunes]):
-            raise TunefbInvalid(TUNE_UPDATE_ERROR)
+            raise TunefbInvalid(Status.TUNE_UPDATE)
         # Move tunes to numpyarray after severity check
         tunes = numpy.array(tunes)
         log.info('Tune delta before last correction %s' % self.tune_deltas)
@@ -266,7 +270,7 @@ class TunefbServer(object):
         if any(abs(deltas) > self.mag_delta_max):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
-            self.status_pv.set(Status.SCALING)
+            self.status_pv.set(Status.FEEDBACK_SCALING)
             log.info('Using clipping factor: %s' % factor)
         return deltas
 
