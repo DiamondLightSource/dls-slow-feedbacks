@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1437
-y 221
+x 1270
+y 262
 w 344
-h 432
+h 370
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -23,58 +23,6 @@ showGrid
 snapToGrid
 gridSize 8
 endScreenProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 336
-w 328
-h 24
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 4
-value {
-  "STATUS"
-}
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 368
-w 328
-h 24
-
-beginGroup
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 368
-w 328
-h 24
-lineColor index 13
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-endGroup
-
-endObjectProperties
 
 # (Rectangle)
 object activeRectangleClass
@@ -96,7 +44,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 218
 y 146
@@ -130,7 +78,7 @@ fill
 fillColor index 5
 fillAlarm
 lineWidth 2
-alarmPv "SR-CS-TFB-01:ERROR"
+alarmPv "SR-CS-TFB-01:STATUS"
 endObjectProperties
 
 # (Rectangle)
@@ -169,7 +117,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 282
 y 50
@@ -192,7 +140,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 218
 y 50
@@ -204,7 +152,6 @@ fontAlign "center"
 fgColor index 14
 fgAlarm
 bgColor index 5
-limitsFromDb
 nullColor index 0
 useHexPrefix
 newPos
@@ -231,7 +178,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 218
 y 114
@@ -270,7 +217,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 218
 y 82
@@ -294,7 +241,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
 w 344
@@ -346,7 +293,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 240
 w 200
@@ -365,7 +312,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 176
 w 200
@@ -384,7 +331,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 272
 w 200
@@ -394,7 +341,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "LAST ERROR"
+  "STATUS"
 }
 endObjectProperties
 
@@ -402,7 +349,7 @@ endObjectProperties
 object activeButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 216
 y 240
@@ -426,7 +373,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 216
 y 272
@@ -450,7 +397,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 80
 w 200
@@ -468,7 +415,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 282
 y 82
@@ -508,7 +455,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 112
 w 200
@@ -526,7 +473,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 282
 y 114
@@ -568,7 +515,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 48
 w 200
@@ -587,7 +534,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 144
 w 200
@@ -621,7 +568,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 218
 y 178
@@ -645,7 +592,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 208
 w 200
@@ -663,7 +610,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 216
 y 208
@@ -686,13 +633,13 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 12
 y 308
 w 320
 h 16
-controlPv "SR-CS-TFB-01:ERROR"
+controlPv "SR-CS-TFB-01:STATUS"
 format "string"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
@@ -711,7 +658,7 @@ major 4
 minor 1
 release 0
 x 216
-y 400
+y 336
 w 120
 h 24
 fgColor index 46
@@ -723,36 +670,14 @@ font "helvetica-medium-r-12.0"
 3d
 endObjectProperties
 
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 5
-release 0
-x 10
-y 370
-w 324
-h 20
-controlPv "SR-CS-TFB-01:STATUS"
-format "string"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-limitsFromDb
-nullColor index 0
-newPos
-objType "controls"
-endObjectProperties
-
 # (Shell Command)
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 8
-y 400
+y 336
 w 96
 h 24
 fgColor index 29
@@ -780,10 +705,10 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 2
+minor 3
 release 0
 x 112
-y 400
+y 336
 w 96
 h 24
 fgColor index 29
