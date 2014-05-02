@@ -3,13 +3,13 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1270
-y 262
-w 344
-h 370
-font "helvetica-bold-r-14.0"
-ctlFont "helvetica-bold-r-14.0"
-btnFont "helvetica-bold-r-14.0"
+x 1498
+y 99
+w 296
+h 360
+font "helvetica-bold-r-12.0"
+ctlFont "helvetica-bold-r-12.0"
+btnFont "helvetica-bold-r-12.0"
 fgColor index 14
 bgColor index 3
 textColor index 14
@@ -30,48 +30,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 144
-w 120
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 218
-y 146
-w 116
-h 20
-controlPv "SR-CS-TFB-01:IDELTA"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
 x 8
-y 304
-w 328
+y 296
+w 280
 h 24
 lineColor index 13
 fill
@@ -87,183 +48,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 48
-w 56
-h 24
-lineColor index 13
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 280
-y 48
-w 56
-h 24
-lineColor index 13
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 282
-y 50
-w 52
-h 20
-controlPv "SR23C-DI-TMBF-02:TUNE:TUNE"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 218
-y 50
-w 52
-h 20
-controlPv "SR23C-DI-TMBF-01:TUNE:TUNE"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 216
-y 112
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 218
-y 114
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:HDELTA"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 216
-y 80
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 218
-y 82
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:H"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
 x 0
-y 0
-w 344
-h 40
-font "helvetica-medium-r-18.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 73
-value {
-  "TUNE FEEDBACK CS-DI-IOC-09"
-}
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 0
-y 40
-w 344
+y 32
+w 296
 h 0
 lineColor index 22
 fillColor index 45
@@ -278,8 +65,80 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 280
-y 80
+x 0
+y 32
+w 296
+h 0
+lineColor index 17
+fillColor index 45
+lineWidth 0
+visPv "SR-CS-TFB-01:ONOFF"
+visMin "1"
+visMax "2"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 12
+y 300
+w 272
+h 16
+controlPv "SR-CS-TFB-01:STATUS"
+format "string"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+limitsFromDb
+nullColor index 0
+newPos
+objType "controls"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 168
+w 120
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 136
+w 120
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 104
 w 56
 h 24
 lineColor index 9
@@ -288,17 +147,299 @@ fillColor index 5
 lineWidth 2
 endObjectProperties
 
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 232
+y 104
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 232
+y 72
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 72
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 40
+w 56
+h 24
+lineColor index 13
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 232
+y 40
+w 56
+h 24
+lineColor index 13
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 170
+y 170
+w 116
+h 20
+controlPv "SR-CS-TFB-01:AFRAC"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 170
+y 138
+w 116
+h 20
+controlPv "SR-CS-TFB-01:IDELTA"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 234
+y 106
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:VDELTA"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 170
+y 106
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:HDELTA"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 234
+y 74
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:V"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 170
+y 74
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:H"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 234
+y 42
+w 52
+h 20
+controlPv "SR23C-DI-TMBF-02:TUNE:TUNE"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+fgAlarm
+bgColor index 5
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 170
+y 42
+w 52
+h 20
+controlPv "SR23C-DI-TMBF-01:TUNE:TUNE"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+fgAlarm
+bgColor index 5
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
-x 8
-y 240
-w 200
-h 24
+release 0
+x 0
+y 0
+w 296
+h 32
 font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "TUNE FEEDBACK CS-DI-IOC-09"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 8
+y 232
+w 152
+h 24
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -312,12 +453,12 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 176
-w 200
+y 168
+w 152
 h 24
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -331,12 +472,12 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 272
-w 200
+y 264
+w 152
 h 24
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -349,10 +490,10 @@ endObjectProperties
 object activeButtonClass
 beginObjectProperties
 major 4
-minor 1
+minor 0
 release 0
-x 216
-y 240
+x 168
+y 232
 w 120
 h 24
 fgColor index 14
@@ -365,7 +506,7 @@ controlPv "SR-CS-TFB-01:ONOFF"
 onLabel "ON"
 offLabel "OFF"
 3d
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 objType "controls"
 endObjectProperties
 
@@ -373,10 +514,10 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 1
+minor 0
 release 0
-x 216
-y 272
+x 168
+y 264
 w 120
 h 24
 fgColor index 14
@@ -389,7 +530,7 @@ pressValue "1"
 onLabel "CLEAR"
 offLabel "CLEAR"
 3d
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 endObjectProperties
 
 # (Static Text)
@@ -397,12 +538,12 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 80
-w 200
+y 72
+w 152
 h 24
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -411,56 +552,17 @@ value {
 }
 endObjectProperties
 
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 282
-y 82
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:V"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 280
-y 112
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 112
-w 200
+y 104
+w 152
 h 24
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -469,58 +571,17 @@ value {
 }
 endObjectProperties
 
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 282
-y 114
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:VDELTA"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 0
-y 40
-w 344
-h 0
-lineColor index 17
-fillColor index 45
-lineWidth 0
-visPv "SR-CS-TFB-01:ONOFF"
-visMin "1"
-visMax "2"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 48
-w 200
+y 40
+w 152
 h 24
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -534,12 +595,12 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 144
-w 200
+y 136
+w 152
 h 24
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -548,56 +609,17 @@ value {
 }
 endObjectProperties
 
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 216
-y 176
-w 120
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 218
-y 178
-w 116
-h 20
-controlPv "SR-CS-TFB-01:AFRAC"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 8
-y 208
-w 200
+y 200
+w 152
 h 24
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
@@ -610,10 +632,10 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 1
+minor 0
 release 0
-x 216
-y 208
+x 168
+y 200
 w 120
 h 24
 fgColor index 14
@@ -626,29 +648,7 @@ pressValue "1"
 onLabel "CORRECT"
 offLabel "CORRECT"
 3d
-font "helvetica-bold-r-14.0"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 12
-y 308
-w 320
-h 16
-controlPv "SR-CS-TFB-01:STATUS"
-format "string"
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-limitsFromDb
-nullColor index 0
-newPos
-objType "controls"
+font "helvetica-bold-r-12.0"
 endObjectProperties
 
 # (Exit Button)
@@ -657,8 +657,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 216
-y 336
+x 168
+y 328
 w 120
 h 24
 fgColor index 46
@@ -674,17 +674,17 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 3
+minor 2
 release 0
 x 8
-y 336
-w 96
+y 328
+w 72
 h 24
 fgColor index 29
 bgColor index 3
 topShadowColor index 0
 botShadowColor index 14
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 buttonLabel "SETUP"
 numCmds 4
 commandLabel {
@@ -705,17 +705,17 @@ endObjectProperties
 object shellCmdClass
 beginObjectProperties
 major 4
-minor 3
+minor 2
 release 0
-x 112
-y 336
-w 96
+x 88
+y 328
+w 72
 h 24
 fgColor index 29
 bgColor index 3
 topShadowColor index 0
 botShadowColor index 14
-font "helvetica-bold-r-14.0"
+font "helvetica-bold-r-12.0"
 buttonLabel "HELP"
 numCmds 1
 command {
