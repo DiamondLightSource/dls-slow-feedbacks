@@ -9,7 +9,7 @@ from softioc import builder, alarm
 
 # Set up logging
 import logging as log
-LOG_FORMAT = 'TCFB: %(levelname)s %(message)s'
+LOG_FORMAT = 'TFB: %(levelname)s %(message)s'
 LOG_LEVEL = log.WARNING
 log.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 numpy.set_printoptions(precision=4)
