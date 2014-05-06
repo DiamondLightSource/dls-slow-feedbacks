@@ -328,12 +328,23 @@ class TunefbServer(object):
         Catches all invalid and error states.
         '''
         try:
+            # This is here only to give visual feedback when pressing the
+            # single correction button
+            self.status_pv.set(Status.FEEDBACK_OFF)
+            cothread.Sleep(0.3)
             self.refresh_tune_deltas()
             mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
             scaled_deltas = self.scale_deltas(mag_deltas)
             self.apply_correction(scaled_deltas)
             log.info('Completed single correction')
             self.corr_toggle_pv.set(1 - self.corr_toggle_pv.get())
+            # This sleep is also necessary to see the above status change
+            # in the GUI
+            cothread.Sleep(0.2)
+            if self.scaling:
+                self.status_pv.set(Status.SINGLE_SCALED)
+            else:
+                self.status_pv.set(Status.SINGLE_CORR)
         except TunefbInvalid, e:
             log.warn('%s' % str(e))
             self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
