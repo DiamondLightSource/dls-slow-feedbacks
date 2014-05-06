@@ -25,16 +25,20 @@ class Status(object):
     FEEDBACK_OFF = 0
     FEEDBACK_ON = 1
     FEEDBACK_SCALING = 2
-    MAGNET_CURRENT = 3
-    TUNE_RANGE = 4
-    TUNE_VALIDITY = 5
-    TUNE_UPDATE = 6
-    LOW_CURRENT = 7
-    UNEXPECTED_ERROR = 8
+    SINGLE_CORR = 3
+    SINGLE_SCALED = 4
+    MAGNET_CURRENT = 5
+    TUNE_RANGE = 6
+    TUNE_VALIDITY = 7
+    TUNE_UPDATE = 8
+    LOW_CURRENT = 9
+    UNEXPECTED_ERROR = 10
 
     STRINGS = {FEEDBACK_OFF:  'Feedback off',
                FEEDBACK_ON: 'Feedback running',
-               FEEDBACK_SCALING: 'Correction scaled',
+               FEEDBACK_SCALING: 'Feedback running: scaled',
+               SINGLE_CORR: 'Single correction applied',
+               SINGLE_SCALED: 'Single correction: scaled',
                MAGNET_CURRENT: 'Magnet current error',
                TUNE_RANGE: 'Tunes outside valid range',
                TUNE_VALIDITY: 'Tune measurement invalid',
@@ -135,6 +139,8 @@ class TunefbServer(object):
         self.period = 1.0
         self.last_error = None
 
+        # Whether the last correction was scaled
+        self.scaling = False
         # Tune data - Golden tunes are set from ringmode
         self.golden_tunes = numpy.array([0.0, 0.0])
         self.mag_delta_max = numpy.array([0.01])
@@ -208,10 +214,12 @@ class TunefbServer(object):
             try:
                 if self.power_pv.get():
                     self.checked_correction()
-                    if self.status_pv.get() == Status.FEEDBACK_SCALING:
+                    if self.scaling:
+                        self.status_pv.set(Status.FEEDBACK_SCALING)
+                    else:
                         self.status_pv.set(Status.FEEDBACK_ON)
                 else:
-                    if self.status_pv.get() == Status.FEEDBACK_ON:
+                    if self.status_pv.get() in (Status.FEEDBACK_ON, Status.FEEDBACK_SCALING):
                         self.status_pv.set(Status.FEEDBACK_OFF)
             except TunefbInvalid, e:
                 # skip one correction
@@ -270,8 +278,10 @@ class TunefbServer(object):
         if any(abs(deltas) > self.mag_delta_max):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
-            self.status_pv.set(Status.FEEDBACK_SCALING)
+            self.scaling = True
             log.info('Using clipping factor: %s' % factor)
+        else:
+            self.scaling = False
         return deltas
 
     def check_mag_limits(self, currents):
@@ -452,5 +462,6 @@ class TunefbServer(object):
                     builder.aOut(pv.split(':')[1] + ':I', initial_value=value))
 
         # Pass all values from the enum into the status PV
-        status_args = ['STATUS'] + [(Status.STRINGS[code], code) for code in range(9)]
+        num_statuses = len(Status.STRINGS)
+        status_args = ['STATUS'] + [(Status.STRINGS[code], code) for code in range(num_statuses)]
         self.status_pv = builder.mbbIn(*status_args, initial_value=Status.FEEDBACK_OFF)
