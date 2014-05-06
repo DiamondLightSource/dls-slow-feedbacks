@@ -719,7 +719,7 @@ font "helvetica-bold-r-12.0"
 buttonLabel "HELP"
 numCmds 1
 command {
-  0 "firefox http://confluence.diamond.ac.uk/display/CHLP/Tune+Feedback+Documentation"
+  0 "firefox http://www.cs.diamond.ac.uk/cgi-bin/wiki.cgi/Tune_Feedback"
 }
 endObjectProperties
 
