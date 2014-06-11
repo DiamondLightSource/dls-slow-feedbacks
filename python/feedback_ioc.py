@@ -61,7 +61,7 @@ run = records.ai('RUN', PINI = 'YES', VAL = 0,
 
 # Create the identification PVs
 builder.SetDeviceName('CS-DI-IOC-09')
-builder.stringIn('WHOAMI', VAL = 'RF Feedback Server')
+builder.stringIn('WHOAMI', VAL = 'Machine Feedback Services')
 builder.stringIn('HOSTNAME', VAL = os.uname()[1])
 
 

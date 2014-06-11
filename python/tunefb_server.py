@@ -170,7 +170,13 @@ class TunefbServer(object):
 
         # fetch values from the PVs we will be mirroring, before
         # starting up.
-        self.startup_currents = caget([pv + ':OFFSET1' for pv in self.mag_pvs])
+        self.startup_currents = \
+            caget([pv + ':OFFSET1' for pv in self.mag_pvs], throw = False)
+        for i in range(len(self.startup_currents)):
+            if not self.startup_currents[i].ok:
+                print 'Unable to read', self.startup_currents[i].name
+                self.startup_currents[i] = 0
+
         self.integrated_current = self.startup_currents
         self.integrated_tunes = numpy.zeros(2)
 
