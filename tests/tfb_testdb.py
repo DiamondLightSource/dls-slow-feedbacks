@@ -59,6 +59,13 @@ class Server(object):
             cothread.Sleep(0.5)
             xtune.set(xtune.get() + random.uniform(-0.001, 0.001))
             ytune.set(ytune.get() + random.uniform(-0.001, 0.001))
+            # Throw in an occasional spurious tune value
+            if random.random() > 0.9:
+                old = ytune.get()
+                ytune.set(random.uniform(0,10))
+                cothread.Sleep(0.5)
+                ytune.set(old)
+
 
 
 # Start the database
