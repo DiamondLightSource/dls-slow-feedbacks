@@ -189,7 +189,7 @@ class TunefbServer(object):
 
         # Initalise EPICS records
         self.records()
-        self.max_i_pv.set(max(abs(i) for i in self.startup_currents))
+        self.update_max_i_pv(max(abs(i) for i in self.startup_currents))
 
     def set_datadir(self, datadir):
         '''Load required data from files in datadir.'''
@@ -321,7 +321,7 @@ class TunefbServer(object):
             log.warn(OFFSET_CURRENT_CHANGED)
 
         self.integrated_current = fetched_current + deltas
-        self.max_i_pv.set(max(abs(self.integrated_current)))
+        self.update_max_i_pv(max(abs(self.integrated_current)))
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
         log.info(
@@ -402,6 +402,17 @@ class TunefbServer(object):
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
             log.warn('Aggregated offsets into setpoints')
 
+    def update_max_i_pv(self, value):
+        '''Update value and severity of IMAX PV.'''
+        if value > self.max_current_range:
+            sev = alarm.MAJOR_ALARM
+        elif value > 0.8 * self.max_current_range:
+            sev = alarm.MINOR_ALARM
+        else:
+            sev = alarm.NO_ALARM
+        self.max_i_pv.set(value, severity=sev)
+
+
     def set_afrac(self, value):
         self.afrac = value
 
@@ -474,7 +485,7 @@ class TunefbServer(object):
         builder.aOut(
                 'ILIM', initial_value=self.max_current_range,
                 on_update=self.set_max_current_range, PREC=4)
-        self.max_i_pv = builder.aOut(
+        self.max_i_pv = builder.aIn(
                 'IMAX', initial_value=0.0, PREC=4)
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
