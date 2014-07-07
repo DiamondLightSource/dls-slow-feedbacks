@@ -149,6 +149,8 @@ class TunefbServer(object):
         self.tunes_max_delta = numpy.array([DELTA_TUNE_TOLERANCE] * 2)
         self.tunes = numpy.zeros(2)
         self.tune_deltas = numpy.zeros(2)
+        # Allow one tune measument out of range before tripping
+        self.one_tune_error = False
 
         # Load magnet PVs from file in this directory.
         pydir = os.path.dirname(os.path.realpath(__file__))
@@ -254,10 +256,15 @@ class TunefbServer(object):
 
     def check_tune_range(self):
         '''Check if the measured tunes are within the allowed range.'''
-        if any(self.tunes - self.golden_tunes > self.tunes_max_delta):
-            raise TunefbError(Status.TUNE_RANGE)
-        if any(self.tunes - self.golden_tunes < -self.tunes_max_delta):
-            raise TunefbError(Status.TUNE_RANGE)
+        if any(abs(self.tunes - self.golden_tunes) > self.tunes_max_delta):
+            if self.one_tune_error:
+                self.one_tune_error = False
+                raise TunefbError(Status.TUNE_RANGE)
+            else:
+                self.one_tune_error = True
+                raise TunefbInvalid(Status.TUNE_RANGE)
+        else:
+            self.one_tune_error = False
 
     def refresh_tune_deltas(self):
         '''
