@@ -66,7 +66,7 @@ IOC = 'SR-CS-TFB-01'
 BEAM_DAMP_TIME = 0.001
 # Default values
 DELTA_TUNE_TOLERANCE = 0.02
-MAX_CURRENT_OFFSET = 0.15
+MAX_CURRENT_OFFSET = 0.1
 
 
 def load_magnet_pvs(txt_file):
