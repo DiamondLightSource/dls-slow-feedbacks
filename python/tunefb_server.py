@@ -294,10 +294,10 @@ class TunefbServer(object):
         return deltas
 
     def check_mag_limits(self, currents):
-        self.max_i_pv.set(max(abs(i) for i in currents))
-        if any(currents < self.mag_limits[0]):
-            raise TunefbError(Status.MAGNET_CURRENT)
-        if any(currents > self.mag_limits[1]):
+        max_i = max(abs(currents))
+        if max_i > self.max_current_range:
+            log.debug('Max current offset: ' +  str(max_i))
+            log.debug('Current offset limit:' + str(self.max_current_range))
             raise TunefbError(Status.MAGNET_CURRENT)
 
     def apply_correction(self, deltas):
@@ -400,9 +400,6 @@ class TunefbServer(object):
 
     def set_max_current_range(self, value):
         self.max_current_range = value
-        self.mag_limits = [
-            numpy.array([-self.max_current_range for pv in self.local_pvs]),
-            numpy.array([ self.max_current_range for pv in self.local_pvs])]
 
     def set_min_beam_current(self, value):
         self.min_beam_current = value
