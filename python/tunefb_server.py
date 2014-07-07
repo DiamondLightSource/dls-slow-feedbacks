@@ -62,9 +62,11 @@ GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 IOC = 'SR-CS-TFB-01'
 
 
-# Constants
-DELTA_TUNE_TOLERANCE = 0.02
+# Constant
 BEAM_DAMP_TIME = 0.001
+# Default values
+DELTA_TUNE_TOLERANCE = 0.02
+MAX_CURRENT_OFFSET = 0.15
 
 
 def load_magnet_pvs(txt_file):
@@ -134,7 +136,7 @@ class TunefbServer(object):
         '''Fetch data from files and set up soft IOC.'''
         # Initial values for PVs
         self.afrac = 0.2
-        self.max_current_range = 0.1
+        self.max_current_range = MAX_CURRENT_OFFSET
         self.min_beam_current = 1.0
         self.period = 1.0
         self.last_error = None
