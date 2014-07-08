@@ -1,4 +1,4 @@
-#!/dls_sw/work/R3.14.11/support/pythonSoftIoc/pythonIoc
+#!/dls_sw/work/R3.14.12.3/support/pythonSoftIoc/pythonIoc
 '''
 Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
@@ -26,9 +26,8 @@ mag_pvs = load_magnet_pvs(PVS_FILE)
 local_pvs = rename_pvs(mag_pvs)
 
 if 'test' in sys.argv:
-    def caput(pvs, values):
-        for pv, val in zip(pvs, values):
-            print '%s   %s' % (pv, val)
+    def caput(pv, value):
+        print '%s   %s' % (pv, value)
 if 'redirect' in sys.argv:
     # set INP to our PVs
     links = [pv + ':I CPP MS' for pv in local_pvs]
