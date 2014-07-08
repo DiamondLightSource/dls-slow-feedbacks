@@ -181,13 +181,13 @@ class TunefbServer(object):
                 print 'Unable to read', self.startup_currents[i].name
                 self.startup_currents[i] = 0
 
-        self.integrated_current = self.startup_currents
+        self.integrated_current = numpy.array(self.startup_currents)
         self.integrated_tunes = numpy.zeros(2)
 
         # Initalise EPICS records
         self.records()
         # This uses one of the PVs created in the records() method
-        self.update_max_i_pv(max(abs(i) for i in self.startup_currents))
+        self.update_max_i_pv()
 
     def set_datadir(self, datadir):
         '''Load required data from files in datadir.'''
@@ -221,6 +221,7 @@ class TunefbServer(object):
         while True:
             cothread.Sleep(self.period)
             try:
+                self.update_max_i_pv()
                 if self.power_pv.get():
                     self.checked_correction()
                     if self.scaling:
@@ -319,7 +320,6 @@ class TunefbServer(object):
             log.warn(OFFSET_CURRENT_CHANGED)
 
         self.integrated_current = fetched_current + deltas
-        self.update_max_i_pv(max(abs(self.integrated_current)))
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
         log.info(
@@ -400,8 +400,9 @@ class TunefbServer(object):
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
             log.warn('Aggregated offsets into setpoints')
 
-    def update_max_i_pv(self, value):
+    def update_max_i_pv(self):
         '''Update value and severity of IMAX PV.'''
+        value = max(abs(i) for i in self.integrated_current)
         if value > self.max_current_range:
             sev = alarm.MAJOR_ALARM
         elif value > 0.8 * self.max_current_range:
