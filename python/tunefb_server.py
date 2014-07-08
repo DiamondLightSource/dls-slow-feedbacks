@@ -184,11 +184,9 @@ class TunefbServer(object):
         self.integrated_current = self.startup_currents
         self.integrated_tunes = numpy.zeros(2)
 
-        # Magnet current limits
-        self.set_max_current_range(self.max_current_range)
-
         # Initalise EPICS records
         self.records()
+        # This uses one of the PVs created in the records() method
         self.update_max_i_pv(max(abs(i) for i in self.startup_currents))
 
     def set_datadir(self, datadir):
