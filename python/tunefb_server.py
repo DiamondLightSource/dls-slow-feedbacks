@@ -125,7 +125,7 @@ class TunefbServer(object):
         # Tune data - Golden tunes are set from ringmode
         self.golden_tunes = numpy.array([0.0, 0.0])
         self.mag_delta_max = numpy.array([0.01])
-        self.tunes_max_delta = numpy.array([DELTA_TUNE_TOLERANCE] * 2)
+        self.tune_delta_max = DELTA_TUNE_TOLERANCE
         self.tunes = numpy.zeros(2)
         self.tune_deltas = numpy.zeros(2)
         # Allow one tune measument out of range before tripping
@@ -235,7 +235,7 @@ class TunefbServer(object):
 
     def check_tune_range(self):
         '''Check if the measured tunes are within the allowed range.'''
-        if any(abs(self.tunes - self.golden_tunes) > self.tunes_max_delta):
+        if max(abs(self.tunes - self.golden_tunes)) > self.tune_delta_max:
             if self.one_tune_error:
                 self.one_tune_error = False
                 raise TunefbError(Status.TUNE_RANGE)
@@ -280,7 +280,7 @@ class TunefbServer(object):
         return deltas
 
     def check_mag_limits(self, currents):
-        max_i = max(abs(currents))
+        max_i = max(abs(i) for i in currents)
         if max_i > self.max_current_range:
             log.debug('Max current offset: ' +  str(max_i))
             log.debug('Current offset limit:' + str(self.max_current_range))
@@ -417,11 +417,8 @@ class TunefbServer(object):
     def set_tune_v(self, value):
         self.golden_tunes[1] = value
 
-    def set_max_h_tune_delta(self, value):
-        self.tunes_max_delta[0] = value
-
-    def set_max_v_tune_delta(self, value):
-        self.tunes_max_delta[1] = value
+    def set_max_tune_delta(self, value):
+        self.tune_delta_max = value
 
     def set_mag_delta_max(self, value):
         self.mag_delta_max = value
@@ -451,12 +448,9 @@ class TunefbServer(object):
         self.tune_int_v_pv = builder.aOut(
                 'TUNE:VINT', initial_value=self.integrated_tunes[1],
                 PREC=4)
-        self.max_h_tune_delta_pv = builder.aOut(
-                'TUNE:HDELTA', initial_value=self.tunes_max_delta[0],
-                on_update=self.set_max_h_tune_delta, PREC=4)
-        self.max_v_tune_delta_pv = builder.aOut(
-                'TUNE:VDELTA', initial_value=self.tunes_max_delta[1],
-                on_update=self.set_max_v_tune_delta, PREC=4)
+        self.max_tune_delta_pv = builder.aOut(
+                'TUNE:DELTA', initial_value=self.tune_delta_max,
+                on_update=self.set_max_tune_delta, PREC=4)
         self.corr_toggle_pv = builder.aOut(
                 'CORR:TOGGLE', initial_value=0, PREC=4)
         builder.aOut(
