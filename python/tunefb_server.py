@@ -506,10 +506,10 @@ class TunefbServer(object):
                 'PERIOD', initial_value=self.period,
                 on_update=self.set_period, PREC=4)
         builder.aOut(
-                'ILIM', initial_value=self.max_current_range,
+                'OFFSETLIM', initial_value=self.max_current_range,
                 on_update=self.set_max_current_range, PREC=4)
         self.max_i_pv = builder.aIn(
-                'IMAX', initial_value=0.0, PREC=4)
+                'OFFSETMAX', initial_value=0.0, PREC=4)
         self.fwd_ok_pv = builder.mbbIn('FWDOK', ('OK', 0), ('INVALID', 1), initial_value=0)
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
