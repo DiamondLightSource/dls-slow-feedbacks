@@ -5,6 +5,7 @@ import numpy, scipy, scipy.io
 import cothread
 from cothread.catools import caget, caput, FORMAT_TIME
 from softioc import builder, alarm
+from tunefb_offsets import load_magnet_pvs, rename_pvs, all_forwarded
 
 
 # Set up logging
@@ -68,28 +69,6 @@ BEAM_DAMP_TIME = 0.001
 DELTA_TUNE_TOLERANCE = 0.02
 MAX_CURRENT_OFFSET = 0.1
 
-
-def load_magnet_pvs(txt_file):
-    '''
-    Load corrector magnet PVs from the specific format
-    in the file.
-    '''
-    mag_pvs = []
-    with open(txt_file) as f:
-        for line in f:
-            mag_pvs.append(line.strip())
-    return mag_pvs
-
-
-def rename_pvs(pvs):
-    '''Rename quadrople pv names for use as local pvs.'''
-    new_pvs = []
-    for pv in pvs:
-        parts = pv.split('-')
-        cell = parts[0][2:4]
-        new_pv = IOC + ':' + cell + parts[2] + parts[3]
-        new_pvs.append(new_pv)
-    return new_pvs
 
 
 def load_tune_rm(mat_file):
@@ -222,6 +201,7 @@ class TunefbServer(object):
             cothread.Sleep(self.period)
             try:
                 self.update_max_i_pv()
+                self.update_fwd_ok_pv()
                 if self.power_pv.get():
                     self.checked_correction()
                     if self.scaling:
@@ -412,6 +392,12 @@ class TunefbServer(object):
             sev = alarm.NO_ALARM
         self.max_i_pv.set(value, severity=sev)
 
+    def update_fwd_ok_pv(self):
+        '''Update value and severity of FWDOK PV.'''
+        if not all_forwarded(self.local_pvs, self.mag_pvs):
+            self.fwd_ok_pv.set(1, severity = alarm.MINOR_ALARM)
+        else:
+            self.fwd_ok_pv.set(0, severity=alarm.NO_ALARM)
 
     def set_afrac(self, value):
         self.afrac = value
@@ -487,6 +473,7 @@ class TunefbServer(object):
                 on_update=self.set_max_current_range, PREC=4)
         self.max_i_pv = builder.aIn(
                 'IMAX', initial_value=0.0, PREC=4)
+        self.fwd_ok_pv = builder.mbbIn('FWDOK', ('OK', 0), ('INVALID', 1), initial_value=0)
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
                 on_update=self.set_min_beam_current, PREC=4)
