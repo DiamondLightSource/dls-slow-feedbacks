@@ -188,6 +188,7 @@ class TunefbServer(object):
 
         # Invert response matrix
         self.irm = numpy.linalg.pinv(self.rm)
+        self.integrated_tunes = numpy.dot(self.rm, self.integrated_current)
 
     def init(self):
         '''Spawn a new thread to run the main ioc loop.'''
@@ -401,6 +402,8 @@ class TunefbServer(object):
                 pv.set(0)
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
             log.warn('Reset all integrated currents to zero')
+            self.tune_int_h_pv.set(0)
+            self.tune_int_v_pv.set(0)
 
     def aggregate_setpoints(self, value):
         '''Move offsets from this ioc to the quadrupole setpoints.'''
@@ -413,6 +416,8 @@ class TunefbServer(object):
                 self.mirror_pvs[i].set(0)
                 self.integrated_current[i] = 0
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
+            self.tune_int_h_pv.set(0)
+            self.tune_int_v_pv.set(0)
             log.warn('Aggregated offsets into setpoints')
 
     def update_max_i_pv(self):
