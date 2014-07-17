@@ -33,7 +33,8 @@ class Status(object):
     TUNE_VALIDITY = 7
     TUNE_UPDATE = 8
     LOW_CURRENT = 9
-    UNEXPECTED_ERROR = 10
+    TUNE_STEP = 10
+    UNEXPECTED_ERROR = 11
 
     STRINGS = {FEEDBACK_OFF:  'Feedback off',
                FEEDBACK_ON: 'Feedback running',
@@ -45,6 +46,7 @@ class Status(object):
                TUNE_VALIDITY: 'Tune measurement invalid',
                TUNE_UPDATE: 'Tune PV not updated',
                LOW_CURRENT: 'Beam current is too low',
+               TUNE_STEP: 'Tune step applied',
                UNEXPECTED_ERROR: 'Unexpected error'}
 
 
@@ -352,6 +354,38 @@ class TunefbServer(object):
             log.warn('Unexpected exception: %s' % str(e))
             self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
 
+    def step_tune(self, dummy):
+        '''
+        Apply raw correction without checking beam current.
+        Catches all invalid and error states.
+        '''
+        try:
+            # This is here only to give visual feedback when pressing the
+            # single correction button
+            self.status_pv.set(Status.FEEDBACK_OFF)
+            cothread.Sleep(0.3)
+            self.refresh_tune_deltas()
+            # Apply tune change according to step PVs.
+            deltas = (self.hstep_pv.get(), self.vstep_pv.get())
+            mag_deltas = numpy.dot(self.irm, deltas)
+            self.apply_correction(mag_deltas)
+            log.info('Completed tune step')
+            self.step_toggle_pv.set(1 - self.step_toggle_pv.get())
+
+            # This sleep is also necessary to see the above status change
+            # in the GUI
+            cothread.Sleep(0.2)
+            self.status_pv.set(Status.TUNE_STEP)
+        except TunefbInvalid, e:
+            log.warn('%s' % str(e))
+            self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
+        except TunefbError, e:
+            log.error('%s' % str(e))
+            self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
+        except Exception, e:
+            log.warn('Unexpected exception: %s' % str(e))
+            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+
     def reset(self, dummy):
         '''Reset the error pv.'''
         self.status_pv.set(Status.FEEDBACK_OFF)
@@ -451,11 +485,20 @@ class TunefbServer(object):
         self.max_tune_delta_pv = builder.aOut(
                 'TUNE:DELTA', initial_value=self.tune_delta_max,
                 on_update=self.set_max_tune_delta, PREC=4)
-        self.corr_toggle_pv = builder.aOut(
+        self.hstep_pv = builder.aOut(
+                'TUNE:HSTEP', initial_value=0, PREC=4)
+        self.vstep_pv = builder.aOut(
+                'TUNE:VSTEP', initial_value=0, PREC=4)
+        self.corr_toggle_pv = builder.aIn(
                 'CORR:TOGGLE', initial_value=0, PREC=4)
         builder.aOut(
                 'CORR', initial_value=0,
                 on_update=self.unchecked_correction, always_update=True)
+        builder.aOut(
+                'STEPTUNE', initial_value=0,
+                on_update=self.step_tune, always_update=True)
+        self.step_toggle_pv = builder.aIn(
+                'STEP:TOGGLE', initial_value=0, PREC=4)
         builder.aOut(
                 'AFRAC', initial_value=self.afrac,
                 on_update=self.set_afrac, PREC=4)
