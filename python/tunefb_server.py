@@ -335,7 +335,8 @@ class TunefbServer(object):
         self.check_tune_range()
         mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
         scaled_deltas = self.scale_deltas(mag_deltas)
-        self.check_mag_limits(self.integrated_current + scaled_deltas)
+        # Check if offset currents have been exceeded
+        self.check_mag_limits(self.integrated_current)
         self.apply_correction(scaled_deltas)
 
     def unchecked_correction(self, dummy):
