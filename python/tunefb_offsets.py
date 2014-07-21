@@ -43,7 +43,7 @@ def rename_pvs(pvs):
     return new_pvs
 
 def all_forwarded(local_pvs, mag_pvs):
-    inps = caget(pv + OFFSET_INPUT for pv in mag_pvs)
+    inps = caget([pv + OFFSET_INPUT for pv in mag_pvs], timeout=1.)
     expected = [pv + CURRENT_LINK for pv in local_pvs]
     return inps == expected
 

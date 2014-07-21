@@ -3,7 +3,7 @@ import time
 import traceback
 import numpy, scipy, scipy.io
 import cothread
-from cothread.catools import caget, caput, FORMAT_TIME
+from cothread.catools import caget, caput, ca_nothing, FORMAT_TIME
 from softioc import builder, alarm
 from tunefb_offsets import load_magnet_pvs, rename_pvs, all_forwarded
 
@@ -433,10 +433,13 @@ class TunefbServer(object):
 
     def update_fwd_ok_pv(self):
         '''Update value and severity of FWDOK PV.'''
-        if not all_forwarded(self.local_pvs, self.mag_pvs):
-            self.fwd_ok_pv.set(1, severity = alarm.MINOR_ALARM)
-        else:
-            self.fwd_ok_pv.set(0, severity=alarm.NO_ALARM)
+        try:
+            if not all_forwarded(self.local_pvs, self.mag_pvs):
+                self.fwd_ok_pv.set(1, severity=alarm.MINOR_ALARM)
+            else:
+                self.fwd_ok_pv.set(0, severity=alarm.NO_ALARM)
+        except ca_nothing:
+            self.fwd_ok_pv.set(2, severity=alarm.MAJOR_ALARM)
 
     def set_afrac(self, value):
         self.afrac = value
@@ -515,7 +518,8 @@ class TunefbServer(object):
                 on_update=self.set_max_current_range, PREC=4)
         self.max_i_pv = builder.aIn(
                 'OFFSETMAX', initial_value=0.0, PREC=4)
-        self.fwd_ok_pv = builder.mbbIn('FWDOK', ('OK', 0), ('INVALID', 1), initial_value=0)
+        self.fwd_ok_pv = builder.mbbIn('FWDOK',
+                ('OK', 0), ('NOT FORWARDED', 1), ('IOC DOWN', 2), initial_value=0)
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
                 on_update=self.set_min_beam_current, PREC=4)
