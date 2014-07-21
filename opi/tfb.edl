@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1120
-y 220
+x 1434
+y 134
 w 298
 h 666
 font "helvetica-bold-r-12.0"
@@ -23,6 +23,376 @@ showGrid
 snapToGrid
 gridSize 8
 endScreenProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 0
+y 0
+w 296
+h 32
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "TUNE FEEDBACK CS-DI-IOC-09"
+}
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 600
+w 120
+h 24
+lineColor index 9
+fill
+fillColor index 5
+fillAlarm
+lineWidth 2
+alarmPv "SR-CS-TFB-01:FWDOK"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 568
+w 120
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 536
+w 120
+h 24
+lineColor index 9
+fill
+fillColor index 5
+fillAlarm
+lineWidth 2
+alarmPv "SR-CS-TFB-01:OFFSETMAX"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 232
+y 120
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 120
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 88
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 232
+y 56
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 56
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 170
+y 90
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:H"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 172
+y 604
+w 112
+h 16
+controlPv "SR-CS-TFB-01:FWDOK"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 170
+y 570
+w 116
+h 20
+controlPv "SR-CS-TFB-01:OFFSETLIM"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 172
+y 540
+w 112
+h 16
+controlPv "SR-CS-TFB-01:OFFSETMAX"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 232
+y 88
+w 56
+h 24
+lineColor index 9
+fill
+fillColor index 5
+lineWidth 2
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 234
+y 122
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:VINT"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+fgAlarm
+bgColor index 5
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 170
+y 122
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:HINT"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+fgAlarm
+bgColor index 5
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 234
+y 90
+w 52
+h 20
+controlPv "SR-CS-TFB-01:TUNE:V"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 5
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 234
+y 58
+w 52
+h 20
+controlPv "SR23C-DI-TMBF-02:TUNE:TUNE"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+fgAlarm
+bgColor index 5
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 170
+y 58
+w 52
+h 20
+controlPv "SR23C-DI-TMBF-01:TUNE:TUNE"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+fgAlarm
+bgColor index 5
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
 
 # (Rectangle)
 object activeRectangleClass
@@ -148,70 +518,6 @@ fillColor index 5
 lineWidth 2
 endObjectProperties
 
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 232
-y 88
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 168
-y 88
-w 56
-h 24
-lineColor index 9
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 168
-y 56
-w 56
-h 24
-lineColor index 13
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 232
-y 56
-w 56
-h 24
-lineColor index 13
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
@@ -279,116 +585,6 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 234
-y 90
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:V"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 170
-y 90
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:H"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 234
-y 58
-w 52
-h 20
-controlPv "SR23C-DI-TMBF-02:TUNE:TUNE"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 170
-y 58
-w 52
-h 20
-controlPv "SR23C-DI-TMBF-01:TUNE:TUNE"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 0
-y 0
-w 296
-h 32
-font "helvetica-bold-r-14.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 73
-value {
-  "TUNE FEEDBACK CS-DI-IOC-09"
-}
 endObjectProperties
 
 # (Static Text)
@@ -459,7 +655,7 @@ y 376
 w 120
 h 24
 fgColor index 14
-onColor index 4
+onColor index 17
 offColor index 3
 inconsistentColor index 14
 topShadowColor index 0
@@ -685,52 +881,6 @@ command {
 }
 endObjectProperties
 
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 168
-y 570
-w 116
-h 20
-controlPv "SR-CS-TFB-01:OFFSETLIM"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 5
-editable
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 168
-y 538
-w 116
-h 20
-controlPv "SR-CS-TFB-01:OFFSETMAX"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -788,29 +938,6 @@ value {
 }
 endObjectProperties
 
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 168
-y 602
-w 116
-h 20
-controlPv "SR-CS-TFB-01:FWDOK"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -866,83 +993,6 @@ bgColor index 7
 value {
   "TUNE PVS"
 }
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 168
-y 120
-w 56
-h 24
-lineColor index 13
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 232
-y 120
-w 56
-h 24
-lineColor index 13
-fill
-fillColor index 5
-lineWidth 2
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 232
-y 122
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:VINT"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-limitsFromDb
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
-endObjectProperties
-
-# (Text Control)
-object activeXTextDspClass
-beginObjectProperties
-major 4
-minor 6
-release 0
-x 170
-y 122
-w 52
-h 20
-controlPv "SR-CS-TFB-01:TUNE:HINT"
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-fgAlarm
-bgColor index 5
-nullColor index 0
-useHexPrefix
-newPos
-objType "controls"
 endObjectProperties
 
 # (Static Text)
@@ -1110,10 +1160,11 @@ major 4
 minor 1
 release 1
 x 192
-y 38
-w 8
-h 14
+y 40
+w 16
+h 16
 font "helvetica-bold-r-12.0"
+fontAlign "center"
 fgColor index 14
 bgColor index 0
 useDisplayBg
@@ -1130,10 +1181,11 @@ major 4
 minor 1
 release 1
 x 256
-y 38
-w 8
-h 14
+y 40
+w 32
+h 16
 font "helvetica-bold-r-12.0"
+fontAlign "center"
 fgColor index 14
 bgColor index 0
 useDisplayBg
