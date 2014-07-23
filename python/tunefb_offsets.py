@@ -61,7 +61,7 @@ if __name__ == "__main__":
             print '%s   %s' % (pv, value)
     if 'redirect' in sys.argv:
         # set INP to our PVs
-        links = [pv + LOCAL_LINK for pv in local_pvs]
+        links = [pv + CURRENT_LINK for pv in local_pvs]
     elif 'reset' in sys.argv:
         # set INP to the remote PVs
         links = [pv + LOCAL_LINK for pv in mag_pvs]
