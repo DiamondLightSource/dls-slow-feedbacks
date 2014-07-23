@@ -167,8 +167,6 @@ class TunefbServer(object):
 
         # Initalise EPICS records
         self.records()
-        # This uses one of the PVs created in the records() method
-        self.update_max_i_pv()
 
     def set_datadir(self, datadir):
         '''Load required data from files in datadir.'''
@@ -179,8 +177,6 @@ class TunefbServer(object):
         # Select correct tune based on ringmode
         tune_h = env['X_tune_' + datadir] * 0.0001
         tune_v = env['Y_tune_' + datadir] * 0.0001
-        self.tune_h_pv.set(tune_h)
-        self.tune_v_pv.set(tune_v)
 
         # Load data from file
         mode_dir = os.path.join(self.dataroot, datadir)
@@ -188,10 +184,18 @@ class TunefbServer(object):
 
         # Invert response matrix
         self.irm = numpy.linalg.pinv(self.rm)
+
+        # Update PV values.
+        self.tune_h_pv.set(tune_h)
+        self.tune_v_pv.set(tune_v)
+        self.update_max_i_pv()
         self.integrated_tunes = numpy.dot(self.rm, self.integrated_current)
+        self.tune_int_h_pv.set(self.integrated_tunes[0])
+        self.tune_int_v_pv.set(self.integrated_tunes[1])
 
     def init(self):
-        '''Spawn a new thread to run the main ioc loop.'''
+        ''' Spawn a new thread to run the main ioc loop.'''
+        # Start the loop.
         cothread.Spawn(self.tick)
 
     def tick(self):
