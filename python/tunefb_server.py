@@ -369,7 +369,6 @@ class TunefbServer(object):
             # single correction button
             self.status_pv.set(Status.FEEDBACK_OFF)
             cothread.Sleep(0.3)
-            self.refresh_tune_deltas()
             # Apply tune change according to step PVs.
             deltas = (self.hstep_pv.get(), self.vstep_pv.get())
             mag_deltas = numpy.dot(self.irm, deltas)
