@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 865
-y 158
-w 342
-h 760
+x 1064
+y 144
+w 319
+h 714
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -30,10 +30,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 408
-w 120
-h 24
+x 197
+y 380
+w 114
+h 22
 fgColor index 14
 bgColor index 3
 inconsistentColor index 14
@@ -48,17 +48,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 8
-w 336
-h 40
+release 1
+x 0
+y 0
+w 319
+h 38
 font "helvetica-medium-r-18.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "SLOW FEEDBACK CS-DI-IOC-09"
+"SLOW FEEDBACK CS-DI-IOC-09"
 }
 endObjectProperties
 
@@ -68,10 +68,10 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 288
-y 728
-w 48
-h 24
+x 266
+y 684
+w 45
+h 22
 fgColor index 46
 bgColor index 3
 topShadowColor index 0
@@ -87,10 +87,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 152
-w 120
-h 24
+x 197
+y 136
+w 114
+h 22
 fgColor index 14
 bgColor index 3
 inconsistentColor index 14
@@ -105,17 +105,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 120
-w 200
-h 24
+release 1
+x 0
+y 106
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "RF SETPOINT"
+"RF SETPOINT"
 }
 endObjectProperties
 
@@ -124,17 +124,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 216
-w 200
-h 24
+release 1
+x 0
+y 197
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "RFFB TARGET"
+"RFFB TARGET"
 }
 endObjectProperties
 
@@ -142,12 +142,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 120
-w 120
-h 24
+x 197
+y 106
+w 114
+h 22
 controlPv "LI-RF-MOSC-01:FREQ_SET"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -166,12 +166,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 216
-w 120
-h 24
+x 197
+y 197
+w 114
+h 22
 controlPv "SR-CS-RFFB-01:TARGET"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -191,17 +191,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 408
-w 200
-h 24
+release 1
+x 0
+y 380
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "RFFB LOOP"
+"RFFB LOOP"
 }
 endObjectProperties
 
@@ -210,17 +210,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 152
-w 200
-h 24
+release 1
+x 0
+y 136
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "RING MODE"
+"RING MODE"
 }
 endObjectProperties
 
@@ -229,17 +229,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 56
-w 200
-h 24
+release 1
+x 0
+y 45
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "ORBIT FEEDBACK"
+"ORBIT FEEDBACK"
 }
 endObjectProperties
 
@@ -247,12 +247,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 56
-w 120
-h 24
+x 197
+y 45
+w 114
+h 22
 controlPv "CS-CS-MSTAT-01:FBSTAT"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -270,12 +270,12 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
-x 8
-y 728
-w 136
-h 24
+x 7
+y 684
+w 121
+h 22
 fgColor index 43
 bgColor index 3
 topShadowColor index 0
@@ -285,7 +285,7 @@ buttonLabel "Select Correctors"
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "cors.edl"
+0 "cors.edl"
 }
 endObjectProperties
 
@@ -294,17 +294,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 88
-w 200
-h 24
+release 1
+x 0
+y 76
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "BEAM CURRENT"
+"BEAM CURRENT"
 }
 endObjectProperties
 
@@ -312,12 +312,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 88
-w 120
-h 24
+x 197
+y 76
+w 114
+h 22
 controlPv "SR-DI-DCCT-01:SIGNAL"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -337,17 +337,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 248
-w 200
-h 24
+release 1
+x 0
+y 228
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "MAX RF STEP (Hz)"
+"MAX RF STEP (Hz)"
 }
 endObjectProperties
 
@@ -356,17 +356,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 280
-w 200
-h 24
+release 1
+x 0
+y 258
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "UPDATE PERIOD (s)"
+"UPDATE PERIOD (s)"
 }
 endObjectProperties
 
@@ -374,12 +374,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 248
-w 120
-h 24
+x 197
+y 228
+w 114
+h 22
 controlPv "SR-CS-RFFB-01:RFSTEP"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -400,10 +400,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 280
-w 120
-h 24
+x 197
+y 258
+w 114
+h 22
 fgColor index 14
 bgColor index 3
 inconsistentColor index 14
@@ -417,12 +417,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 8
-y 312
-w 200
-h 24
+x 0
+y 288
+w 190
+h 22
 controlPv "SR-CS-RFFB-01:EMATRIX.ONAM"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
@@ -439,12 +439,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 8
-y 344
-w 200
-h 24
+x 0
+y 319
+w 190
+h 22
 controlPv "SR-CS-RFFB-01:ECALC.ONAM"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
@@ -463,10 +463,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 312
-w 24
-h 24
+x 197
+y 288
+w 22
+h 22
 lineColor index 14
 fill
 fillColor index 83
@@ -479,10 +479,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 344
-w 24
-h 24
+x 197
+y 319
+w 22
+h 22
 lineColor index 14
 fill
 fillColor index 83
@@ -493,12 +493,12 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
-x 216
-y 696
-w 120
-h 24
+x 197
+y 653
+w 114
+h 22
 fgColor index 14
 onColor index 3
 offColor index 3
@@ -517,17 +517,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 696
-w 200
-h 24
+release 1
+x 0
+y 653
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "SOFB SINGLE"
+"SOFB SINGLE"
 }
 endObjectProperties
 
@@ -536,17 +536,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 664
-w 200
-h 24
+release 1
+x 0
+y 623
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "SOFB LOOP"
+"SOFB LOOP"
 }
 endObjectProperties
 
@@ -556,10 +556,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 664
-w 120
-h 24
+x 197
+y 623
+w 114
+h 22
 fgColor index 14
 bgColor index 3
 inconsistentColor index 14
@@ -574,17 +574,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 472
-w 200
-h 24
+release 1
+x 0
+y 440
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "MAX CURRENT STEP (A)"
+"MAX CURRENT STEP (A)"
 }
 endObjectProperties
 
@@ -592,12 +592,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 472
-w 120
-h 24
+x 197
+y 440
+w 114
+h 22
 controlPv "SR-CS-SOFB-01:LIMIT"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -616,12 +616,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 504
-w 120
-h 24
+x 197
+y 471
+w 114
+h 22
 controlPv "SR-CS-SOFB-01:SVDT"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -641,17 +641,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 184
-w 328
-h 24
+release 1
+x 0
+y 167
+w 319
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 0
 bgColor index 9
 value {
-  "RF FEEDBACK"
+"RF FEEDBACK"
 }
 endObjectProperties
 
@@ -660,17 +660,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 440
-w 328
-h 24
+release 1
+x 0
+y 410
+w 319
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 0
 bgColor index 9
 value {
-  "SLOW ORBIT FEEDBACK"
+"SLOW ORBIT FEEDBACK"
 }
 endObjectProperties
 
@@ -680,10 +680,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 600
-w 24
-h 24
+x 197
+y 562
+w 22
+h 22
 lineColor index 14
 fill
 fillColor index 83
@@ -694,12 +694,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 8
-y 600
-w 200
-h 24
+x 0
+y 562
+w 190
+h 22
 controlPv "SR-CS-SOFB-01:ECALC.ONAM"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
@@ -716,12 +716,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 8
-y 568
-w 200
-h 24
+x 0
+y 532
+w 190
+h 22
 controlPv "SR-CS-SOFB-01:EMATRIX.ONAM"
 font "helvetica-bold-r-14.0"
 fontAlign "center"
@@ -740,10 +740,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 216
-y 568
-w 24
-h 24
+x 197
+y 532
+w 22
+h 22
 lineColor index 14
 fill
 fillColor index 83
@@ -754,12 +754,12 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
-x 152
-y 728
-w 128
-h 24
+x 136
+y 684
+w 121
+h 22
 fgColor index 43
 bgColor index 3
 topShadowColor index 0
@@ -769,7 +769,7 @@ buttonLabel "SOFB Plot"
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "bpms.edl"
+0 "bpms.edl"
 }
 endObjectProperties
 
@@ -778,17 +778,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 376
-w 104
-h 24
+release 1
+x 0
+y 349
+w 98
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "BAD PV"
+"BAD PV"
 }
 endObjectProperties
 
@@ -796,12 +796,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 120
-y 376
-w 216
-h 24
+x 106
+y 349
+w 205
+h 22
 controlPv "SR-CS-RFFB-01:EPV"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -819,12 +819,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 120
-y 632
-w 216
-h 24
+x 106
+y 592
+w 205
+h 22
 controlPv "SR-CS-SOFB-01:EPV"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -843,17 +843,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 632
-w 104
-h 24
+release 1
+x 0
+y 592
+w 98
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "BAD PV"
+"BAD PV"
 }
 endObjectProperties
 
@@ -862,17 +862,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 504
-w 200
-h 24
+release 1
+x 0
+y 471
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "SVD THRESHOLD"
+"SVD THRESHOLD"
 }
 endObjectProperties
 
@@ -881,17 +881,17 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 536
-w 200
-h 24
+release 1
+x 0
+y 501
+w 190
+h 22
 font "helvetica-bold-r-14.0"
 fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "FRACTION TO APPLY"
+"FRACTION TO APPLY"
 }
 endObjectProperties
 
@@ -899,12 +899,12 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 216
-y 536
-w 120
-h 24
+x 197
+y 501
+w 114
+h 22
 controlPv "SR-CS-SOFB-01:AFRAC"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
