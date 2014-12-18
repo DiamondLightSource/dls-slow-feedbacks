@@ -239,7 +239,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "MAX HSTR"
+  "RELATIVE MAX HSTR"
 }
 endObjectProperties
 
@@ -258,7 +258,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-  "MAX VSTR"
+  "RELATIVE MAX VSTR"
 }
 endObjectProperties
 

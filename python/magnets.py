@@ -4,7 +4,7 @@ import traceback
 import mml
 from softioc import builder
 import cothread
-from cothread.catools import caget, ca_nothing
+from cothread.catools import caget, ca_nothing, FORMAT_CTRL
 from numpy import *
 
 def bind1st(x, f):
@@ -19,6 +19,7 @@ class magnets_server(object):
         self.bpmen = zeros(len(mml.ao["bpmx"].s)) == 0
 
         self.wf = [None, None]
+        self.rwf = [None, None]
 
         builder.SetDeviceName("SR-DI-EBPM-01")
         builder.WaveformOut("S", initial_value = mml.ao["bpmx"].s)
@@ -30,8 +31,11 @@ class magnets_server(object):
             builder.SetDeviceName(v)
             w = builder.WaveformOut(
                 "I", initial_value = zeros(len(mml.ao[k].s)))
+            rw = builder.WaveformOut(
+                "MAG", initial_value = zeros(len(mml.ao[k].s)))
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
             self.wf[i] = w
+            self.rwf[i] = rw
 
         self.create_controls()
 
@@ -56,6 +60,8 @@ class magnets_server(object):
 
         fam = ["hcm", "vcm"]
         hv = [None, None]
+        mag = [None, None]
+        rhv = [None, None]
         en = [None, None]
 
         # get corrector enables
@@ -69,10 +75,13 @@ class magnets_server(object):
         # get corrector readbacks
         for p in range(2):
             pvs = mml.ao[fam[p]].readback[en[p]]
-            hv[p] = caget(pvs)
+            hv[p] = caget(pvs, format=FORMAT_CTRL)
+            # convert to relative magnitude
+            mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
+            rhv[p] = array(hv[p]) / mag[p]
             # update max value and name
-            i = argmax(abs(array(hv[p])))
-            self.maxval[p].set(hv[p][i])
+            i = argmax(abs(array(rhv[p])))
+            self.maxval[p].set(rhv[p][i])
             self.maxname[p].set(pvs[i])
 
         # write to waveforms (disabled are set to zero)
@@ -81,6 +90,11 @@ class magnets_server(object):
             w[en[p]] = hv[p]
             w[en[p] == False] = 0
             self.wf[p].set(w)
+
+            rw = self.rwf[p].get()
+            rw[en[p]] = rhv[p]
+            rw[en[p] == False] = 0
+            self.rwf[p].set(rw)
 
     def update(self, key, value):
         "update corrector enabled vector from individual records"
