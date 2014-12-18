@@ -88,7 +88,7 @@ nPts 1
 showXAxis
 xAxisSrc "fromUser"
 xMin 1
-xMax 562
+xMax 25
 xLabelIntervals 24
 xLablePrecision 1
 # Y axis properties
@@ -147,7 +147,7 @@ nPts 1
 showXAxis
 xAxisSrc "fromUser"
 xMin 1
-xMax 562
+xMax 25
 xLabelIntervals 24
 xLablePrecision 1
 # Y axis properties
