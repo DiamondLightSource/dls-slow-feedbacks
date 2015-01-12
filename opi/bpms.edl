@@ -76,7 +76,7 @@ y 96
 w 992
 h 280
 # Appearance
-xLabel "Displacement"
+xLabel "BPM ID"
 yLabel "mm"
 fgColor index 14
 bgColor index 3
@@ -135,7 +135,7 @@ y 424
 w 992
 h 272
 # Appearance
-xLabel "Displacement"
+xLabel "Corrector ID"
 yLabel "Abs Magnitude"
 fgColor index 14
 bgColor index 3
