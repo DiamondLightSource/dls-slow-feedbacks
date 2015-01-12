@@ -78,7 +78,7 @@ class magnets_server(object):
             hv[p] = caget(pvs, format=FORMAT_CTRL)
             # convert to relative magnitude
             mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
-            rhv[p] = array(hv[p]) / mag[p]
+            rhv[p] = 2 * abs(array(hv[p]) / mag[p])
             # update max value and name
             i = argmax(abs(array(rhv[p])))
             self.maxval[p].set(rhv[p][i])
