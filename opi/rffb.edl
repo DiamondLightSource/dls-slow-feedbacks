@@ -622,7 +622,7 @@ x 197
 y 471
 w 114
 h 22
-controlPv "SR-CS-SOFB-01:SVDT"
+controlPv "SR-CS-SOFB-01:MU"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
 fgColor index 14
@@ -872,7 +872,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"SVD THRESHOLD"
+  "REGULARISATION PARAM"
 }
 endObjectProperties
 
