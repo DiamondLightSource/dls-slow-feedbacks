@@ -7,29 +7,35 @@ from cothread import Spawn, Sleep, WaitForQuit
 import mml
 
 
+def tkv_reg(m, mu):
+    # Tikhonov regularization
+    u, s, vt = svd(m, full_matrices = False)
+    si = s/(mu + s**2)
+    return dot(vt.T * si, u.T)
+
+
 class sofb(object):
 
     def __init__(self):
         self.step_limit = 0.1
-        self.threshold = 1e-4
+        self.mu = 1.0
         self.cache = {}
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
 
-    def set_threshold(self, threshold):
-        self.threshold = threshold
+    def set_mu(self, mu):
+        self.mu = mu
 
-    def get_irm(self, hen, ven, bpmen, threshold):
-        key = (tuple(hen), tuple(ven), tuple(bpmen), threshold)
+    def get_irm(self, hen, ven, bpmen, mu):
+        key = (tuple(hen), tuple(ven), tuple(bpmen), mu)
         if key in self.cache:
             return self.cache[key]
         print "new response matrix"
         irm = [None, None]
         rmx = self.rmx[ix_(bpmen, hen)]
         rmy = self.rmy[ix_(bpmen, ven)]
-        irm = [pinv(rmx, threshold),
-               pinv(rmy, threshold)]
+        irm = [tkv_reg(rmx, self.mu), tkv_reg(rmy, self.mu)]
         self.cache.clear()
         self.cache[key] = irm
         return irm
@@ -51,7 +57,7 @@ class sofb(object):
         ven = caget("SR-PC-VSTR-01:ENABLED") == 0
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
 
-        irm = self.get_irm(hen, ven, bpmen, self.threshold)
+        irm = self.get_irm(hen, ven, bpmen, self.mu)
 
         bpmx = caget(mml.ao["bpmx"].readback)[bpmen]
         hcm = caget(mml.ao["hcm"].setpoint[hen])

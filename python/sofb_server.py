@@ -79,9 +79,8 @@ class sofb_server(object):
         builder.aOut("AFRAC", initial_value = 0.2,
                      DRVH = 1, DRVL = 0, PREC = 4, EGU = "1")
 
-        builder.aOut("SVDT", initial_value = self.sofb.threshold,
-                     on_update = self.sofb.set_threshold,
-                     DRVH = 1, DRVL = 0, PREC = 4, EGU = "Hz")
+        builder.aOut("MU", 0, initial_value = self.sofb.mu,
+            on_update = self.sofb.set_mu, PREC = 3)
 
         builder.aOut("CORRECT", initial_value = 0,
                      on_update = self.single, always_update = True)
