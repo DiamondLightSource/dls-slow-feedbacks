@@ -267,6 +267,9 @@ class TunefbServer(object):
             raise TunefbInvalid(Status.TUNE_UPDATE)
         # Move tunes to numpyarray after severity check
         tunes = numpy.array(tunes)
+        if numpy.isnan(tunes).any():
+            log.warn('Tune value NaN but PV not invalid.')
+            raise TunefbInvalid(Status.TUNE_VALIDITY)
         log.info('Tune delta before last correction %s' % self.tune_deltas)
         log.info(
             'Tune change since last correction %s' % str(tunes - self.tunes))
@@ -307,6 +310,9 @@ class TunefbServer(object):
             log.warn(OFFSET_CURRENT_CHANGED)
 
         self.integrated_current = fetched_current + deltas
+        if numpy.isnan(self.integrated_current).any():
+            log.warn('Unexpected NaN in calculated current correction.')
+            raise TunefbError(Status.UNEXPECTED_ERROR)
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
         log.info(
