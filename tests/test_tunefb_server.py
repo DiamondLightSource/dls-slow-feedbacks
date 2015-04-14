@@ -27,6 +27,10 @@ class TestTunefb(unittest.TestCase):
         with patch('tunefb_server.TunefbServer.records'):
             self.tfb = TunefbServer(mode)
             self.tfb.max_i_pv = MagicMock()
+            self.tfb.rm = numpy.zeros((2, 168))
+            self.tfb.tune_int_h_pv = MagicMock()
+            self.tfb.tune_int_v_pv = MagicMock()
+            self.tfb.integrated_current = numpy.zeros(168)
 
     def test_check_current_does_nothing_if_current_valid(self):
         with patch('tunefb_server.caget') as mock_caget:
@@ -91,6 +95,23 @@ class TestTunefb(unittest.TestCase):
         currents[55] = 2
         self.assertRaises(TunefbError, self.tfb.check_mag_limits, currents)
 
+    def test_apply_correction_does_not_apply_nans_from_deltas(self):
+        deltas = numpy.zeros(168)
+        deltas[56] = numpy.nan
+        # Awkward patch to control value of fetched_current
+        with patch('numpy.array') as na:
+            z = numpy.zeros(168)
+            na.return_value = z
+            self.assertRaises(TunefbError, self.tfb.apply_correction, deltas)
+
+    def test_apply_correction_does_not_apply_nans_from_pv(self):
+        deltas = numpy.zeros(168)
+        # Awkward patch to control value of fetched_current
+        with patch('numpy.array') as na:
+            z = numpy.zeros(168)
+            z[33] = numpy.nan
+            na.return_value = z
+            self.assertRaises(TunefbError, self.tfb.apply_correction, deltas)
 
 class ca_float(float):
     severity = 0
