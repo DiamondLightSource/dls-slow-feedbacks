@@ -9,6 +9,7 @@ require('cothread')
 require('numpy')
 require('scipy')
 require('iocbuilder')
+require('mock')
 
 from mock import MagicMock, patch
 import unittest
@@ -112,6 +113,7 @@ class TestTunefb(unittest.TestCase):
             z[33] = numpy.nan
             na.return_value = z
             self.assertRaises(TunefbError, self.tfb.apply_correction, deltas)
+
 
 class ca_float(float):
     severity = 0
