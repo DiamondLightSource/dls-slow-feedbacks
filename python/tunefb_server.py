@@ -20,8 +20,7 @@ OFFSET_CURRENT_CHANGED = 'Offset changed outside of TFB',
 
 
 class Status(object):
-    ''' Enum for tune feedback errors.  I can't find a simpler
-        way of retaining the same information.
+    ''' Enum for tune feedback errors.
     '''
     FEEDBACK_OFF = 0
     FEEDBACK_ON = 1
@@ -72,7 +71,6 @@ DELTA_TUNE_TOLERANCE = 0.02
 MAX_CURRENT_OFFSET = 0.1
 
 
-
 def load_tune_rm(mat_file):
     '''
     Load response matrix from the specific format found
@@ -98,6 +96,7 @@ class TunefbInvalid(Exception):
         Exception.__init__(self, Status.STRINGS[code])
         self.code = code
 
+
 class TunefbError(Exception):
     '''
     Exception used to stop tune feedback.
@@ -105,6 +104,7 @@ class TunefbError(Exception):
     def __init__(self, code):
         Exception.__init__(self, Status.STRINGS[code])
         self.code = code
+
 
 class TunefbServer(object):
 
@@ -156,7 +156,7 @@ class TunefbServer(object):
         # fetch values from the PVs we will be mirroring, before
         # starting up.
         self.startup_currents = \
-            caget([pv + ':OFFSET1' for pv in self.mag_pvs], throw = False)
+            caget([pv + ':OFFSET1' for pv in self.mag_pvs], throw=False)
         for i in range(len(self.startup_currents)):
             if not self.startup_currents[i].ok:
                 print 'Unable to read', self.startup_currents[i].name
@@ -216,7 +216,8 @@ class TunefbServer(object):
                     else:
                         self.status_pv.set(Status.FEEDBACK_ON)
                 else:
-                    if self.status_pv.get() in (Status.FEEDBACK_ON, Status.FEEDBACK_SCALING):
+                    if self.status_pv.get() in (Status.FEEDBACK_ON,
+                                                Status.FEEDBACK_SCALING):
                         self.status_pv.set(Status.FEEDBACK_OFF)
             except TunefbInvalid, e:
                 # skip one correction
@@ -230,10 +231,11 @@ class TunefbServer(object):
                 log.error('%s' % str(e))
             except Exception, e:
                 # stop feedback and print stack trace
-                log.warn('Unexpected exception: %s' %str(e))
+                log.warn('Unexpected exception: %s' % str(e))
                 traceback.print_exc()
                 self.power_pv.set(False)
-                self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+                self.status_pv.set(Status.UNEXPECTED_ERROR,
+                                   severity=alarm.MAJOR_ALARM)
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
@@ -292,7 +294,7 @@ class TunefbServer(object):
     def check_mag_limits(self, currents):
         max_i = max(abs(i) for i in currents)
         if max_i > self.max_current_range:
-            log.debug('Max current offset: ' +  str(max_i))
+            log.debug('Max current offset: ' + str(max_i))
             log.debug('Current offset limit:' + str(self.max_current_range))
             raise TunefbError(Status.MAGNET_CURRENT)
 

@@ -16,11 +16,6 @@ import time
 from tunefb_server import TunefbServer, TunefbError, TunefbInvalid
 import numpy
 
-# Set up PYTHONPATH
-import sys
-PYTHON_DIR = '../python'
-sys.path.append(PYTHON_DIR)
-
 
 class TestTunefb(unittest.TestCase):
 
