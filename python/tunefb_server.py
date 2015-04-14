@@ -258,7 +258,7 @@ class TunefbServer(object):
         reliable.
         '''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
-        if any([tune.severity == alarm.INVALID_ALARM for tune in tunes]):
+        if any(tune.severity != alarm.NO_ALARM for tune in tunes):
             raise TunefbInvalid(Status.TUNE_VALIDITY)
         # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.period
