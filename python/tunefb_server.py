@@ -207,28 +207,7 @@ class TunefbServer(object):
         while True:
             cothread.Sleep(self.period)
             try:
-                self.update_max_i_pv()
-                self.update_fwd_ok_pv()
-                if self.power_pv.get():
-                    self.checked_correction()
-                    if self.scaling:
-                        self.status_pv.set(Status.FEEDBACK_SCALING)
-                    else:
-                        self.status_pv.set(Status.FEEDBACK_ON)
-                else:
-                    if self.status_pv.get() in (Status.FEEDBACK_ON,
-                                                Status.FEEDBACK_SCALING):
-                        self.status_pv.set(Status.FEEDBACK_OFF)
-            except TunefbInvalid, e:
-                # skip one correction
-                if self.status_pv.get() != e.code:
-                    self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
-                    log.info('Tune feedback paused: %s' % str(e))
-            except TunefbError, e:
-                # stop feedback
-                self.power_pv.set(False)
-                self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
-                log.error('%s' % str(e))
+                self.loop_correction()
             except Exception, e:
                 # stop feedback and print stack trace
                 log.warn('Unexpected exception: %s' % str(e))
@@ -236,6 +215,31 @@ class TunefbServer(object):
                 self.power_pv.set(False)
                 self.status_pv.set(Status.UNEXPECTED_ERROR,
                                    severity=alarm.MAJOR_ALARM)
+
+    def loop_correction(self):
+        self.update_max_i_pv()
+        self.update_fwd_ok_pv()
+        try:
+            if self.power_pv.get():
+                self.checked_correction()
+                if self.scaling:
+                    self.status_pv.set(Status.FEEDBACK_SCALING)
+                else:
+                    self.status_pv.set(Status.FEEDBACK_ON)
+            else:
+                if self.status_pv.get() in (Status.FEEDBACK_ON,
+                                            Status.FEEDBACK_SCALING):
+                    self.status_pv.set(Status.FEEDBACK_OFF)
+        except TunefbInvalid, e:
+            # skip one correction
+            if self.status_pv.get() != e.code:
+                self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
+                log.info('Tune feedback paused: %s' % str(e))
+        except TunefbError, e:
+            # stop feedback
+            self.power_pv.set(False)
+            self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
+            log.error('%s' % str(e))
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
