@@ -69,6 +69,7 @@ BEAM_DAMP_TIME = 0.001
 # Default values
 DELTA_TUNE_TOLERANCE = 0.02
 MAX_CURRENT_OFFSET = 0.1
+MAX_CONSECUTIVE_INVALIDS = 5
 
 
 def load_tune_rm(mat_file):
@@ -130,8 +131,8 @@ class TunefbServer(object):
         self.tune_delta_max = DELTA_TUNE_TOLERANCE
         self.tunes = numpy.zeros(2)
         self.tune_deltas = numpy.zeros(2)
-        # Allow one tune measument out of range before tripping
-        self.one_tune_error = False
+        # Count consecutive invalid exceptions to eventually trip
+        self.invalid_counter = 0
 
         # Load magnet PVs from file in this directory.
         pydir = os.path.dirname(os.path.realpath(__file__))
@@ -226,20 +227,26 @@ class TunefbServer(object):
                     self.status_pv.set(Status.FEEDBACK_SCALING)
                 else:
                     self.status_pv.set(Status.FEEDBACK_ON)
+                self.invalid_counter = 0
             else:
                 if self.status_pv.get() in (Status.FEEDBACK_ON,
                                             Status.FEEDBACK_SCALING):
                     self.status_pv.set(Status.FEEDBACK_OFF)
         except TunefbInvalid, e:
-            # skip one correction
+            # skip corrections for a while before tripping off
+            self.invalid_counter += 1
+            if self.invalid_counter >= MAX_CONSECUTIVE_INVALIDS:
+                self.trip_feedback(e)
             if self.status_pv.get() != e.code:
                 self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
                 log.info('Tune feedback paused: %s' % str(e))
         except TunefbError, e:
-            # stop feedback
-            self.power_pv.set(False)
-            self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
-            log.error('%s' % str(e))
+            self.trip_feedback(e)
+
+    def trip_feedback(self, exception):
+        self.power_pv.set(False)
+        self.status_pv.set(exception.code, severity=alarm.MAJOR_ALARM)
+        log.error('%s' % str(exception))
 
     def check_current(self):
         '''Check if current is greater than a mininum current.'''
@@ -249,14 +256,7 @@ class TunefbServer(object):
     def check_tune_range(self):
         '''Check if the measured tunes are within the allowed range.'''
         if max(abs(self.tunes - self.golden_tunes)) > self.tune_delta_max:
-            if self.one_tune_error:
-                self.one_tune_error = False
-                raise TunefbError(Status.TUNE_RANGE)
-            else:
-                self.one_tune_error = True
                 raise TunefbInvalid(Status.TUNE_RANGE)
-        else:
-            self.one_tune_error = False
 
     def refresh_tune_deltas(self):
         '''
@@ -406,6 +406,7 @@ class TunefbServer(object):
         '''Reset the error pv.'''
         self.status_pv.set(Status.FEEDBACK_OFF)
         self.reset_pv.set(0)
+        self.invalid_counter = 0
 
     def reset_integrated_current(self, value):
         '''Set all integrated currents to zero.'''
