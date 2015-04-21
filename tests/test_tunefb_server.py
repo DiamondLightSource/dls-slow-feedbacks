@@ -54,6 +54,19 @@ class TestTunefb(unittest.TestCase):
             mock_caget.return_value = (val1, val2)
             self.assertRaises(TunefbInvalid, self.tfb.refresh_tune_deltas)
 
+    def test_loop_correction_throws_error_on_mutiple_invalids(self):
+        self.tfb.update_fwd_ok_pv = MagicMock()
+        self.tfb.checked_correction = MagicMock(side_effect=TunefbInvalid(7))
+        self.tfb.power_pv = MagicMock()
+        self.tfb.status_pv = MagicMock()
+        # If we keep getting Invalids we should trip
+        for _ in range(10):
+            self.tfb.loop_correction()
+        try:
+            self.assertFalse(self.tfb.power_pv.set.call_args[0][0])
+        except TypeError:
+            self.fail('self.tfb.power_pv.set object never called')
+
     def test_refresh_tune_deltas_throws_exception_if_nan_received(self):
         with patch('tunefb_server.caget') as mock_caget:
             val1 = ca_float(1.0)
