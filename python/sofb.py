@@ -7,11 +7,30 @@ from cothread import Spawn, Sleep, WaitForQuit
 import mml
 
 
-def tkv_reg(m, mu):
+def tkv_reg(m, mu, singular_values):
     # Tikhonov regularization
     u, s, vt = svd(m, full_matrices = False)
-    si = s/(mu + s**2)
+    # We use nan_to_num here to catch the case of singular m and zero mu.
+    si = nan_to_num(s / (mu + s**2))
+
+    singular_values.s.set(s)
+    singular_values.s_inv.set(nan_to_num(1 / s))
+    singular_values.s_inv_cut.set(si)
+    singular_values.length.set(count_nonzero(s))
     return dot(vt.T * si, u.T)
+
+
+class SingularValuePVs(object):
+    """
+    Stores references to PV objects that can be set to provide
+    waveforms representing SVD Data.
+    """
+    def __init__(self):
+        # Requires injecting of fields from instantiating class
+        self.s = None
+        self.s_inv = None
+        self.s_inv_cut = None
+        self.length = None
 
 
 class sofb(object):
@@ -19,6 +38,7 @@ class sofb(object):
     def __init__(self):
         self.step_limit = 0.1
         self.mu = 1.0
+        self.svd = {'X':SingularValuePVs(), 'Y':SingularValuePVs()}
         self.cache = {}
 
     def set_step_limit(self, step_limit):
@@ -35,7 +55,9 @@ class sofb(object):
         irm = [None, None]
         rmx = self.rmx[ix_(bpmen, hen)]
         rmy = self.rmy[ix_(bpmen, ven)]
-        irm = [tkv_reg(rmx, self.mu), tkv_reg(rmy, self.mu)]
+        irm = [
+            tkv_reg(rmx, mu, self.svd['X']),
+            tkv_reg(rmy, mu, self.svd['Y'])]
         self.cache.clear()
         self.cache[key] = irm
         return irm

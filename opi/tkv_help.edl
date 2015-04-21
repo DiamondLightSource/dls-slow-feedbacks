@@ -1,0 +1,367 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 423
+y 53
+w 601
+h 600
+font "helvetica-medium-r-12.0"
+ctlFont "helvetica-medium-r-12.0"
+btnFont "helvetica-medium-r-12.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 14
+ctlFgColor2 index 0
+ctlBgColor1 index 3
+ctlBgColor2 index 14
+topShadowColor index 1
+botShadowColor index 11
+title "Diagnostics Storage Ring BPMs"
+showGrid
+snapToGrid
+gridSize 8
+disableScroll
+endScreenProperties
+
+# (X-Y Graph)
+object xyGraphClass
+beginObjectProperties
+major 4
+minor 8
+release 0
+# Geometry
+x 8
+y 136
+w 592
+h 431
+# Appearance
+plotAreaBorder
+xLabel "Mode Number"
+yLabel "Values"
+fgColor index 14
+bgColor index 3
+gridColor index 14
+font "helvetica-medium-r-12.0"
+# Operating Modes
+plotMode "plotLastNPts"
+nPts 0
+updateTimerMs 100
+# X axis properties
+showXAxis
+xAxisSrc "fromUser"
+xMin 0
+xMax 173
+xLabelIntervals 10
+xLablePrecision 1
+# Y axis properties
+showYAxis
+yAxisStyle "log10"
+yAxisSrc "fromUser"
+yMin 0.0001
+yMax 100
+# Y2 axis properties
+y2AxisSrc "AutoScale"
+y2Max 1
+# Trace Properties
+numTraces 4
+yPv {
+  0 "SR-CS-SOFB-01:SVD:X:S_INV"
+  1 "SR-CS-SOFB-01:SVD:X:S_INV_CUT"
+  2 "SR-CS-SOFB-01:SVD:Y:S_INV"
+  3 "SR-CS-SOFB-01:SVD:Y:S_INV_CUT"
+}
+nPv {
+  0 "SR-CS-SOFB-01:SVD:X:LENGTH"
+  1 "SR-CS-SOFB-01:SVD:X:LENGTH"
+  2 "SR-CS-SOFB-01:SVD:Y:LENGTH"
+  3 "SR-CS-SOFB-01:SVD:Y:LENGTH"
+}
+lineThickness {
+  0 2
+  1 2
+  2 2
+  3 2
+}
+lineStyle {
+  0 "dash"
+  2 "dash"
+}
+plotUpdateMode {
+  0 "y"
+  1 "y"
+  2 "y"
+  3 "y"
+}
+opMode {
+  0 "plot"
+  1 "plot"
+  2 "plot"
+  3 "plot"
+}
+plotColor {
+  0 index 25
+  1 index 25
+  2 index 20
+  3 index 20
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 0
+y 104
+w 600
+h 32
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "Singular Values"
+}
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 544
+y 568
+w 48
+h 22
+fgColor index 46
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+label "EXIT"
+font "helvetica-medium-r-12.0"
+3d
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 0
+y 0
+w 600
+h 40
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "TIKHONOV REGULARIZATION"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 696
+y 56
+w 152
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "RELATIVE MAX HSTR"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 696
+y 136
+w 152
+h 24
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "RELATIVE MAX VSTR"
+}
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 696
+y 112
+w 80
+h 24
+controlPv "SR-PC-HSTR-01:MAXI"
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+precision 3
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 696
+y 168
+w 160
+h 24
+controlPv "SR-PC-VSTR-01:MAXNAME"
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 696
+y 192
+w 80
+h 24
+controlPv "SR-PC-VSTR-01:MAXI"
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+precision 3
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 48
+w 578
+h 48
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Lower values of the regularisation parameter apply a more 'forceful' correction; the"
+  "parameter should be adjusted logarithmically. The dashed trace shows the singular values"
+  "for param = 0. Values only update on a correction."
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 192
+y 568
+w 9
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Y"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 104
+y 568
+w 10
+h 16
+font "helvetica-medium-r-14.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "X"
+}
+autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 168
+y 568
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 20
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 80
+y 568
+w 16
+h 16
+lineColor index 14
+fill
+fillColor index 25
+endObjectProperties
+

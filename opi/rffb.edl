@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1064
-y 144
+x 301
+y 26
 w 319
-h 714
+h 711
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -58,7 +58,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-"SLOW FEEDBACK CS-DI-IOC-09"
+  "SLOW FEEDBACK CS-DI-IOC-09"
 }
 endObjectProperties
 
@@ -69,7 +69,7 @@ major 4
 minor 1
 release 0
 x 266
-y 684
+y 681
 w 45
 h 22
 fgColor index 46
@@ -115,7 +115,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"RF SETPOINT"
+  "RF SETPOINT"
 }
 endObjectProperties
 
@@ -134,7 +134,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"RFFB TARGET"
+  "RFFB TARGET"
 }
 endObjectProperties
 
@@ -201,7 +201,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"RFFB LOOP"
+  "RFFB LOOP"
 }
 endObjectProperties
 
@@ -220,7 +220,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"RING MODE"
+  "RING MODE"
 }
 endObjectProperties
 
@@ -239,7 +239,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"ORBIT FEEDBACK"
+  "ORBIT FEEDBACK"
 }
 endObjectProperties
 
@@ -273,7 +273,7 @@ major 4
 minor 4
 release 0
 x 7
-y 684
+y 681
 w 121
 h 22
 fgColor index 43
@@ -285,7 +285,7 @@ buttonLabel "Select Correctors"
 numPvs 4
 numDsps 1
 displayFileName {
-0 "cors.edl"
+  0 "cors.edl"
 }
 endObjectProperties
 
@@ -304,7 +304,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"BEAM CURRENT"
+  "BEAM CURRENT"
 }
 endObjectProperties
 
@@ -347,7 +347,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"MAX RF STEP (Hz)"
+  "MAX RF STEP (Hz)"
 }
 endObjectProperties
 
@@ -366,7 +366,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"UPDATE PERIOD (s)"
+  "UPDATE PERIOD (s)"
 }
 endObjectProperties
 
@@ -496,7 +496,7 @@ major 4
 minor 1
 release 0
 x 197
-y 653
+y 650
 w 114
 h 22
 fgColor index 14
@@ -519,7 +519,7 @@ major 4
 minor 1
 release 1
 x 0
-y 653
+y 650
 w 190
 h 22
 font "helvetica-bold-r-14.0"
@@ -527,7 +527,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"SOFB SINGLE"
+  "SOFB SINGLE"
 }
 endObjectProperties
 
@@ -538,7 +538,7 @@ major 4
 minor 1
 release 1
 x 0
-y 623
+y 620
 w 190
 h 22
 font "helvetica-bold-r-14.0"
@@ -546,7 +546,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"SOFB LOOP"
+  "SOFB LOOP"
 }
 endObjectProperties
 
@@ -557,7 +557,7 @@ major 4
 minor 0
 release 0
 x 197
-y 623
+y 620
 w 114
 h 22
 fgColor index 14
@@ -584,7 +584,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"MAX CURRENT STEP (A)"
+  "MAX CURRENT STEP (A)"
 }
 endObjectProperties
 
@@ -618,10 +618,10 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 197
-y 471
-w 114
-h 22
+x 232
+y 504
+w 80
+h 24
 controlPv "SR-CS-SOFB-01:MU"
 font "helvetica-bold-r-14.0"
 fontAlign "right"
@@ -651,7 +651,7 @@ fontAlign "center"
 fgColor index 0
 bgColor index 9
 value {
-"RF FEEDBACK"
+  "RF FEEDBACK"
 }
 endObjectProperties
 
@@ -670,7 +670,7 @@ fontAlign "center"
 fgColor index 0
 bgColor index 9
 value {
-"SLOW ORBIT FEEDBACK"
+  "SLOW ORBIT FEEDBACK"
 }
 endObjectProperties
 
@@ -681,7 +681,7 @@ major 4
 minor 0
 release 0
 x 197
-y 562
+y 559
 w 22
 h 22
 lineColor index 14
@@ -697,7 +697,7 @@ major 4
 minor 6
 release 0
 x 0
-y 562
+y 559
 w 190
 h 22
 controlPv "SR-CS-SOFB-01:ECALC.ONAM"
@@ -719,7 +719,7 @@ major 4
 minor 6
 release 0
 x 0
-y 532
+y 529
 w 190
 h 22
 controlPv "SR-CS-SOFB-01:EMATRIX.ONAM"
@@ -741,7 +741,7 @@ major 4
 minor 0
 release 0
 x 197
-y 532
+y 529
 w 22
 h 22
 lineColor index 14
@@ -757,7 +757,7 @@ major 4
 minor 4
 release 0
 x 136
-y 684
+y 681
 w 121
 h 22
 fgColor index 43
@@ -769,7 +769,7 @@ buttonLabel "SOFB Plot"
 numPvs 4
 numDsps 1
 displayFileName {
-0 "bpms.edl"
+  0 "bpms.edl"
 }
 endObjectProperties
 
@@ -788,7 +788,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"BAD PV"
+  "BAD PV"
 }
 endObjectProperties
 
@@ -822,7 +822,7 @@ major 4
 minor 6
 release 0
 x 106
-y 592
+y 590
 w 205
 h 22
 controlPv "SR-CS-SOFB-01:EPV"
@@ -845,7 +845,7 @@ major 4
 minor 1
 release 1
 x 0
-y 592
+y 590
 w 98
 h 22
 font "helvetica-bold-r-14.0"
@@ -853,7 +853,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"BAD PV"
+  "BAD PV"
 }
 endObjectProperties
 
@@ -864,7 +864,7 @@ major 4
 minor 1
 release 1
 x 0
-y 471
+y 502
 w 190
 h 22
 font "helvetica-bold-r-14.0"
@@ -883,7 +883,7 @@ major 4
 minor 1
 release 1
 x 0
-y 501
+y 471
 w 190
 h 22
 font "helvetica-bold-r-14.0"
@@ -891,7 +891,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 4
 value {
-"FRACTION TO APPLY"
+  "FRACTION TO APPLY"
 }
 endObjectProperties
 
@@ -901,8 +901,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 197
-y 501
+x 200
+y 471
 w 114
 h 22
 controlPv "SR-CS-SOFB-01:AFRAC"
@@ -917,5 +917,28 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 197
+y 502
+w 23
+h 22
+fgColor index 43
+bgColor index 3
+topShadowColor index 0
+botShadowColor index 14
+font "helvetica-bold-r-14.0"
+buttonLabel "?"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "tkv_help.edl"
+}
 endObjectProperties
 

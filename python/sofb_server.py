@@ -82,6 +82,24 @@ class sofb_server(object):
         builder.aOut("MU", 0, initial_value = self.sofb.mu,
             on_update = self.sofb.set_mu, PREC = 3)
 
+        builder.WaveformIn("CMID", initial_value = [
+            int(d[2:4]) + 0.1*int(d[14:16]) for d in mml.ao['hcm'].devices])
+
+        svd_length = len(mml.ao['bpmx'].s)
+        for plane in ['X', 'Y']:
+            self.sofb.svd[plane].length = builder.aIn(
+                'SVD:%s:LENGTH' % plane, initial_value = svd_length)
+
+            self.sofb.svd[plane].s = builder.WaveformIn(
+                'SVD:%s:S' % plane, initial_value = [0.0]*svd_length)
+
+            self.sofb.svd[plane].s_inv = builder.WaveformIn(
+                'SVD:%s:S_INV' % plane, initial_value = [0.0]*svd_length)
+
+            self.sofb.svd[plane].s_inv_cut = builder.WaveformIn(
+                'SVD:%s:S_INV_CUT' % plane,
+                initial_value = [0.0]*svd_length)
+
         builder.aOut("CORRECT", initial_value = 0,
                      on_update = self.single, always_update = True)
 
