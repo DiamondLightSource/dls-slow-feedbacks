@@ -128,7 +128,6 @@ class TunefbServer(object):
         # Tune data - Golden tunes are set from ringmode
         self.golden_tunes = numpy.array([0.0, 0.0])
         self.mag_delta_max = numpy.array([0.01])
-        self.tune_delta_max = DELTA_TUNE_TOLERANCE
         self.tunes = numpy.zeros(2)
         self.tune_deltas = numpy.zeros(2)
         # Count consecutive invalid exceptions to eventually trip
@@ -253,11 +252,6 @@ class TunefbServer(object):
         if caget(CURRENT_PV) < self.min_beam_current:
             raise TunefbError(Status.LOW_CURRENT)
 
-    def check_tune_range(self):
-        '''Check if the measured tunes are within the allowed range.'''
-        if max(abs(self.tunes - self.golden_tunes)) > self.tune_delta_max:
-                raise TunefbInvalid(Status.TUNE_RANGE)
-
     def refresh_tune_deltas(self):
         '''
         Update values for tune deltas, checking if the values are
@@ -331,7 +325,6 @@ class TunefbServer(object):
         '''
         self.check_current()
         self.refresh_tune_deltas()
-        self.check_tune_range()
         mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
         scaled_deltas = self.scale_deltas(mag_deltas)
         # Check if offset currents have been exceeded
@@ -475,9 +468,6 @@ class TunefbServer(object):
     def set_tune_v(self, value):
         self.golden_tunes[1] = value
 
-    def set_max_tune_delta(self, value):
-        self.tune_delta_max = value
-
     def set_mag_delta_max(self, value):
         self.mag_delta_max = value
 
@@ -506,9 +496,6 @@ class TunefbServer(object):
         self.tune_int_v_pv = builder.aOut(
                 'TUNE:VINT', initial_value=self.integrated_tunes[1],
                 PREC=4)
-        self.max_tune_delta_pv = builder.aOut(
-                'TUNE:DELTA', initial_value=self.tune_delta_max,
-                on_update=self.set_max_tune_delta, PREC=4)
         self.hstep_pv = builder.aOut(
                 'TUNE:HSTEP', initial_value=0, PREC=4)
         self.vstep_pv = builder.aOut(
