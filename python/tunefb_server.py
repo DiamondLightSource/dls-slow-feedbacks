@@ -258,24 +258,26 @@ class TunefbServer(object):
         reliable.
         '''
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
-        if any(tune.severity != alarm.NO_ALARM for tune in tunes):
-            raise TunefbInvalid(Status.TUNE_VALIDITY)
+        # Store tunes in cothread wrapper to allow severity checking
+        self.tunes = tunes
+        tune_array = numpy.array(tunes)
         # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.period
         last_check = time.time() - self.period
         if any([tune.timestamp < last_check for tune in tunes]):
             raise TunefbInvalid(Status.TUNE_UPDATE)
-        # Move tunes to numpyarray after severity check
-        tunes = numpy.array(tunes)
-        if numpy.isnan(tunes).any():
+        if numpy.isnan(tune_array).any():
             log.warn('Tune value NaN but PV not invalid.')
             raise TunefbInvalid(Status.TUNE_VALIDITY)
         log.info('Tune delta before last correction %s' % self.tune_deltas)
         log.info(
-            'Tune change since last correction %s' % str(tunes - self.tunes))
-        self.tunes = tunes
-        self.tune_deltas = self.golden_tunes - self.tunes
+            'Tune change since last correction %s' % str(tune_array-self.tunes))
+        self.tune_deltas = self.golden_tunes - tune_array
         log.info('Actual tune deltas %s' % self.tune_deltas)
+
+    def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM):
+        if any(tune.severity >= max_alarm for tune in self.tunes):
+            raise TunefbInvalid(Status.TUNE_VALIDITY)
 
     def scale_deltas(self, deltas):
         '''Put delta correction to magnets, clipping if neccassary.'''
@@ -325,6 +327,7 @@ class TunefbServer(object):
         '''
         self.check_current()
         self.refresh_tune_deltas()
+        self.check_tune_alarms(max_alarm=alarm.MINOR_ALARM)
         mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
         scaled_deltas = self.scale_deltas(mag_deltas)
         # Check if offset currents have been exceeded
@@ -342,6 +345,7 @@ class TunefbServer(object):
             self.status_pv.set(Status.FEEDBACK_OFF)
             cothread.Sleep(0.3)
             self.refresh_tune_deltas()
+            self.check_tune_alarms(max_alarm=alarm.INVALID_ALARM)
             mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
             scaled_deltas = self.scale_deltas(mag_deltas)
             self.apply_correction(scaled_deltas)
