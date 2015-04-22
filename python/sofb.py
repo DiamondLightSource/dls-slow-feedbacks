@@ -37,7 +37,7 @@ class sofb(object):
 
     def __init__(self):
         self.step_limit = 0.1
-        self.mu = 1.0
+        self.mu = 0.01
         self.svd = {'X':SingularValuePVs(), 'Y':SingularValuePVs()}
         self.cache = {}
 
