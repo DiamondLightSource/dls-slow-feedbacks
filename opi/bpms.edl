@@ -161,8 +161,8 @@ y2Max 1
 # Trace Properties
 numTraces 2
 xPv {
-  0 "SR-DI-EBPM-01:BPMID"
-  1 "SR-DI-EBPM-01:BPMID"
+  0 "SR-CS-SOFB-01:CMID"
+  1 "SR-CS-SOFB-01:CMID"
 }
 yPv {
   0 "SR-PC-HSTR-01:MAG"

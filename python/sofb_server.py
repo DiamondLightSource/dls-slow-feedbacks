@@ -82,6 +82,8 @@ class sofb_server(object):
         builder.aOut("MU", 0, initial_value = self.sofb.mu,
             on_update = self.sofb.set_mu, PREC = 3)
 
+        # Corrector magnet ID, in floating point format: cell.position_in_cell
+        # This matches the format of SR-DI-EBPM-01:BPMID
         builder.WaveformIn("CMID", initial_value = [
             int(d[2:4]) + 0.1*int(d[14:16]) for d in mml.ao['hcm'].devices])
 
