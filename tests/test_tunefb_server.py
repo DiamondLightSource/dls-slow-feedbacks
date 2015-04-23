@@ -132,6 +132,21 @@ class TestTunefb(unittest.TestCase):
             na.return_value = z
             self.assertRaises(TunefbError, self.tfb.apply_correction, deltas)
 
+    def test_check_tune_alarms_raises_exception_with_minor_severity(self):
+        self.tfb.tunes = [MagicMock(), MagicMock()]
+        for tune in self.tfb.tunes:
+            tune.severity = 1
+        self.assertRaises(TunefbInvalid, self.tfb.check_tune_alarms)
+
+    def test_check_tune_alarms_completes_with_no_alarm_severity(self):
+        self.tfb.tunes = [MagicMock(), MagicMock()]
+        for tune in self.tfb.tunes:
+            tune.severity = 0
+        try:
+            self.tfb.check_tune_alarms()
+        except TunefbInvalid:
+            self.fail('Should not throw an exception.')
+
 
 class ca_float(float):
     severity = 0
