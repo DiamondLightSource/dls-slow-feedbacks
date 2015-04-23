@@ -46,7 +46,7 @@ class TestTunefb(unittest.TestCase):
             mock_caget.return_value = 0.5
             self.assertRaises(TunefbError, self.tfb.check_current)
 
-    def test_refresh_tune_deltas_throws_exception_if_severity_minor(self):
+    def test_refresh_tune_deltas_completes_when_tune_severity_minor(self):
         with patch('tunefb_server.caget') as mock_caget:
             val1 = ca_float(1.0)
             val1.timestamp = time.time()
@@ -54,7 +54,10 @@ class TestTunefb(unittest.TestCase):
             val2 = ca_float(1.0)
             val2.timestamp = time.time()
             mock_caget.return_value = (val1, val2)
-            self.assertRaises(TunefbInvalid, self.tfb.refresh_tune_deltas)
+            try:
+                self.tfb.refresh_tune_deltas()
+            except TunefbInvalid:
+                self.fail('Should not thrown an exception')
 
     def test_loop_correction_throws_error_on_mutiple_invalids(self):
         self.tfb.update_fwd_ok_pv = MagicMock()
