@@ -49,8 +49,10 @@ class TestTunefb(unittest.TestCase):
     def test_refresh_tune_deltas_throws_exception_if_severity_minor(self):
         with patch('tunefb_server.caget') as mock_caget:
             val1 = ca_float(1.0)
+            val1.timestamp = time.time()
             val1.severity = 1
-            val2 = ca_float(numpy.nan)
+            val2 = ca_float(1.0)
+            val2.timestamp = time.time()
             mock_caget.return_value = (val1, val2)
             self.assertRaises(TunefbInvalid, self.tfb.refresh_tune_deltas)
 
