@@ -7,10 +7,6 @@ import cothread
 from cothread.catools import caget, ca_nothing, FORMAT_CTRL
 from numpy import *
 
-def bind1st(x, f):
-    def g(*args, **kw):
-        f(x, *args, **kw)
-    return g
 
 class magnets_server(object):
 
@@ -130,7 +126,7 @@ class magnets_server(object):
             for n, c in enumerate(mml.ao[f].devices):
                 builder.SetDeviceName(c)
                 r = builder.mbbOut('DISABLED', ("Enabled", 0), ("Disabled", 1),
-                                   on_update = bind1st((p, n), self.update))
+                                   on_update = lambda x: self.update((p, n), x))
                 records[p].append(r)
         self.records = records
 
