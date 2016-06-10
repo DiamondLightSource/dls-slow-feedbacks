@@ -1,13 +1,24 @@
 Physics Applications IOC CS-DI-IOC-09
 =====================================
 
-1) CORRECTOR ENABLE
+1) RINGMODE
+-------
+
+The ringmode PV is hosted by this IOC. It is queried by most high level
+applications to determine which golden matricies to use, as well as many
+accelerator physics applications includeing middlelayer.
+
+2) BPM & CORRECTOR ENABLE
 -------------------
 
-PVs and EDL to disable each horizontal and vertical corrector from the feedback
-algorithms.
+PVs and EDL to disable each horizontal and vertical corrector and BPM from the
+feedback algorithms. BPMs and correctors can be controlled for SOFB and FOFB
+independantly.
 
-2) RFFB
+A GUI to display where the correctors are operating within their range and
+the PVs backing this are also included in this module.
+
+3) RFFB
 -------
 
 Removes dispersive component from the correctors by adjusting the RF
@@ -20,7 +31,7 @@ Where pinv is matrix or vector pseudo-inverse (numpy)
 
 PVs are SR-CS-RFFB-01:XXX
 
-3) SOFB
+4) SOFB
 -------
 
 Corrects orbit, single correction or feedback
@@ -31,4 +42,15 @@ delta_correctors = pinv(orbit_response_matrix) * orbit
 
 (pure integral control)
 
+5) TFB
+-------
 
+Tune feedback, single correction or feedback
+
+Corrects the global tune based on the inverse golden tune response matrix.
+
+delta_quads = pinv(tune_response_matrix) * tune_error
+
+Tune feedback also contains code for attaching itself to the quadrupole PSC
+via a PV forwarding mechanism. It then writes into an offset field which
+adjusts the quadupole setpoint.
