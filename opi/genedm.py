@@ -73,7 +73,7 @@ endObjectProperties
 """ % locals()
 
 
-def rectangle(x, y, w, h, pv=None, color=83, alarm=False):
+def rectangle(x, y, w, h, pv=None, color=83, alarm=False, vis_pv=None):
     text = """
 # (Rectangle)
 object activeRectangleClass
@@ -94,11 +94,15 @@ fillColor index %(color)d
     text = text + "lineWidth 0\n"
     if pv:
         text = text + "alarmPv %(pv)s\n"
+    if vis_pv:
+        text = text + "visPv %(vis_pv)s\n"
+        text = text + "visMin \"0\"\n"
+        text = text + "visMax \"1\"\n"
     text = text + "endObjectProperties\n"
     return text % locals()
 
 
-def related(x, y, w, h, deviceh, devicev):
+def related(x, y, w, h, deviceh, devicev, display='enable.edl'):
     return """# (Related Display)
 object relatedDisplayClass
 beginObjectProperties
@@ -118,7 +122,7 @@ invisible
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "enable.edl"
+  0 "%(display)s"
 }
 symbols {
   0 "deviceh=%(deviceh)s,devicev=%(devicev)s"
@@ -201,22 +205,33 @@ class Layout(object):
         return (width, height)
 
 
-CORRECTOR_REGION = [20, 20]
+CORRECTOR_REGION = [20, 24]
+RATES = ['SLOW', 'FAST']
 def corrector_func(i, j, x, y):
-    half_region = [CORRECTOR_REGION[0]/2, CORRECTOR_REGION[1]]
+    quart_region = [CORRECTOR_REGION[0]/2, CORRECTOR_REGION[1]/2]
     devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
     if j in [0, 1]:  ## Skip cells without mini beta correctors
         if i not in [8, 12]:
             return ""
         devs = ["SR%02dS-PC-%sSTR-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
-    pvs = [d + ':$(mode):DISABLED' for d in devs]
+    pvs = [d + ':%s:DISABLED' % r for r in RATES for d in devs]
     return (
-        rectangle(x, y, *(half_region + [pvs[0]])) +
-        rectangle(x + half_region[0], y, *(half_region + [pvs[1]])) +
-        related(x, y, *(CORRECTOR_REGION + devs)))
+        rectangle(x, y, *quart_region, color=19) +
+        rectangle(x, y, *quart_region, color=15, vis_pv=pvs[0]) +
+        rectangle(x + quart_region[0], y, *quart_region, color=19) +
+        rectangle(x + quart_region[0], y, *quart_region, color=15,
+            vis_pv=pvs[1]) +
+        rectangle(x, y + quart_region[1], *quart_region, color=19) +
+        rectangle(x, y + quart_region[1], *quart_region, color=15,
+            vis_pv=pvs[2]) +
+        rectangle(x + quart_region[0], y + quart_region[1], *quart_region,
+            color=19) +
+        rectangle(x + quart_region[0], y + quart_region[1], *quart_region,
+            color=15, vis_pv=pvs[3]) +
+        related(x, y, *(CORRECTOR_REGION + devs), display='cor_enable.edl'))
 
 corrector_definition = {
-        'title': "$(mode_string) Corrector Enable",
+        'title': "Slow and Fast Corrector Enable",
         'x_names': ['%02d' % x for x in range(1, 25)],
         'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
         'region': CORRECTOR_REGION,
