@@ -297,12 +297,16 @@ def corrector_key():
     )
 
 
+def corrector_info():
+    text = 'RF feedback always uses all correctors'
+    return label(360, 82, 240, 16, text, color=3)
+
+
+def bpm_key():
 if __name__ == '__main__':
     layout = Layout(**corrector_definition)
-    data = layout.produce()
-    data = data + corrector_key()
     with open('cors.edl', 'w') as f:
-        f.write(data)
+        f.write(layout.produce() + corrector_key() + corrector_info())
     layout = Layout(**bpm_definition)
     with open('bpms.edl', 'w') as f:
         f.write(layout.produce())
