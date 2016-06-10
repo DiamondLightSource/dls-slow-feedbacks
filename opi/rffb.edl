@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 301
-y 26
+x 303
+y 28
 w 319
 h 711
 font "helvetica-bold-r-14.0"
@@ -288,7 +288,7 @@ displayFileName {
   0 "cors.edl"
 }
 symbols {
-  0 "mode=SLOW"
+  0 "mode=SLOW,mode_string=Slow"
 }
 endObjectProperties
 

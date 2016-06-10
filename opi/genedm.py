@@ -65,7 +65,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "Feedback Corrector Enable ($(mode))"
+  "$(mode_string) Feedback Corrector Enable"
 }
 endObjectProperties
 """
