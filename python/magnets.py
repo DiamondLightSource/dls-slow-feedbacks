@@ -10,6 +10,15 @@ from numpy import *
 
 class magnets_server(object):
 
+
+    PLANES = [0, 1]
+    FAMILIES = {
+            'cor': ['hcm', 'vcm'],
+            'bpm': ['bpmx', 'bpmy'],
+            }
+    SPEEDS = ['slow', 'fast']
+
+
     def __init__(self):
         self.wf = {}
         self.records = {}
@@ -32,7 +41,7 @@ class magnets_server(object):
 
     def tick(self):
         "read from individual correctors, write to corrector vector"
-        fam = ["hcm", "vcm"]
+        fam = self.FAMILIES['cor']
         hv = [None, None]
         mag = [None, None]
         rhv = [None, None]
@@ -43,7 +52,7 @@ class magnets_server(object):
         en[1] = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
 
         # get corrector readbacks
-        for p in range(2):
+        for p in self.PLANES:
             pvs = mml.ao[fam[p]].readback[en[p]]
             hv[p] = caget(pvs, format=FORMAT_CTRL)
             # convert to relative magnitude
@@ -55,7 +64,7 @@ class magnets_server(object):
             self.maxname[p].set(pvs[i])
 
         # write to waveforms (disabled are set to zero)
-        for p in range(2):
+        for p in self.PLANES:
             w = self.wf['current'][p].get()
             w[en[p]] = hv[p]
             w[en[p] == False] = 0
@@ -95,18 +104,17 @@ class magnets_server(object):
         self.maxval = [None, None]
         self.maxname = [None, None]
 
-        corr_fams = ["hcm", "vcm"]
         bpm_fams = ["bpmx", "bpmy"]
 
         for dev in ['cor', 'bpm']:
             self.wf[dev] = {}
             self.records[dev] = {}
-            for speed in ['slow', 'fast']:
+            for speed in self.SPEEDS:
                 self.records[dev][speed] = [[], []]
                 self.wf[dev][speed] = [None, None]
 
-        for p in range(2):
-            corr_fam = corr_fams[p]
+        for p in self.PLANES:
+            corr_fam = self.FAMILIES['cor'][p]
 
             # build concentrator vector
             envec = (mml.ao[corr_fam].enabled == 0)
@@ -135,7 +143,7 @@ class magnets_server(object):
                             self.update((p, n), x, 'fast', 'cor')))
 
             # Build slow and fast BPM enabled vectors
-            bpm_fam = bpm_fams[p]  # One vector for both planes
+            bpm_fam = self.FAMILIES['bpm'][p]
             for n, c in enumerate(mml.ao[bpm_fam].devices):
                 builder.SetDeviceName(c)
                 self.records['bpm']['slow'][p].append(
@@ -160,9 +168,8 @@ class magnets_server(object):
 
     def write(self):
         # set initial control values
-        for mode in ['slow', 'fast']:
-            for p in range(2):
-                for n, r in enumerate(self.records['cor'][mode][p]):
-                    r.set(self.wf['cor'][mode][p].get()[n])
-                for n, r in enumerate(self.records['bpm'][mode][p]):
-                    r.set(self.wf['bpm'][mode][p].get()[n])
+        for mode in self.SPEEDS:
+            for p in self.PLANES:
+                for dev in ['cor', 'bpm']:
+                    for n, r in enumerate(self.records[dev][mode][p]):
+                        r.set(self.wf[dev][mode][p].get()[n])
