@@ -228,6 +228,35 @@ def generate_quad(x, y, region, pvs, devs):
         related(x, y, *(region + devs), display='enable.edl'))
 
 
+def corrector_key():
+    x = 558
+    y = 6
+    h = 17
+    w = 20
+    return (
+        label(x,   y,   w+1, h+1, 'SH', color=3, border_width=1) +
+        label(x+w, y,   w,   h+1, 'SV', color=3, border_width=1) +
+        label(x,   y+h, w+1, h,   'FH', color=3, border_width=1) +
+        label(x+w, y+h, w,   h,   'FV', color=3, border_width=1))
+
+
+def corrector_info():
+    text = 'RF feedback always uses all correctors'
+    return label(360, 82, 240, 16, text, color=3)
+
+
+def bpm_key():
+    x = 558
+    y = 78
+    h = 17
+    w = 20
+    return (
+        label(x,   y,     w*2, h+1, 'master', color=3, border_width=1) +
+        label(x,   y+h,   w+1, h+1, 'SH', color=3, border_width=1) +
+        label(x+w, y+h,   w,   h+1, 'SV', color=3, border_width=1) +
+        label(x,   y+2*h, w+1, h, 'FH', color=3, border_width=1) +
+        label(x+w, y+2*h, w,   h, 'FV', color=3, border_width=1))
+
 
 CORRECTOR_REGION = [20, 24]
 RATES = ['SLOW', 'FAST']
@@ -277,38 +306,6 @@ bpm_definition = {
         'region': BPM_REGION,
         'region_func': bpm_func,
         }
-
-
-def corrector_key():
-    x = 558
-    y = 6
-    h = 17
-    w = 20
-    return (
-        label(x,   y,   w+1, h+1, 'SH', color=3, border_width=1) +
-        label(x+w, y,   w,   h+1, 'SV', color=3, border_width=1) +
-        label(x,   y+h, w+1, h,   'FH', color=3, border_width=1) +
-        label(x+w, y+h, w,   h,   'FV', color=3, border_width=1)
-    )
-
-
-def corrector_info():
-    text = 'RF feedback always uses all correctors'
-    return label(360, 82, 240, 16, text, color=3)
-
-
-def bpm_key():
-    x = 558
-    y = 78
-    h = 17
-    w = 20
-    return (
-        label(x,   y,     w*2, h+1, 'master', color=3, border_width=1) +
-        label(x,   y+h,   w+1, h+1, 'SH', color=3, border_width=1) +
-        label(x+w, y+h,   w,   h+1, 'SV', color=3, border_width=1) +
-        label(x,   y+2*h, w+1, h, 'FH', color=3, border_width=1) +
-        label(x+w, y+2*h, w,   h, 'FV', color=3, border_width=1)
-    )
 
 
 if __name__ == '__main__':
