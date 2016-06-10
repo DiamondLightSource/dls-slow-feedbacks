@@ -1,10 +1,36 @@
-#!/bin/env python
+#!/bin/env dls-python
 
-"generate corrector enable screen"
 
-exit_ = """
-# (Exit Button)
-object activeExitButtonClass
+def header(w, h):
+    return """
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 200
+y 200
+w %(w)d
+h %(h)d
+font "arial-medium-r-18.0"
+ctlFont "arial-medium-r-18.0"
+btnFont "arial-medium-r-18.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 14
+ctlFgColor2 index 0
+ctlBgColor1 index 0
+ctlBgColor2 index 14
+topShadowColor index 0
+botShadowColor index 14
+endScreenProperties
+""" % locals()
+
+
+def title(x, y, w, h, value):
+    return """# (Static Text)
+object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
@@ -13,17 +39,67 @@ x %(x)d
 y %(y)d
 w %(w)d
 h %(h)d
-fgColor index 46
-bgColor index 3
-topShadowColor index 0
-botShadowColor index 14
-label "EXIT"
-font "helvetica-medium-r-12.0"
-3d
+font "arial-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "%(value)s"
+}
 endObjectProperties
-"""
+""" % locals()
 
-related = """# (Related Display)
+
+def label(x, y, w, h, value):
+    return """
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x %(x)d
+y %(y)d
+w %(w)d
+h %(h)d
+font "helvetica-medium-r-12.0"
+fontAlign "center"
+fgColor index 1
+bgColor index 8
+value {
+          "%(value)s"
+          }
+endObjectProperties
+""" % locals()
+
+
+def rectangle(x, y, w, h, pv=None, color=83, alarm=False):
+    text = """
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x %(x)d
+y %(y)d
+w %(w)d
+h %(h)d
+lineColor index 14
+fill
+fillColor index %(color)d
+"""
+    if alarm:
+        text = text + "fillAlarm\n"
+    text = text + "lineWidth 0\n"
+    if pv:
+        text = text + "alarmPv %(pv)s\n"
+    text = text + "endObjectProperties\n"
+    return text % locals()
+
+
+def related(x, y, w, h, deviceh, devicev):
+    return """# (Related Display)
 object relatedDisplayClass
 beginObjectProperties
 major 4
@@ -48,172 +124,139 @@ symbols {
   0 "deviceh=%(deviceh)s,devicev=%(devicev)s"
 }
 endObjectProperties
-"""
+""" % locals()
 
-title = """# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 8
-y 8
-w 592
-h 40
-font "arial-medium-r-18.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 73
-value {
-  "$(mode_string) Feedback Corrector Enable"
-}
-endObjectProperties
-"""
 
-text = """# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x %(x)d
-y %(y)d
-w %(w)d
-h %(h)d
-font "helvetica-medium-r-12.0"
-fontAlign "center"
-fgColor index 1
-bgColor index 8
-value {
-  "%(value)s"
-}
-endObjectProperties
-"""
+class Layout(object):
 
-header = """4 0 1
-beginScreenProperties
-major 4
-minor 0
-release 1
-x 200
-y 200
-w %(xm)d
-h %(ym)d
-font "arial-medium-r-18.0"
-ctlFont "arial-medium-r-18.0"
-btnFont "arial-medium-r-18.0"
-fgColor index 14
-bgColor index 3
-textColor index 14
-ctlFgColor1 index 14
-ctlFgColor2 index 0
-ctlBgColor1 index 0
-ctlBgColor2 index 14
-topShadowColor index 0
-botShadowColor index 14
-endScreenProperties
-"""
+    """Create EDM GUIs consiting of a 2D grid with lables."""
 
-rectangle = """# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x %(x)d
-y %(y)d
-w %(w)d
-h %(h)d
-lineColor index 14
-fill
-fillColor index 83
-lineWidth 0
-alarmPv "%(pv)s"
-endObjectProperties
-"""
+    PADDING = 4
+    TITLE_HEIGHT = 40
 
-redrectangle = """# (Rectangle)
-object activeRectangleClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x %(x)d
-y %(y)d
-w %(w)d
-h %(h)d
-lineColor index 14
-fill
-fillColor index 21
-lineWidth 0
-endObjectProperties
-"""
+    def __init__(self, title, x_names, y_names, region, region_func):
+        """
+        Setup a grid of EDM widgets.
+            x_names     -- Array of strings for use as X lables
+            y_names     -- Array of strings for use as Y lables
+            region      -- Tuple of ints specifying the dimensions of
+                           the region in which each element is shown
+            region_func -- Callback function that draws in the region
+        """
+        self.title = title
+        self.x_names = x_names
+        self.y_names = y_names
+        self.region = region
+        self.region_func = region_func
+        self.nodes = []
+        self._make_lables()
+        self._make_regions()
+        self._make_title()
 
-size = 16
-delta = 8
-w = size
-h = size
+    def produce(self):
+        """Produce the string data representing the EDM GUI."""
+        out = []
+        out.append(header(*self._calculate_boundaries()))
+        for node in self.nodes:
+            out.append(node)
+        return ''.join(out)
 
-CELLS = 24
-MAGS = 7
+    def _make_lables(self):
+        width = self.region[0]
+        height = self.region[1]
+        x0 = 2 * self.PADDING + width
+        y0 = 2 * self.PADDING + self.TITLE_HEIGHT
+        for i, x_name in enumerate(self.x_names):
+            x = x0 + i * (width + self.PADDING)
+            y = y0
+            self.nodes.append(label(x, y, width, height, x_name))
+        x0 = self.PADDING
+        y0 = 3 * self.PADDING + height + self.TITLE_HEIGHT
+        for i, y_name in enumerate(self.y_names):
+            x = x0
+            y = y0 + i * (height + self.PADDING)
+            self.nodes.append(label(x, y, width, height, y_name))
 
-tsize = (size + delta) * 2
+    def _make_regions(self):
+        width = self.region[0]
+        height = self.region[1]
+        x0 = 2 * self.PADDING + width
+        y0 = 3 * self.PADDING + height + self.TITLE_HEIGHT
+        for i, __ in enumerate(self.x_names):
+            for j, __ in enumerate(self.y_names):
+                x = x0 + i*(self.PADDING + width)
+                y = y0 + j*(self.PADDING + height)
+                self.nodes.append(self.region_func(i, j, x, y))
 
-xm = (CELLS + 1) * (size + delta) + delta
-ym = (MAGS + 3) * (size + delta) + delta + tsize + (24 + delta)
+    def _make_title(self):
+        (w, __) = self._calculate_boundaries()
+        self.nodes.append(title(self.PADDING, self.PADDING,
+            w - 2*self.PADDING, self.TITLE_HEIGHT, self.title))
 
-print header % locals()
+    def _calculate_boundaries(self):
+        width = (self.PADDING +
+                (len(self.x_names) + 1) * (self.PADDING + self.region[0]))
+        height = (2 * self.PADDING + self.TITLE_HEIGHT +
+                (len(self.y_names) + 1) * (self.PADDING + self.region[1]))
+        return (width, height)
 
-for cell in range(CELLS):
-    x = (cell + 1) * (size + delta) + delta
-    y = delta + tsize
-    value = "%02d" % (cell + 1)
-    print text % locals()
 
-for i in range(-2, MAGS):
-    x = delta
-    y = (i + 3) * (size + delta) + delta + tsize
-    value = "%02d" % (i + 1)
-    if i <  0:
-        value = "S%d" % (i + 3)
-    print text % locals()
+CORRECTOR_REGION = [20, 20]
+def corrector_func(i, j, x, y):
+    half_region = [CORRECTOR_REGION[0]/2, CORRECTOR_REGION[1]]
+    devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
+    if j in [0, 1]:  ## Skip cells without mini beta correctors
+        if i not in [8, 12]:
+            return ""
+        devs = ["SR%02dS-PC-%sSTR-%02d" % (i, 'HV'[p], j+1) for p in [0, 1]]
+    pvs = [d + ':$(mode):DISABLED' for d in devs]
+    return (
+        rectangle(x, y, *(half_region + [pvs[0]])) +
+        rectangle(x + half_region[0], y, *(half_region + [pvs[1]])) +
+        related(x, y, *(CORRECTOR_REGION + devs)))
 
-for cell in range(CELLS):
-    for i in range(MAGS):
-        deviceh = "SR%02dA-PC-HSTR-%02d" % (cell + 1, i + 1)
-        devicev = "SR%02dA-PC-VSTR-%02d" % (cell + 1, i + 1)
-        x = (cell + 1) * (size + delta) + delta
-        y = (i + 3) * (size + delta) + delta + tsize
+corrector_definition = {
+        'title': "$(mode_string) Corrector Enable",
+        'x_names': ['%02d' % x for x in range(1, 25)],
+        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
+        'region': CORRECTOR_REGION,
+        'region_func': corrector_func,
+        }
 
-        w = size / 2
-        pv = "%s:$(mode):DISABLED" % deviceh
-        print rectangle % locals()
 
-        x = x + w
-        pv = "%s:$(mode):DISABLED" % devicev
-        print rectangle % locals()
+BPM_REGION = [20, 25]
+BPM_HEADER = 5
+def bpm_func(i, j, x, y):
+    bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j-1)
+    devs = ["SR%02dC-PC-%sBPM-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
+    if j in [0, 1]:  ## Skip cells without mini beta correctors
+        if i not in [8, 12]:
+            return ""
+        devs = ["SR%02dS-PC-%sBPM-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
+        bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j+1)
+    width = BPM_REGION[0]
+    half_width = BPM_REGION[0]/2
+    height = BPM_REGION[1] - BPM_HEADER
+    pvs = [d + ':$(mode):DISABLED' for d in devs]
+    return (
+        rectangle(x, y, width, BPM_HEADER, color=15, alarm=True, pv=bpm_dev) +
+        rectangle(x, y+BPM_HEADER, half_width, height, pv=pvs[0]) +
+        rectangle(x+half_width, y+BPM_HEADER, half_width, height, pv=pvs[1]))
 
-        # this is fairly stupid
-        x = x - w
-        w = size
-        print related % locals()
+bpm_definition = {
+        'title': "$(mode_string) Feedback BPM Mask",
+        'x_names': ['%02d' % x for x in range(1, 25)],
+        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
+        'region': BPM_REGION,
+        'region_func': bpm_func,
+        }
 
-for mbcell in [9, 13]:
-    for i in range(2):
-        deviceh = "SR%02dS-PC-HSTR-%02d" % (mbcell, i + 1)
-        devicev = "SR%02dS-PC-VSTR-%02d" % (mbcell, i + 1)
-        x = mbcell * (size + delta) + delta
-        y = (i + 1) * (size + delta) + delta + tsize
-        pv = "%s:$(mode):DISABLED" % deviceh
-        w = size / 2
-        print rectangle % locals()
-        x = x + w
-        pv = "%s:$(mode):DISABLED" % devicev
-        print rectangle % locals()
 
-        x = x - w
-        w = size
-        print related % locals()
+if __name__ == '__main__':
+    layout = Layout(**corrector_definition)
+    with open('cors.edl', 'w') as f:
+        f.write(layout.produce())
+    layout = Layout(**bpm_definition)
+    with open('bpms.edl', 'w') as f:
+        f.write(layout.produce())
 
-print title
-print exit_ % {"x": xm - 48 - delta, "y": ym - 24 - delta, "w": 48, "h": 24}
