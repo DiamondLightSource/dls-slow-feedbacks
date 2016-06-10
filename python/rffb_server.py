@@ -85,8 +85,8 @@ class rffb_server(object):
 
     def feedback(self):
 
-        # channel access read
-        fbstat = catools.caget("SR01A-CS-FOFB-01:RUN")
+        # Check if eithier SOFB or FOFB is running
+        fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
         # Use any corrector that's enabled for use in FOFB or SOFB
         enabled_cor = numpy.logical_or(
                 catools.caget("SR-PC-HSTR-01:FAST:ENABLED") == 0,
