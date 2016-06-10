@@ -22,17 +22,15 @@ class magnets_server(object):
         nm = (("hcm", 'SR-PC-HSTR-01'),
               ("vcm", 'SR-PC-VSTR-01'))
 
-        w = [None, None]
-        rw = [None, None]
+        self.wf['current'] = []
+        self.wf['mag'] = []
         for i, (k, v) in enumerate(nm):
             builder.SetDeviceName(v)
-            w[i] = builder.WaveformOut(
-                "I", initial_value = zeros(len(mml.ao[k].s)))
-            rw[i] = builder.WaveformOut(
-                "MAG", initial_value = zeros(len(mml.ao[k].s)))
+            self.wf['current'].append(builder.WaveformOut(
+                "I", initial_value = zeros(len(mml.ao[k].s))))
+            self.wf['mag'].append(builder.WaveformOut(
+                "MAG", initial_value = zeros(len(mml.ao[k].s))))
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
-        self.wf['current'] = w
-        self.wf['mag'] = rw
 
         self.create_controls()
 
