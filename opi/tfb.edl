@@ -443,7 +443,7 @@ fontAlign "center"
 fgColor index 14
 fgAlarm
 bgColor index 5
-limitsFromDb
+precision 4
 nullColor index 0
 useHexPrefix
 newPos
@@ -466,6 +466,7 @@ fontAlign "center"
 fgColor index 14
 fgAlarm
 bgColor index 5
+precision 4
 nullColor index 0
 useHexPrefix
 newPos
