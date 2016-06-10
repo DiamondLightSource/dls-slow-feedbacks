@@ -63,9 +63,6 @@ class magnets_server(object):
         # get corrector enables
         en[0] = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
         en[1] = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
-        # get bpm enables
-        bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
-
 
         # get corrector readbacks
         for p in range(2):
@@ -91,10 +88,15 @@ class magnets_server(object):
             rw[en[p] == False] = 0
             self.rwf[p].set(rw)
 
-    def update(self, key, value, mode):
+    def update(self, key, value, mode, element):
         "update corrector enabled vector from individual records"
         (k, i) = key
-        r = self.cenabled[mode][k]
+        if element == 'cor':
+            r = self.cenabled[mode][k]
+        elif element == 'bpm':
+            r = self.benabled[mode]
+        else:
+            raise ValueError
         wf = r.get()
         wf[i] = value
         r.set(wf)
@@ -104,13 +106,20 @@ class magnets_server(object):
         self.cenabled = {}
         self.cenabled['slow'] = [None, None]
         self.cenabled['fast'] = [None, None]
+        self.benabled = {}
+        self.benabled['slow'] = None
+        self.benabled['fast'] = None
         self.maxval = [None, None]
         self.maxname = [None, None]
 
         fams = ["hcm", "vcm"]
         records = {}
-        records['slow'] = [[], []]
-        records['fast'] = [[], []]
+        records['cor'] = {}
+        records['bpm'] = {}
+        records['cor']['slow'] = [[], []]
+        records['cor']['fast'] = [[], []]
+        records['bpm']['slow'] = []
+        records['bpm']['fast'] = []
 
         for p in range(2):
             f = fams[p]
@@ -130,17 +139,46 @@ class magnets_server(object):
             # build individual controls
             for n, c in enumerate(mml.ao[f].devices):
                 builder.SetDeviceName(c)
-                r = builder.mbbOut('SLOW:DISABLED', ("Enabled", 0), ("Disabled", 1),
-                       on_update = lambda x, n=n, p=p: self.update((p, n), x, 'slow'))
-                records['slow'][p].append(r)
-                r = builder.mbbOut('FAST:DISABLED', ("Enabled", 0), ("Disabled", 1),
-                       on_update = lambda x, n=n, p=p: self.update((p, n), x, 'fast'))
-                records['fast'][p].append(r)
+                r = builder.mbbOut(
+                    'SLOW:DISABLED', ("Enabled", 0), ("Disabled", 1),
+                    on_update=lambda x, n=n, p=p:
+                        self.update((p, n), x, 'slow', 'cor'))
+                records['cor']['slow'][p].append(r)
+                r = builder.mbbOut(
+                    'FAST:DISABLED', ("Enabled", 0), ("Disabled", 1),
+                    on_update=lambda x, n=n, p=p:
+                        self.update((p, n), x, 'fast', 'cor'))
+                records['cor']['fast'][p].append(r)
         self.records = records
+
+        # Build slow and fast BPM enabled vectors
+        BPM_FAM = 'bpmx'  # One vector for both planes
+        builder.SetDeviceName("SR-DI-EBPM-01")
+        for n, c in enumerate(mml.ao[BPM_FAM].devices):
+            self.records['bpm']['slow'].append(
+                builder.mbbOut(
+                    '%03d:SLOW:DISABLED' % (n+1),
+                    ("Enabled", 0), ("Disabled", 1),
+                    on_update=lambda x, n=n, p=p:
+                        self.update((p, n), x, 'slow', 'bpm')))
+            self.records['bpm']['fast'].append(
+                builder.mbbOut(
+                    '%03d:FAST:DISABLED' % (n+1),
+                    ("Enabled", 0), ("Disabled", 1),
+                    on_update=lambda x, n=n, p=p:
+                        self.update((p, n), x, 'fast', 'bpm')))
+
+        bpm_envec = zeros(len(mml.ao[BPM_FAM].enabled))
+        self.benabled['slow'] = builder.WaveformIn("SLOW:ENABLED",
+                initial_value = bpm_envec)
+        self.benabled['fast'] = builder.WaveformIn("FAST:ENABLED",
+                initial_value = bpm_envec)
 
     def write(self):
         # set initial control values
-        for p in range(2):
-            for mode in ['slow', 'fast']:
-                for n, r in enumerate(self.records[mode][p]):
+        for mode in ['slow', 'fast']:
+            for p in range(2):
+                for n, r in enumerate(self.records['cor'][mode][p]):
                     r.set(self.cenabled[mode][p].get()[n])
+            for n, r in enumerate(self.records['bpm'][mode]):
+                r.set(self.benabled[mode].get()[n])
