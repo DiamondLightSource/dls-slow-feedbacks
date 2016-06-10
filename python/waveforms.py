@@ -139,8 +139,9 @@ class waveforms_server(object):
                             builder.mbbOut(
                                 '%s:DISABLED' % speed.upper(),
                                 ("Enabled", 0), ("Disabled", 1),
-                                on_update=lambda x, n=n, p=p:
-                                    self.update((p, n), x, speed, fam_type)))
+                                on_update =
+                                    lambda x, n=n, p=p, s=speed, f=fam_type:
+                                        self.update((p, n), x, s, f)))
 
     def write(self):
         # set initial control values
