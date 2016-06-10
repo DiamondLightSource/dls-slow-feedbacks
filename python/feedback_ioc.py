@@ -21,7 +21,7 @@ from iocbuilder import records
 
 
 import rffb_server
-import magnets
+import waveforms
 import sofb_server
 import vefb_server
 import tunefb_server
@@ -38,7 +38,7 @@ from softioc import pvlog
 mode = rffb_server.ringmode()
 
 # Monitors magnet settings and creates aggregated waveforms.
-mags = magnets.magnets_server()
+wavs = waveforms.waveforms_server()
 
 # Adjusts RF frequency to minimise horizontal dispersion.
 rffb = rffb_server.rffb_server(mode)
@@ -72,7 +72,7 @@ softioc.iocInit()
 
 # Perform post ioc init initialisation for the various components
 mode.init()
-mags.init()
+wavs.init()
 rffb.init()
 sofb.init()
 vefb.init()

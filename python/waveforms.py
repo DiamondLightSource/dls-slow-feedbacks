@@ -1,4 +1,4 @@
-"magnet position PVs"
+"waveforms and control PVs"
 
 import traceback
 import mml
@@ -8,7 +8,7 @@ from cothread.catools import caget, ca_nothing, FORMAT_CTRL
 from numpy import *
 
 
-class magnets_server(object):
+class waveforms_server(object):
 
 
     PLANES = [0, 1]
