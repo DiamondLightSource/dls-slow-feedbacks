@@ -84,8 +84,13 @@ class sofb_server(object):
 
         # Corrector magnet ID, in floating point format: cell.position_in_cell
         # This matches the format of SR-DI-EBPM-01:BPMID
-        builder.WaveformIn("CMID", initial_value = [
-            int(d[2:4]) + 0.1*int(d[14:16]) for d in mml.ao['hcm'].devices])
+        mag_ids = []
+        for mag in mml.ao['hcm'].devices:
+            if mag[4] == 'S':
+                mag_ids.append(int(mag[2:4]) + 0.1*(int(mag[-2:]) - 2))
+            else:
+                mag_ids.append(int(mag[2:4]) + 0.1*int(mag[-2:]))
+        builder.WaveformIn("CMID", initial_value = mag_ids)
 
         svd_length = len(mml.ao['bpmx'].s)
         for plane in ['X', 'Y']:
