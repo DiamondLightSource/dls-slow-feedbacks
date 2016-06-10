@@ -98,12 +98,11 @@ class magnets_server(object):
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
 
     def create_control_and_waveforms(self):
-        self.wf['cor'] = {}
-        self.wf['cor']['slow'] = [None, None]
-        self.wf['cor']['fast'] = [None, None]
-        self.wf['bpm'] = {}
-        self.wf['bpm']['slow'] = [None, None]
-        self.wf['bpm']['fast'] = [None, None]
+        for dev in ['cor', 'bpm']:
+            self.wf[dev] = {}
+            self.wf[dev]['slow'] = [None, None]
+            self.wf[dev]['fast'] = [None, None]
+
         self.maxval = [None, None]
         self.maxname = [None, None]
 
