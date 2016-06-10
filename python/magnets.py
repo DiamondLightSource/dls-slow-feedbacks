@@ -48,8 +48,8 @@ class magnets_server(object):
         en = [None, None]
 
         # get corrector enables
-        en[0] = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
-        en[1] = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
+        en[0] = self.wf['cor']['slow'][0].get() == 0
+        en[1] = self.wf['cor']['slow'][1].get() == 0
 
         # get corrector readbacks
         for p in self.PLANES:
@@ -110,7 +110,7 @@ class magnets_server(object):
             self.records[dev] = {}
             for speed in self.SPEEDS:
                 self.records[dev][speed] = [[], []]
-                self.wf[dev][speed] = [None, None]
+                self.wf[dev][speed] = [None, None]  # Will be indexed by plane
 
         for p in self.PLANES:
             # Build vectors of maximum magnet values
