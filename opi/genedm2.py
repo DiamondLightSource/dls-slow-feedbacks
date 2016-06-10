@@ -73,7 +73,7 @@ endObjectProperties
 """ % locals()
 
 
-def rectangle(x, y, w, h, pv=None):
+def rectangle(x, y, w, h, pv=None, color=83, alarm=False):
     text = """
 # (Rectangle)
 object activeRectangleClass
@@ -87,9 +87,11 @@ w %(w)d
 h %(h)d
 lineColor index 14
 fill
-fillColor index 83
-lineWidth 0
+fillColor index %(color)d
 """
+    if alarm:
+        text = text + "fillAlarm\n"
+    text = text + "lineWidth 0\n"
     if pv:
         text = text + "alarmPv %(pv)s\n"
     text = text + "endObjectProperties\n"
@@ -142,8 +144,8 @@ class Layout(object):
             region_func -- Callback function that draws in the region
         """
         self.title = title
-        self.x_name = x_names
-        self.y_name = y_names
+        self.x_names = x_names
+        self.y_names = y_names
         self.region = region
         self.region_func = region_func
         self.nodes = []
@@ -164,13 +166,13 @@ class Layout(object):
         height = self.region[1]
         x0 = 2 * self.PADDING + width
         y0 = 2 * self.PADDING + self.TITLE_HEIGHT
-        for i, x_name in enumerate(x_names):
+        for i, x_name in enumerate(self.x_names):
             x = x0 + i * (width + self.PADDING)
             y = y0
             self.nodes.append(label(x, y, width, height, x_name))
         x0 = self.PADDING
         y0 = 3 * self.PADDING + height + self.TITLE_HEIGHT
-        for i, y_name in enumerate(y_names):
+        for i, y_name in enumerate(self.y_names):
             x = x0
             y = y0 + i * (height + self.PADDING)
             self.nodes.append(label(x, y, width, height, y_name))
@@ -180,8 +182,8 @@ class Layout(object):
         height = self.region[1]
         x0 = 2 * self.PADDING + width
         y0 = 3 * self.PADDING + height + self.TITLE_HEIGHT
-        for i, __ in enumerate(x_names):
-            for j, __ in enumerate(y_names):
+        for i, __ in enumerate(self.x_names):
+            for j, __ in enumerate(self.y_names):
                 x = x0 + i*(self.PADDING + width)
                 y = y0 + j*(self.PADDING + height)
                 self.nodes.append(self.region_func(i, j, x, y))
@@ -193,9 +195,9 @@ class Layout(object):
 
     def _calculate_boundaries(self):
         width = (self.PADDING +
-                (len(x_names) + 1) * (self.PADDING + self.region[0]))
+                (len(self.x_names) + 1) * (self.PADDING + self.region[0]))
         height = (2 * self.PADDING + self.TITLE_HEIGHT +
-                (len(y_names) + 1) * (self.PADDING + self.region[1]))
+                (len(self.y_names) + 1) * (self.PADDING + self.region[1]))
         return (width, height)
 
 
@@ -203,8 +205,8 @@ CORRECTOR_REGION = [20, 20]
 def corrector_func(i, j, x, y):
     half_region = [CORRECTOR_REGION[0]/2, CORRECTOR_REGION[1]]
     devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
-    if j in [0, 1]:  ## Mini beta cors
-        if i not in [9, 13]:
+    if j in [0, 1]:  ## Skip cells without mini beta correctors
+        if i not in [8, 12]:
             return ""
         devs = ["SR%02dS-PC-%sSTR-%02d" % (i, 'HV'[p], j+1) for p in [0, 1]]
     pvs = [d + ':$(mode):DISABLED' for d in devs]
@@ -213,13 +215,48 @@ def corrector_func(i, j, x, y):
         rectangle(x + half_region[0], y, *(half_region + [pvs[1]])) +
         related(x, y, *(CORRECTOR_REGION + devs)))
 
+corrector_definition = {
+        'title': "$(mode_string) Corrector Enable",
+        'x_names': ['%02d' % x for x in range(1, 25)],
+        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
+        'region': CORRECTOR_REGION,
+        'region_func': corrector_func,
+        }
+
+
+BPM_REGION = [20, 25]
+BPM_HEADER = 5
+def bpm_func(i, j, x, y):
+    bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j-1)
+    devs = ["SR%02dC-PC-%sBPM-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
+    if j in [0, 1]:  ## Skip cells without mini beta correctors
+        if i not in [8, 12]:
+            return ""
+        devs = ["SR%02dS-PC-%sBPM-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
+        bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j+1)
+    width = BPM_REGION[0]
+    half_width = BPM_REGION[0]/2
+    height = BPM_REGION[1] - BPM_HEADER
+    pvs = [d + ':$(mode):DISABLED' for d in devs]
+    return (
+        rectangle(x, y, width, BPM_HEADER, color=15, alarm=True, pv=bpm_dev) +
+        rectangle(x, y+BPM_HEADER, half_width, height, pv=pvs[0]) +
+        rectangle(x+half_width, y+BPM_HEADER, half_width, height, pv=pvs[1]))
+
+bpm_definition = {
+        'title': "$(mode_string) Feedback BPM Mask",
+        'x_names': ['%02d' % x for x in range(1, 25)],
+        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
+        'region': BPM_REGION,
+        'region_func': bpm_func,
+        }
+
 
 if __name__ == '__main__':
-    x_names = ['%02d' % x for x in range(1, 25)]
-    y_names = ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)]
-    box = CORRECTOR_REGION
-    cor_title = "$(mode_string) Corrector Enable"
-    layout = Layout(cor_title, x_names, y_names, box, corrector_func)
+    layout = Layout(**corrector_definition)
     with open('test.edl', 'w') as f:
+        f.write(layout.produce())
+    layout = Layout(**bpm_definition)
+    with open('test2.edl', 'w') as f:
         f.write(layout.produce())
 
