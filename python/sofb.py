@@ -56,8 +56,8 @@ class sofb(object):
         rmx = self.rmx[ix_(hbpmen, hen)]
         rmy = self.rmy[ix_(vbpmen, ven)]
         irm = [
-            tkv_reg(rmx, mu, self.svd['X']),
-            tkv_reg(rmy, mu, self.svd['Y'])]
+            tkv_reg(rmx, mu, self.svd['X']) if rmx.size else array([]),
+            tkv_reg(rmy, mu, self.svd['Y']) if rmy.size else array([])]
         self.cache.clear()
         self.cache[key] = irm
         return irm
@@ -90,14 +90,16 @@ class sofb(object):
         bpmy = caget(mml.ao["bpmy"].readback)[vbpmen]
         vcm = caget(mml.ao["vcm"].setpoint[ven])
 
-        hdelta = dot(irm[0], bpmx)
-        hdelta = hdelta * self.scale(hdelta)
+        if not irm[0].size == 0:
+            hdelta = dot(irm[0], bpmx)
+            hdelta = hdelta * self.scale(hdelta)
+            caput(mml.ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
 
-        vdelta = dot(irm[1], bpmy)
-        vdelta = vdelta * self.scale(vdelta)
+        if not irm[1].size == 0:
+            vdelta = dot(irm[1], bpmy)
+            vdelta = vdelta * self.scale(vdelta)
+            caput(mml.ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
 
-        caput(mml.ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
-        caput(mml.ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
         caput("CS-CS-MSTAT-01:FBHEART", 10)
 
     def scale(self, xs):
