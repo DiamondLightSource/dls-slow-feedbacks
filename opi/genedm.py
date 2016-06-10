@@ -236,7 +236,7 @@ def corrector_func(i, j, x, y):
         related(x, y, *(CORRECTOR_REGION + devs), display='cor_enable.edl'))
 
 corrector_definition = {
-        'title': "Slow and Fast Corrector Enable",
+        'title': "SOFB and FOFB Corrector Enable",
         'x_names': ['%02d' % x for x in range(1, 25)],
         'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
         'region': CORRECTOR_REGION,
