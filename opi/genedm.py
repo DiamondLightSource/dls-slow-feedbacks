@@ -224,7 +224,7 @@ corrector_definition = {
         }
 
 
-BPM_REGION = [20, 25]
+BPM_REGION = [20, 22]
 BPM_HEADER = 5
 def bpm_func(i, j, x, y):
     bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j-1)
