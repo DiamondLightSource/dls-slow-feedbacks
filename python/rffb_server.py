@@ -1,12 +1,11 @@
 "IOC for RF Feedback"
 
-import os, sys
+import os
 
 import cothread
 from cothread import catools
 import traceback
 from softioc import builder
-from iocbuilder import records
 from scipy.io import loadmat
 import numpy
 
