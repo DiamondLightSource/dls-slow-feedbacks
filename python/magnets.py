@@ -130,28 +130,23 @@ class magnets_server(object):
                         speed.upper() + ":ENABLED", initial_value=envec)
 
             # build individual controls
-            for n, c in enumerate(mml.ao[corr_fam].devices):
-                builder.SetDeviceName(c)
-                for speed in self.SPEEDS:
-                    self.records['cor'][speed][p].append(
-                        builder.mbbOut(
-                            '%s:DISABLED' % speed.upper(),
-                            ("Enabled", 0), ("Disabled", 1),
-                            on_update=lambda x, n=n, p=p:
-                                self.update((p, n), x, speed, 'cor')))
+            fam_pv_func = {
+                    'cor': lambda _, s: '%s:DISABLED' % s.upper(),
+                    'bpm': lambda p, s: '%s:%s:DISABLED' % ("HV"[p], s.upper())
+                    }
+            for fam_type in ['cor', 'bpm']:
+                fam = self.FAMILIES[fam_type][p]
+                for n, c in enumerate(mml.ao[fam].devices):
+                    builder.SetDeviceName(c)
+                    for speed in self.SPEEDS:
+                        self.records[fam_type][speed][p].append(
+                            builder.mbbOut(
+                                fam_pv_func[fam_type](p, speed),
+                                ("Enabled", 0), ("Disabled", 1),
+                                on_update=lambda x, n=n, p=p:
+                                    self.update((p, n), x, speed, fam_type)))
 
-            # Build slow and fast BPM enabled vectors
             bpm_fam = self.FAMILIES['bpm'][p]
-            for n, c in enumerate(mml.ao[bpm_fam].devices):
-                builder.SetDeviceName(c)
-                for speed in self.SPEEDS:
-                    self.records['bpm'][speed][p].append(
-                        builder.mbbOut(
-                            '%s:%s:DISABLED' % ("HV"[p], speed.upper()),
-                            ("Enabled", 0), ("Disabled", 1),
-                            on_update=lambda x, n=n, p=p:
-                                self.update((p, n), x, speed, 'bpm')))
-
             bpm_envec = zeros(len(mml.ao[bpm_fam].enabled))
             builder.SetDeviceName("SR-DI-EBPM-01")
             for speed in self.SPEEDS:
