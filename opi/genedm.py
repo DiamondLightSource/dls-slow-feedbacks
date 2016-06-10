@@ -255,6 +255,8 @@ def bpm_func(i, j, x, y):
             return ""
         devs = ["SR%02dS-PC-%sBPM-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
         bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j+1)
+    if j in [9] and i not in [1]:  # Add 8th BPM to cell 2 only
+        return ""
     pvs = [d + ':%s:DISABLED' % r for r in RATES for d in devs]
     return (
         rectangle(x, y, BPM_REGION[0], BPM_HEADER, color=15, alarm=True,
@@ -276,7 +278,7 @@ def bpm_func(i, j, x, y):
 bpm_definition = {
         'title': "SOFB and FOFB BPM Mask",
         'x_names': ['%02d' % x for x in range(1, 25)],
-        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
+        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 9)],
         'region': BPM_REGION,
         'region_func': bpm_func,
         }
