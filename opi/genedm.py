@@ -303,11 +303,24 @@ def corrector_info():
 
 
 def bpm_key():
+    x = 558
+    y = 78
+    h = 17
+    w = 20
+    return (
+        label(x,   y,     w*2, h+1, 'master', color=3, border_width=1) +
+        label(x,   y+h,   w+1, h+1, 'SH', color=3, border_width=1) +
+        label(x+w, y+h,   w,   h+1, 'SV', color=3, border_width=1) +
+        label(x,   y+2*h, w+1, h, 'FH', color=3, border_width=1) +
+        label(x+w, y+2*h, w,   h, 'FV', color=3, border_width=1)
+    )
+
+
 if __name__ == '__main__':
     layout = Layout(**corrector_definition)
     with open('cors.edl', 'w') as f:
         f.write(layout.produce() + corrector_key() + corrector_info())
     layout = Layout(**bpm_definition)
     with open('bpms.edl', 'w') as f:
-        f.write(layout.produce())
+        f.write(layout.produce() + bpm_key())
 
