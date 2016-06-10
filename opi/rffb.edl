@@ -772,7 +772,7 @@ buttonLabel "SOFB Plot"
 numPvs 4
 numDsps 1
 displayFileName {
-  0 "bpms.edl"
+  0 "plots.edl"
 }
 endObjectProperties
 
