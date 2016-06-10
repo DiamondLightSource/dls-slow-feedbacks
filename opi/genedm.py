@@ -271,6 +271,13 @@ def bpm_key():
         label(x+w, y+2*h, w,   h, 'FV', color=3, border_width=1))
 
 
+def bpm_info():
+    """Add label giving info about the BPM GUI"""
+    # Use spaces as a crude padding due to centered text on widget
+    text = 'All globally eneabled BPMs\nare used by RF feedback    '
+    return label(354, 80, 164, 32, text, color=3)
+
+
 CORRECTOR_REGION = [20, 24]
 RATES = ['SLOW', 'FAST']
 def corrector_func(i, j, x, y):
@@ -330,5 +337,5 @@ if __name__ == '__main__':
         f.write(layout.produce() + corrector_key() + corrector_info())
     layout = Layout(**bpm_definition)
     with open('bpms.edl', 'w') as f:
-        f.write(layout.produce() + bpm_key())
+        f.write(layout.produce() + bpm_key() + bpm_info())
 
