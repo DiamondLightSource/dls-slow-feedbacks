@@ -86,8 +86,8 @@ class rffb_server(object):
     def feedback(self):
 
         # channel access read
-        fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
-        enabled_cor = catools.caget("SR-PC-HSTR-01:ENABLED") == 0
+        fbstat = catools.caget("SR01A-CS-FOFB-01:RUN")
+        enabled_cor = catools.caget("SR-PC-HSTR-01:FAST:ENABLED") == 0
         enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 

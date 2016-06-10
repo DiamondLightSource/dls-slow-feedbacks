@@ -65,7 +65,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 73
 value {
-  "Feedback Corrector Enable"
+  "Feedback Corrector Enable ($(mode))"
 }
 endObjectProperties
 """
@@ -186,11 +186,11 @@ for cell in range(CELLS):
         y = (i + 3) * (size + delta) + delta + tsize
 
         w = size / 2
-        pv = "%s:DISABLED" % deviceh
+        pv = "%s:$(mode):DISABLED" % deviceh
         print rectangle % locals()
 
         x = x + w
-        pv = "%s:DISABLED" % devicev
+        pv = "%s:$(mode):DISABLED" % devicev
         print rectangle % locals()
 
         # this is fairly stupid
@@ -204,11 +204,11 @@ for mbcell in [9, 13]:
         devicev = "SR%02dS-PC-VSTR-%02d" % (mbcell, i + 1)
         x = mbcell * (size + delta) + delta
         y = (i + 1) * (size + delta) + delta + tsize
-        pv = "%s:DISABLED" % deviceh
+        pv = "%s:$(mode):DISABLED" % deviceh
         w = size / 2
         print rectangle % locals()
         x = x + w
-        pv = "%s:DISABLED" % devicev
+        pv = "%s:$(mode):DISABLED" % devicev
         print rectangle % locals()
 
         x = x - w

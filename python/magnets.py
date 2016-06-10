@@ -61,9 +61,8 @@ class magnets_server(object):
         en = [None, None]
 
         # get corrector enables
-        en[0] = caget("SR-PC-HSTR-01:ENABLED") == 0
-        en[1] = caget("SR-PC-VSTR-01:ENABLED") == 0
-
+        en[0] = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
+        en[1] = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
         # get bpm enables
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
 
@@ -92,22 +91,26 @@ class magnets_server(object):
             rw[en[p] == False] = 0
             self.rwf[p].set(rw)
 
-    def update(self, key, value):
+    def update(self, key, value, mode):
         "update corrector enabled vector from individual records"
         (k, i) = key
-        r = self.cenabled[k]
+        r = self.cenabled[mode][k]
         wf = r.get()
         wf[i] = value
         r.set(wf)
 
     def create_controls(self):
 
-        self.cenabled = [None, None]
+        self.cenabled = {}
+        self.cenabled['slow'] = [None, None]
+        self.cenabled['fast'] = [None, None]
         self.maxval = [None, None]
         self.maxname = [None, None]
 
         fams = ["hcm", "vcm"]
-        records = [[], []]
+        records = {}
+        records['slow'] = [[], []]
+        records['fast'] = [[], []]
 
         for p in range(2):
             f = fams[p]
@@ -120,18 +123,24 @@ class magnets_server(object):
             self.maxval[p] = builder.aOut("MAXI", initial_value = 0)
             self.maxname[p] = builder.stringOut("MAXNAME")
 
-            self.cenabled[p] = builder.WaveformIn("ENABLED",
+            self.cenabled['slow'][p] = builder.WaveformIn("SLOW:ENABLED",
+                                                  initial_value = envec)
+            self.cenabled['fast'][p] = builder.WaveformIn("FAST:ENABLED",
                                                   initial_value = envec)
             # build individual controls
             for n, c in enumerate(mml.ao[f].devices):
                 builder.SetDeviceName(c)
-                r = builder.mbbOut('DISABLED', ("Enabled", 0), ("Disabled", 1),
-                                   on_update = lambda x: self.update((p, n), x))
-                records[p].append(r)
+                r = builder.mbbOut('SLOW:DISABLED', ("Enabled", 0), ("Disabled", 1),
+                       on_update = lambda x, n=n, p=p: self.update((p, n), x, 'slow'))
+                records['slow'][p].append(r)
+                r = builder.mbbOut('FAST:DISABLED', ("Enabled", 0), ("Disabled", 1),
+                       on_update = lambda x, n=n, p=p: self.update((p, n), x, 'fast'))
+                records['fast'][p].append(r)
         self.records = records
 
     def write(self):
         # set initial control values
         for p in range(2):
-            for n, r in enumerate(self.records[p]):
-                r.set(self.cenabled[p].get()[n])
+            for mode in ['slow', 'fast']:
+                for n, r in enumerate(self.records[mode][p]):
+                    r.set(self.cenabled[mode][p].get()[n])

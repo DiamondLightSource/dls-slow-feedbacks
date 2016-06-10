@@ -36,7 +36,7 @@ bgColor index 3
 inconsistentColor index 14
 topShadowColor index 0
 botShadowColor index 14
-controlPv "$(deviceh):DISABLED"
+controlPv "$(deviceh):$(mode):DISABLED"
 font "helvetica-medium-r-18.0"
 endObjectProperties
 
@@ -74,7 +74,7 @@ bgColor index 3
 inconsistentColor index 14
 topShadowColor index 0
 botShadowColor index 14
-controlPv "$(devicev):DISABLED"
+controlPv "$(devicev):$(mode):DISABLED"
 font "helvetica-medium-r-18.0"
 endObjectProperties
 

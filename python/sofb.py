@@ -75,8 +75,8 @@ class sofb(object):
         # calculate inverse response matrix on demand
 
         afrac = caget("SR-CS-SOFB-01:AFRAC")
-        hen = caget("SR-PC-HSTR-01:ENABLED") == 0
-        ven = caget("SR-PC-VSTR-01:ENABLED") == 0
+        hen = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
+        ven = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
 
         irm = self.get_irm(hen, ven, bpmen, self.mu)

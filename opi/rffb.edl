@@ -287,6 +287,9 @@ numDsps 1
 displayFileName {
   0 "cors.edl"
 }
+symbols {
+  0 "mode=SLOW"
+}
 endObjectProperties
 
 # (Static Text)
