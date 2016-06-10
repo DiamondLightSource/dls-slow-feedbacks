@@ -208,7 +208,7 @@ def corrector_func(i, j, x, y):
     if j in [0, 1]:  ## Skip cells without mini beta correctors
         if i not in [8, 12]:
             return ""
-        devs = ["SR%02dS-PC-%sSTR-%02d" % (i, 'HV'[p], j+1) for p in [0, 1]]
+        devs = ["SR%02dS-PC-%sSTR-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
     pvs = [d + ':$(mode):DISABLED' for d in devs]
     return (
         rectangle(x, y, *(half_region + [pvs[0]])) +
