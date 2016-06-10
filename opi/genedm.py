@@ -287,13 +287,13 @@ bpm_definition = {
 def corrector_key():
     x = 558
     y = 6
-    h = 18
+    h = 17
     w = 20
     return (
-        label(x,   y,   w, h, 'SH', color=3, border_width=1) +
-        label(x+w, y,   w, h, 'SV', color=3, border_width=1) +
-        label(x,   y+h, w, h, 'FH', color=3, border_width=1) +
-        label(x+w, y+h, w, h, 'FV', color=3, border_width=1)
+        label(x,   y,   w+1, h+1, 'SH', color=3, border_width=1) +
+        label(x+w, y,   w,   h+1, 'SV', color=3, border_width=1) +
+        label(x,   y+h, w+1, h,   'FH', color=3, border_width=1) +
+        label(x+w, y+h, w,   h,   'FV', color=3, border_width=1)
     )
 
 
