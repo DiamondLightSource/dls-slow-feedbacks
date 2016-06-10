@@ -119,10 +119,6 @@ class waveforms_server(object):
             self.maxname[p] = builder.stringOut("MAXNAME")
 
             # Build individual controls and connected waveforms
-            fam_pv_func = {  # Keys are from self.FAMILIES
-                    'cor': lambda _, s: '%s:DISABLED' % s.upper(),
-                    'bpm': lambda p, s: '%s:%s:DISABLED' % ("HV"[p], s.upper())
-                    }
             device_name_func = {
                     'cor': lambda p: "SR-PC-%sSTR-01" % "HV"[p],
                     'bpm': lambda p: "SR-PC-%sBPM-01" % "HV"[p]
@@ -135,11 +131,13 @@ class waveforms_server(object):
                         "%s:ENABLED" % speed.upper(),
                         initial_value=zeros(len(mml.ao[fam].enabled)))
                 for n, c in enumerate(mml.ao[fam].devices):
+                    # Replace bpm names with plane dependant names
+                    c = c.replace('DI-EBPM', 'PC-%sBPM' % 'HV'[p])
                     builder.SetDeviceName(c)
                     for speed in self.SPEEDS:
                         self.records[fam_type][speed][p].append(
                             builder.mbbOut(
-                                fam_pv_func[fam_type](p, speed),
+                                '%s:DISABLED' % speed.upper(),
                                 ("Enabled", 0), ("Disabled", 1),
                                 on_update=lambda x, n=n, p=p:
                                     self.update((p, n), x, speed, fam_type)))
