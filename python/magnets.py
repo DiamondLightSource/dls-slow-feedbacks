@@ -12,6 +12,7 @@ class magnets_server(object):
 
     def __init__(self):
         self.wf = {}
+        self.records = {}
         self.create_info_waveforms()
         self.create_control_and_waveforms()
 
@@ -30,9 +31,7 @@ class magnets_server(object):
                 traceback.print_exc()
 
     def tick(self):
-
         "read from individual correctors, write to corrector vector"
-
         fam = ["hcm", "vcm"]
         hv = [None, None]
         mag = [None, None]
@@ -70,12 +69,7 @@ class magnets_server(object):
     def update(self, key, value, mode, element):
         "update corrector enabled vector from individual records"
         (k, i) = key
-        if element == 'cor':
-            r = self.wf['cor'][mode][k]
-        elif element == 'bpm':
-            r = self.wf['bpm'][mode][k]
-        else:
-            raise ValueError
+        r = self.wf[element][mode][k]
         wf = r.get()
         wf[i] = value
         r.set(wf)
@@ -98,22 +92,18 @@ class magnets_server(object):
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
 
     def create_control_and_waveforms(self):
-        for dev in ['cor', 'bpm']:
-            self.wf[dev] = {}
-            self.wf[dev]['slow'] = [None, None]
-            self.wf[dev]['fast'] = [None, None]
-
         self.maxval = [None, None]
         self.maxname = [None, None]
 
         corr_fams = ["hcm", "vcm"]
         bpm_fams = ["bpmx", "bpmy"]
 
-        self.records = {}
         for dev in ['cor', 'bpm']:
+            self.wf[dev] = {}
             self.records[dev] = {}
             for speed in ['slow', 'fast']:
                 self.records[dev][speed] = [[], []]
+                self.wf[dev][speed] = [None, None]
 
         for p in range(2):
             corr_fam = corr_fams[p]
