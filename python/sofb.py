@@ -84,10 +84,10 @@ class sofb(object):
 
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
 
-        bpmx = caget(mml.ao["bpmx"].readback)[bpmen]
+        bpmx = caget(mml.ao["bpmx"].readback)[hbpmen]
         hcm = caget(mml.ao["hcm"].setpoint[hen])
 
-        bpmy = caget(mml.ao["bpmy"].readback)[bpmen]
+        bpmy = caget(mml.ao["bpmy"].readback)[vbpmen]
         vcm = caget(mml.ao["vcm"].setpoint[ven])
 
         hdelta = dot(irm[0], bpmx)
