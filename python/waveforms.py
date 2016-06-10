@@ -45,15 +45,10 @@ class waveforms_server(object):
         hv = [None, None]
         mag = [None, None]
         rhv = [None, None]
-        en = [None, None]
-
-        # get corrector enables
-        en[0] = self.wf['cor']['slow'][0].get() == 0
-        en[1] = self.wf['cor']['slow'][1].get() == 0
 
         # get corrector readbacks
         for p in self.PLANES:
-            pvs = mml.ao[fam[p]].readback[en[p]]
+            pvs = mml.ao[fam[p]].readback
             hv[p] = caget(pvs, format=FORMAT_CTRL)
             # convert to relative magnitude
             mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
@@ -66,13 +61,11 @@ class waveforms_server(object):
         # write to waveforms (disabled are set to zero)
         for p in self.PLANES:
             w = self.wf['current'][p].get()
-            w[en[p]] = hv[p]
-            w[en[p] == False] = 0
+            w = hv[p]
             self.wf['current'][p].set(w)
 
             rw = self.wf['mag'][p].get()
-            rw[en[p]] = rhv[p]
-            rw[en[p] == False] = 0
+            rw = rhv[p]
             self.wf['mag'][p].set(rw)
 
     def update(self, key, value, mode, element):
