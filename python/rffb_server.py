@@ -86,10 +86,9 @@ class rffb_server(object):
 
         # Check if eithier SOFB or FOFB is running
         fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
-        # Use any corrector that's enabled for use in FOFB or SOFB
-        enabled_cor = numpy.logical_or(
-                catools.caget("SR-PC-HSTR-01:FAST:ENABLED") == 0,
-                catools.caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0)
+        # Use all correctors, enabled or not, in RFFB.
+        ncor = len(catools.caget("SR-PC-HSTR-01:FAST:ENABLED"))
+        enabled_cor = numpy.ones(ncor, dtype=numpy.bool)
         enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 
