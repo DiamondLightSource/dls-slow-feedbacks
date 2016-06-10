@@ -2,6 +2,7 @@
 
 
 def header(w, h):
+    """Generate text that must appear at the start of an EDM file"""
     return """
 4 0 1
 beginScreenProperties
@@ -29,6 +30,7 @@ endScreenProperties
 
 
 def title(x, y, w, h, value):
+    """Generate text representing an EDM diagnostics title bar"""
     return """
 # (Static Text)
 object activeXTextClass
@@ -52,6 +54,7 @@ endObjectProperties
 
 
 def label(x, y, w, h, value, color=8, border_width=0):
+    """Generate text representing a simple EDM bordered labl"""
     text = """
 # (Static Text)
 object activeXTextClass
@@ -79,6 +82,7 @@ value {
 
 
 def rectangle(x, y, w, h, pv=None, color=83, alarm=False, vis_pv=None):
+    """Generate text representing an EDM rectangle"""
     text = """
 # (Rectangle)
 object activeRectangleClass
@@ -108,6 +112,7 @@ fillColor index %(color)d
 
 
 def related(x, y, w, h, deviceh, devicev, display='enable.edl'):
+    """Generate text representing an EDM related display widget"""
     return """# (Related Display)
 object relatedDisplayClass
 beginObjectProperties
@@ -171,6 +176,7 @@ class Layout(object):
         return ''.join(out)
 
     def _make_lables(self):
+        """Add the labels along the top and down the left of the GUI"""
         width = self.region[0]
         height = self.region[1]
         x0 = 2 * self.PADDING + width
@@ -187,6 +193,7 @@ class Layout(object):
             self.nodes.append(label(x, y, width, height, y_name))
 
     def _make_regions(self):
+        """Use the user provided callback to generate table cells"""
         width = self.region[0]
         height = self.region[1]
         x0 = 2 * self.PADDING + width
@@ -198,11 +205,13 @@ class Layout(object):
                 self.nodes.append(self.region_func(i, j, x, y))
 
     def _make_title(self):
+        """Insert a title widget at the top of the GUI"""
         (w, __) = self._calculate_boundaries()
         self.nodes.append(title(self.PADDING, self.PADDING,
             w - 2*self.PADDING, self.TITLE_HEIGHT, self.title))
 
     def _calculate_boundaries(self):
+        """Determine size of the GUI based on number of rows and columns"""
         width = (self.PADDING +
                 (len(self.x_names) + 1) * (self.PADDING + self.region[0]))
         height = (2 * self.PADDING + self.TITLE_HEIGHT +
@@ -211,6 +220,7 @@ class Layout(object):
 
 
 def generate_quad(x, y, region, pvs, devs):
+    """Generate four rectangles that can be toggeled depending on PVs"""
     quart_region = [region[0]/2, region[1]/2]
     return (
         rectangle(x, y, *quart_region, color=19) +
@@ -229,6 +239,7 @@ def generate_quad(x, y, region, pvs, devs):
 
 
 def corrector_key():
+    """Generate text representing the corrector magnet key"""
     x = 558
     y = 6
     h = 17
@@ -241,11 +252,13 @@ def corrector_key():
 
 
 def corrector_info():
+    """Add label giving info about the corrector GUI"""
     text = 'RF feedback always uses all correctors'
     return label(360, 82, 240, 16, text, color=3)
 
 
 def bpm_key():
+    """Generate text representing the bpm key"""
     x = 558
     y = 78
     h = 17
@@ -261,6 +274,7 @@ def bpm_key():
 CORRECTOR_REGION = [20, 24]
 RATES = ['SLOW', 'FAST']
 def corrector_func(i, j, x, y):
+    """Callback function to generate cells on the corrector GUI"""
     quart_region = [CORRECTOR_REGION[0]/2, CORRECTOR_REGION[1]/2]
     devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
     if j in [0, 1]:  ## Skip cells without mini beta correctors
@@ -282,6 +296,7 @@ corrector_definition = {
 BPM_REGION = [20, 25]
 BPM_HEADER = 5
 def bpm_func(i, j, x, y):
+    """Callback function to generate cells on the BPM GUI"""
     quart_region = [BPM_REGION[0]/2, (BPM_REGION[1] - BPM_HEADER) / 2]
     bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j-1)
     devs = ["SR%02dC-PC-%sBPM-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
@@ -309,6 +324,7 @@ bpm_definition = {
 
 
 if __name__ == '__main__':
+    # instantiate layout objects, add extra labels, and write to file
     layout = Layout(**corrector_definition)
     with open('cors.edl', 'w') as f:
         f.write(layout.produce() + corrector_key() + corrector_info())
