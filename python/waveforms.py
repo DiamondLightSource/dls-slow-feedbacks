@@ -23,7 +23,7 @@ class waveforms_server(object):
         self.wf = {}
         self.records = {}
         self.create_info_waveforms()
-        self.create_control_and_waveforms()
+        self.create_control_and_waveform_pvs()
 
     def init(self):
         self.write()
@@ -100,7 +100,7 @@ class waveforms_server(object):
                 "MAG", initial_value = zeros(len(mml.ao[k].s))))
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
 
-    def create_control_and_waveforms(self):
+    def create_control_and_waveform_pvs(self):
         self.maxval = [None, None]
         self.maxname = [None, None]
 
@@ -125,11 +125,13 @@ class waveforms_server(object):
                     }
             for fam_type in self.FAMILIES.keys():
                 fam = self.FAMILIES[fam_type][p]
+                ## Create waveform PVs
                 for speed in self.SPEEDS:
                     builder.SetDeviceName(device_name_func[fam_type](p))
                     self.wf[fam_type][speed][p] = builder.WaveformIn(
                         "%s:ENABLED" % speed.upper(),
                         initial_value=zeros(len(mml.ao[fam].enabled)))
+                ## Create individule control PVs
                 for n, c in enumerate(mml.ao[fam].devices):
                     # Replace bpm names with plane dependant names
                     c = c.replace('DI-EBPM', 'PC-%sBPM' % 'HV'[p])
