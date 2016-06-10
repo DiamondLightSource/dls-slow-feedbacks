@@ -244,9 +244,10 @@ corrector_definition = {
         }
 
 
-BPM_REGION = [20, 22]
+BPM_REGION = [20, 25]
 BPM_HEADER = 5
 def bpm_func(i, j, x, y):
+    quart_region = [BPM_REGION[0]/2, (BPM_REGION[1] - BPM_HEADER) / 2]
     bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j-1)
     devs = ["SR%02dC-PC-%sBPM-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
     if j in [0, 1]:  ## Skip cells without mini beta correctors
@@ -254,18 +255,26 @@ def bpm_func(i, j, x, y):
             return ""
         devs = ["SR%02dS-PC-%sBPM-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
         bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j+1)
-    width = BPM_REGION[0]
-    half_width = BPM_REGION[0]/2
-    height = BPM_REGION[1] - BPM_HEADER
-    pvs = [d + ':$(mode):DISABLED' for d in devs]
+    pvs = [d + ':%s:DISABLED' % r for r in RATES for d in devs]
     return (
-        rectangle(x, y, width, BPM_HEADER, color=15, alarm=True, pv=bpm_dev) +
-        rectangle(x, y+BPM_HEADER, half_width, height, pv=pvs[0]) +
-        rectangle(x+half_width, y+BPM_HEADER, half_width, height, pv=pvs[1]) +
-        related(x, y, *(BPM_REGION + devs)))
+        rectangle(x, y, BPM_REGION[0], BPM_HEADER, color=15, alarm=True,
+            pv=bpm_dev) +
+        rectangle(x, y+BPM_HEADER, *quart_region, color=19) +
+        rectangle(x, y+BPM_HEADER, *quart_region, color=15, vis_pv=pvs[0]) +
+        rectangle(x+quart_region[0], y+BPM_HEADER, *quart_region, color=19) +
+        rectangle(x+quart_region[0], y+BPM_HEADER, *quart_region, color=15,
+            vis_pv=pvs[1]) +
+        rectangle(x, y+BPM_HEADER+quart_region[1], *quart_region, color=19) +
+        rectangle(x, y+BPM_HEADER+quart_region[1], *quart_region, color=15,
+            vis_pv=pvs[2]) +
+        rectangle(x+quart_region[0], y+BPM_HEADER+quart_region[1],
+            *quart_region, color=19) +
+        rectangle(x+quart_region[0], y+BPM_HEADER+quart_region[1],
+            *quart_region, color=15, vis_pv=pvs[3]) +
+        related(x, y, *(CORRECTOR_REGION + devs), display='cor_enable.edl'))
 
 bpm_definition = {
-        'title': "$(mode_string) Feedback BPM Mask",
+        'title': "SOFB and FOFB BPM Mask",
         'x_names': ['%02d' % x for x in range(1, 25)],
         'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
         'region': BPM_REGION,
