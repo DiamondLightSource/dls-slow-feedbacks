@@ -233,7 +233,7 @@ def corrector_func(i, j, x, y):
             color=19) +
         rectangle(x + quart_region[0], y + quart_region[1], *quart_region,
             color=15, vis_pv=pvs[3]) +
-        related(x, y, *(CORRECTOR_REGION + devs), display='cor_enable.edl'))
+        related(x, y, *(CORRECTOR_REGION + devs), display='enable.edl'))
 
 corrector_definition = {
         'title': "SOFB and FOFB Corrector Enable",
@@ -273,7 +273,7 @@ def bpm_func(i, j, x, y):
             *quart_region, color=19) +
         rectangle(x+quart_region[0], y+BPM_HEADER+quart_region[1],
             *quart_region, color=15, vis_pv=pvs[3]) +
-        related(x, y, *(CORRECTOR_REGION + devs), display='cor_enable.edl'))
+        related(x, y, *(CORRECTOR_REGION + devs), display='enable.edl'))
 
 bpm_definition = {
         'title': "SOFB and FOFB BPM Mask",

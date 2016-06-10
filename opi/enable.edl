@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 443
-y 441
-w 216
-h 216
+x 1033
+y 253
+w 584
+h 232
 font "arial-medium-r-18.0"
 ctlFont "arial-medium-r-18.0"
 btnFont "arial-medium-r-18.0"
@@ -19,81 +19,46 @@ ctlBgColor1 index 0
 ctlBgColor2 index 14
 topShadowColor index 0
 botShadowColor index 14
+showGrid
+snapToGrid
+gridSize 8
 endScreenProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 48
-w 200
-h 40
-fgColor index 14
-bgColor index 3
-inconsistentColor index 14
-topShadowColor index 0
-botShadowColor index 14
-controlPv "$(deviceh):$(mode):DISABLED"
-font "helvetica-medium-r-18.0"
-endObjectProperties
 
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
+release 1
+x 72
 y 8
-w 200
+w 248
 h 40
 font "helvetica-medium-r-18.0"
 fontAlign "center"
 fgColor index 14
-bgColor index 73
+bgColor index 74
 value {
-  "$(deviceh)"
+  "$(deviceh):SLOW"
 }
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 136
-w 200
-h 40
-fgColor index 14
-bgColor index 3
-inconsistentColor index 14
-topShadowColor index 0
-botShadowColor index 14
-controlPv "$(devicev):$(mode):DISABLED"
-font "helvetica-medium-r-18.0"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 8
-y 96
-w 200
+release 1
+x 72
+y 104
+w 248
 h 40
 font "helvetica-medium-r-18.0"
 fontAlign "center"
 fgColor index 14
-bgColor index 73
+bgColor index 74
 value {
-  "$(devicev)"
+  "$(devicev):FAST"
 }
 endObjectProperties
 
@@ -103,9 +68,9 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 160
-y 184
-w 48
+x 512
+y 200
+w 64
 h 24
 fgColor index 46
 bgColor index 3
@@ -114,5 +79,189 @@ botShadowColor index 14
 label "EXIT"
 font "helvetica-medium-r-12.0"
 3d
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 72
+y 144
+w 248
+h 40
+fgColor index 14
+bgColor index 3
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 14
+controlPv "$(deviceh):FAST:DISABLED"
+font "helvetica-medium-r-18.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 328
+y 8
+w 248
+h 40
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 74
+value {
+  "$(devicev):SLOW"
+}
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 328
+y 144
+w 248
+h 40
+fgColor index 14
+bgColor index 3
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 14
+controlPv "$(devicev):FAST:DISABLED"
+font "helvetica-medium-r-18.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 328
+y 104
+w 248
+h 40
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 74
+value {
+  "$(deviceh):FAST"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 104
+w 56
+h 80
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "Fast"
+}
+border
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 72
+y 48
+w 248
+h 40
+fgColor index 14
+bgColor index 3
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 14
+controlPv "$(deviceh):SLOW:DISABLED"
+font "helvetica-medium-r-18.0"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 328
+y 48
+w 248
+h 40
+fgColor index 14
+bgColor index 3
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 14
+controlPv "$(devicev):SLOW:DISABLED"
+font "helvetica-medium-r-18.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 8
+w 56
+h 80
+font "helvetica-medium-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 73
+value {
+  "Slow"
+}
+border
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 104
+w 568
+h 80
+lineColor index 7
+fillColor index 7
+lineWidth 3
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 8
+y 8
+w 568
+h 80
+lineColor index 7
+fillColor index 7
+lineWidth 3
 endObjectProperties
 
