@@ -104,8 +104,6 @@ class magnets_server(object):
         self.maxval = [None, None]
         self.maxname = [None, None]
 
-        bpm_fams = ["bpmx", "bpmy"]
-
         # Declare individule records and waveforms
         for dev in ['cor', 'bpm']:
             self.wf[dev] = {}
@@ -115,27 +113,27 @@ class magnets_server(object):
                 self.wf[dev][speed] = [None, None]
 
         for p in self.PLANES:
-            corr_fam = self.FAMILIES['cor'][p]
-
-            # build concentrator vector
-            envec = (mml.ao[corr_fam].enabled == 0)
+            # Build vectors of maximum magnet values
             builder.SetDeviceName("SR-PC-%sSTR-01" % "HV"[p])
-
-            # maximum value and name
             self.maxval[p] = builder.aOut("MAXI", initial_value = 0)
             self.maxname[p] = builder.stringOut("MAXNAME")
 
-            for speed in self.SPEEDS:
-                self.wf['cor'][speed][p] = builder.WaveformIn(
-                        speed.upper() + ":ENABLED", initial_value=envec)
-
-            # build individual controls
-            fam_pv_func = {
+            # Build individual controls and connected waveforms
+            fam_pv_func = {  # Keys are from self.FAMILIES
                     'cor': lambda _, s: '%s:DISABLED' % s.upper(),
                     'bpm': lambda p, s: '%s:%s:DISABLED' % ("HV"[p], s.upper())
                     }
-            for fam_type in ['cor', 'bpm']:
+            device_name_func = {
+                    'cor': lambda p: "SR-PC-%sSTR-01" % "HV"[p],
+                    'bpm': lambda p: "SR-PC-%sBPM-01" % "HV"[p]
+                    }
+            for fam_type in self.FAMILIES.keys():
                 fam = self.FAMILIES[fam_type][p]
+                for speed in self.SPEEDS:
+                    builder.SetDeviceName(device_name_func[fam_type](p))
+                    self.wf[fam_type][speed][p] = builder.WaveformIn(
+                        "%s:ENABLED" % speed.upper(),
+                        initial_value=zeros(len(mml.ao[fam].enabled)))
                 for n, c in enumerate(mml.ao[fam].devices):
                     builder.SetDeviceName(c)
                     for speed in self.SPEEDS:
@@ -145,14 +143,6 @@ class magnets_server(object):
                                 ("Enabled", 0), ("Disabled", 1),
                                 on_update=lambda x, n=n, p=p:
                                     self.update((p, n), x, speed, fam_type)))
-
-            bpm_fam = self.FAMILIES['bpm'][p]
-            bpm_envec = zeros(len(mml.ao[bpm_fam].enabled))
-            builder.SetDeviceName("SR-DI-EBPM-01")
-            for speed in self.SPEEDS:
-                self.wf['bpm'][speed][p] = builder.WaveformIn(
-                        "%s:%s:DISABLED" % ("HV"[p], speed.upper()),
-                        initial_value=bpm_envec)
 
     def write(self):
         # set initial control values
