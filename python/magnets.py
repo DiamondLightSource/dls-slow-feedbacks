@@ -11,29 +11,9 @@ from numpy import *
 class magnets_server(object):
 
     def __init__(self):
-
-        self.bpmen = zeros(len(mml.ao["bpmx"].s)) == 0
-
         self.wf = {}
-
-        builder.SetDeviceName("SR-DI-EBPM-01")
-        builder.WaveformOut("S", initial_value = mml.ao["bpmx"].s)
-
-        nm = (("hcm", 'SR-PC-HSTR-01'),
-              ("vcm", 'SR-PC-VSTR-01'))
-
-        self.wf['current'] = []
-        self.wf['mag'] = []
-        for i, (k, v) in enumerate(nm):
-            builder.SetDeviceName(v)
-            self.wf['current'].append(builder.WaveformOut(
-                "I", initial_value = zeros(len(mml.ao[k].s))))
-            self.wf['mag'].append(builder.WaveformOut(
-                "MAG", initial_value = zeros(len(mml.ao[k].s))))
-            builder.WaveformOut("S", initial_value = mml.ao[k].s)
-
-        self.create_controls()
-
+        self.create_info_waveforms()
+        self.create_control_and_waveforms()
 
     def init(self):
         self.write()
@@ -100,9 +80,24 @@ class magnets_server(object):
         wf[i] = value
         r.set(wf)
 
-    def create_controls(self):
+    def create_info_waveforms(self):
+        builder.SetDeviceName("SR-DI-EBPM-01")
+        builder.WaveformOut("S", initial_value = mml.ao["bpmx"].s)
 
-        #PLANES = [0, 1]
+        nm = (("hcm", 'SR-PC-HSTR-01'),
+              ("vcm", 'SR-PC-VSTR-01'))
+
+        self.wf['current'] = []
+        self.wf['mag'] = []
+        for i, (k, v) in enumerate(nm):
+            builder.SetDeviceName(v)
+            self.wf['current'].append(builder.WaveformOut(
+                "I", initial_value = zeros(len(mml.ao[k].s))))
+            self.wf['mag'].append(builder.WaveformOut(
+                "MAG", initial_value = zeros(len(mml.ao[k].s))))
+            builder.WaveformOut("S", initial_value = mml.ao[k].s)
+
+    def create_control_and_waveforms(self):
         self.wf['cor'] = {}
         self.wf['cor']['slow'] = [None, None]
         self.wf['cor']['fast'] = [None, None]
