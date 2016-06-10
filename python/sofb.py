@@ -47,14 +47,14 @@ class sofb(object):
     def set_mu(self, mu):
         self.mu = mu
 
-    def get_irm(self, hen, ven, bpmen, mu):
-        key = (tuple(hen), tuple(ven), tuple(bpmen), mu)
+    def get_irm(self, hen, ven, hbpmen, vbpmen, mu):
+        key = (tuple(hen), tuple(ven), tuple(hbpmen), tuple(vbpmen), mu)
         if key in self.cache:
             return self.cache[key]
         print "new response matrix"
         irm = [None, None]
-        rmx = self.rmx[ix_(bpmen, hen)]
-        rmy = self.rmy[ix_(bpmen, ven)]
+        rmx = self.rmx[ix_(hbpmen, hen)]
+        rmy = self.rmy[ix_(vbpmen, ven)]
         irm = [
             tkv_reg(rmx, mu, self.svd['X']),
             tkv_reg(rmy, mu, self.svd['Y'])]
@@ -77,9 +77,12 @@ class sofb(object):
         afrac = caget("SR-CS-SOFB-01:AFRAC")
         hen = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
         ven = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
-        bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
 
-        irm = self.get_irm(hen, ven, bpmen, self.mu)
+        bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
+        hbpmen = logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
+        vbpmen = logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
+
+        irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
 
         bpmx = caget(mml.ao["bpmx"].readback)[bpmen]
         hcm = caget(mml.ao["hcm"].setpoint[hen])
