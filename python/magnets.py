@@ -94,7 +94,7 @@ class magnets_server(object):
         if element == 'cor':
             r = self.cenabled[mode][k]
         elif element == 'bpm':
-            r = self.benabled[mode]
+            r = self.benabled[mode][k]
         else:
             raise ValueError
         wf = r.get()
@@ -107,25 +107,27 @@ class magnets_server(object):
         self.cenabled['slow'] = [None, None]
         self.cenabled['fast'] = [None, None]
         self.benabled = {}
-        self.benabled['slow'] = None
-        self.benabled['fast'] = None
+        self.benabled['slow'] = [None, None]
+        self.benabled['fast'] = [None, None]
         self.maxval = [None, None]
         self.maxname = [None, None]
 
-        fams = ["hcm", "vcm"]
+        corr_fams = ["hcm", "vcm"]
+        bpm_fams = ["bpmx", "bpmy"]
         records = {}
         records['cor'] = {}
         records['bpm'] = {}
         records['cor']['slow'] = [[], []]
         records['cor']['fast'] = [[], []]
-        records['bpm']['slow'] = []
-        records['bpm']['fast'] = []
+        records['bpm']['slow'] = [[], []]
+        records['bpm']['fast'] = [[], []]
+        self.records = records
 
         for p in range(2):
-            f = fams[p]
+            corr_fam = corr_fams[p]
 
             # build concentrator vector
-            envec = (mml.ao[f].enabled == 0)
+            envec = (mml.ao[corr_fam].enabled == 0)
             builder.SetDeviceName("SR-PC-%sSTR-01" % "HV"[p])
 
             # maximum value and name
@@ -137,42 +139,41 @@ class magnets_server(object):
             self.cenabled['fast'][p] = builder.WaveformIn("FAST:ENABLED",
                                                   initial_value = envec)
             # build individual controls
-            for n, c in enumerate(mml.ao[f].devices):
+            for n, c in enumerate(mml.ao[corr_fam].devices):
                 builder.SetDeviceName(c)
-                r = builder.mbbOut(
-                    'SLOW:DISABLED', ("Enabled", 0), ("Disabled", 1),
-                    on_update=lambda x, n=n, p=p:
-                        self.update((p, n), x, 'slow', 'cor'))
-                records['cor']['slow'][p].append(r)
-                r = builder.mbbOut(
-                    'FAST:DISABLED', ("Enabled", 0), ("Disabled", 1),
-                    on_update=lambda x, n=n, p=p:
-                        self.update((p, n), x, 'fast', 'cor'))
-                records['cor']['fast'][p].append(r)
-        self.records = records
+                self.records['cor']['slow'][p].append(
+                    builder.mbbOut(
+                        'SLOW:DISABLED', ("Enabled", 0), ("Disabled", 1),
+                        on_update=lambda x, n=n, p=p:
+                            self.update((p, n), x, 'slow', 'cor')))
+                self.records['cor']['fast'][p].append(
+                    builder.mbbOut(
+                        'FAST:DISABLED', ("Enabled", 0), ("Disabled", 1),
+                        on_update=lambda x, n=n, p=p:
+                            self.update((p, n), x, 'fast', 'cor')))
 
-        # Build slow and fast BPM enabled vectors
-        BPM_FAM = 'bpmx'  # One vector for both planes
-        builder.SetDeviceName("SR-DI-EBPM-01")
-        for n, c in enumerate(mml.ao[BPM_FAM].devices):
-            self.records['bpm']['slow'].append(
-                builder.mbbOut(
-                    '%03d:SLOW:DISABLED' % (n+1),
-                    ("Enabled", 0), ("Disabled", 1),
-                    on_update=lambda x, n=n, p=p:
-                        self.update((p, n), x, 'slow', 'bpm')))
-            self.records['bpm']['fast'].append(
-                builder.mbbOut(
-                    '%03d:FAST:DISABLED' % (n+1),
-                    ("Enabled", 0), ("Disabled", 1),
-                    on_update=lambda x, n=n, p=p:
-                        self.update((p, n), x, 'fast', 'bpm')))
+            # Build slow and fast BPM enabled vectors
+            bpm_fam = bpm_fams[p]  # One vector for both planes
+            builder.SetDeviceName("SR-PC-%sBPM-01" % "HV"[p])
+            for n, c in enumerate(mml.ao[bpm_fam].devices):
+                self.records['bpm']['slow'][p].append(
+                    builder.mbbOut(
+                        '%03d:SLOW:DISABLED' % (n+1),
+                        ("Enabled", 0), ("Disabled", 1),
+                        on_update=lambda x, n=n, p=p:
+                            self.update((p, n), x, 'slow', 'bpm')))
+                self.records['bpm']['fast'][p].append(
+                    builder.mbbOut(
+                        '%03d:FAST:DISABLED' % (n+1),
+                        ("Enabled", 0), ("Disabled", 1),
+                        on_update=lambda x, n=n, p=p:
+                            self.update((p, n), x, 'fast', 'bpm')))
 
-        bpm_envec = zeros(len(mml.ao[BPM_FAM].enabled))
-        self.benabled['slow'] = builder.WaveformIn("SLOW:ENABLED",
-                initial_value = bpm_envec)
-        self.benabled['fast'] = builder.WaveformIn("FAST:ENABLED",
-                initial_value = bpm_envec)
+            bpm_envec = zeros(len(mml.ao[bpm_fam].enabled))
+            self.benabled['slow'][p] = builder.WaveformIn("SLOW:ENABLED",
+                    initial_value = bpm_envec)
+            self.benabled['fast'][p] = builder.WaveformIn("FAST:ENABLED",
+                    initial_value = bpm_envec)
 
     def write(self):
         # set initial control values
@@ -180,5 +181,5 @@ class magnets_server(object):
             for p in range(2):
                 for n, r in enumerate(self.records['cor'][mode][p]):
                     r.set(self.cenabled[mode][p].get()[n])
-            for n, r in enumerate(self.records['bpm'][mode]):
-                r.set(self.benabled[mode].get()[n])
+                for n, r in enumerate(self.records['bpm'][mode][p]):
+                    r.set(self.benabled[mode][p].get()[n])
