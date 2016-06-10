@@ -114,14 +114,12 @@ class magnets_server(object):
 
         corr_fams = ["hcm", "vcm"]
         bpm_fams = ["bpmx", "bpmy"]
-        records = {}
-        records['cor'] = {}
-        records['bpm'] = {}
-        records['cor']['slow'] = [[], []]
-        records['cor']['fast'] = [[], []]
-        records['bpm']['slow'] = [[], []]
-        records['bpm']['fast'] = [[], []]
-        self.records = records
+
+        self.records = {}
+        for dev in ['cor', 'bpm']:
+            self.records[dev] = {}
+            for speed in ['slow', 'fast']:
+                self.records[dev][speed] = [[], []]
 
         for p in range(2):
             corr_fam = corr_fams[p]
