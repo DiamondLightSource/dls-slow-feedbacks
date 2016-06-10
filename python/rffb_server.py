@@ -84,7 +84,7 @@ class rffb_server(object):
 
     def feedback(self):
 
-        # Check if eithier SOFB or FOFB is running
+        # Check if either SOFB or FOFB is running
         fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
         # Use all correctors, enabled or not, in RFFB.
         ncor = len(catools.caget("SR-PC-HSTR-01:FAST:ENABLED"))

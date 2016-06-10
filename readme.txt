@@ -5,15 +5,15 @@ Physics Applications IOC CS-DI-IOC-09
 -------
 
 The ringmode PV is hosted by this IOC. It is queried by most high level
-applications to determine which golden matricies to use, as well as many
-accelerator physics applications includeing middlelayer.
+applications to determine which golden matrices to use, as well as many
+accelerator physics applications including middlelayer.
 
 2) BPM & CORRECTOR ENABLE
 -------------------
 
 PVs and EDL to disable each horizontal and vertical corrector and BPM from the
 feedback algorithms. BPMs and correctors can be controlled for SOFB and FOFB
-independantly.
+independently.
 
 A GUI to display where the correctors are operating within their range and
 the PVs backing this are also included in this module.
