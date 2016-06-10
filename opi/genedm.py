@@ -210,6 +210,25 @@ class Layout(object):
         return (width, height)
 
 
+def generate_quad(x, y, region, pvs, devs):
+    quart_region = [region[0]/2, region[1]/2]
+    return (
+        rectangle(x, y, *quart_region, color=19) +
+        rectangle(x, y, *quart_region, color=15, vis_pv=pvs[0]) +
+        rectangle(x+quart_region[0], y, *quart_region, color=19) +
+        rectangle(x+quart_region[0], y, *quart_region, color=15,
+            vis_pv=pvs[1]) +
+        rectangle(x, y+quart_region[1], *quart_region, color=19) +
+        rectangle(x, y+quart_region[1], *quart_region, color=15,
+            vis_pv=pvs[2]) +
+        rectangle(x+quart_region[0], y+quart_region[1],
+            *quart_region, color=19) +
+        rectangle(x+quart_region[0], y+quart_region[1],
+            *quart_region, color=15, vis_pv=pvs[3]) +
+        related(x, y, *(region + devs), display='enable.edl'))
+
+
+
 CORRECTOR_REGION = [20, 24]
 RATES = ['SLOW', 'FAST']
 def corrector_func(i, j, x, y):
@@ -220,20 +239,7 @@ def corrector_func(i, j, x, y):
             return ""
         devs = ["SR%02dS-PC-%sSTR-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
     pvs = [d + ':%s:DISABLED' % r for r in RATES for d in devs]
-    return (
-        rectangle(x, y, *quart_region, color=19) +
-        rectangle(x, y, *quart_region, color=15, vis_pv=pvs[0]) +
-        rectangle(x + quart_region[0], y, *quart_region, color=19) +
-        rectangle(x + quart_region[0], y, *quart_region, color=15,
-            vis_pv=pvs[1]) +
-        rectangle(x, y + quart_region[1], *quart_region, color=19) +
-        rectangle(x, y + quart_region[1], *quart_region, color=15,
-            vis_pv=pvs[2]) +
-        rectangle(x + quart_region[0], y + quart_region[1], *quart_region,
-            color=19) +
-        rectangle(x + quart_region[0], y + quart_region[1], *quart_region,
-            color=15, vis_pv=pvs[3]) +
-        related(x, y, *(CORRECTOR_REGION + devs), display='enable.edl'))
+    return generate_quad(x, y, CORRECTOR_REGION, pvs, devs)
 
 corrector_definition = {
         'title': "SOFB and FOFB Corrector Enable",
@@ -261,19 +267,8 @@ def bpm_func(i, j, x, y):
     return (
         rectangle(x, y, BPM_REGION[0], BPM_HEADER, color=15, alarm=True,
             pv=bpm_dev) +
-        rectangle(x, y+BPM_HEADER, *quart_region, color=19) +
-        rectangle(x, y+BPM_HEADER, *quart_region, color=15, vis_pv=pvs[0]) +
-        rectangle(x+quart_region[0], y+BPM_HEADER, *quart_region, color=19) +
-        rectangle(x+quart_region[0], y+BPM_HEADER, *quart_region, color=15,
-            vis_pv=pvs[1]) +
-        rectangle(x, y+BPM_HEADER+quart_region[1], *quart_region, color=19) +
-        rectangle(x, y+BPM_HEADER+quart_region[1], *quart_region, color=15,
-            vis_pv=pvs[2]) +
-        rectangle(x+quart_region[0], y+BPM_HEADER+quart_region[1],
-            *quart_region, color=19) +
-        rectangle(x+quart_region[0], y+BPM_HEADER+quart_region[1],
-            *quart_region, color=15, vis_pv=pvs[3]) +
-        related(x, y, *(CORRECTOR_REGION + devs), display='enable.edl'))
+        generate_quad(x, y+BPM_HEADER,
+            [BPM_REGION[0], BPM_REGION[1] - BPM_HEADER], pvs, devs))
 
 bpm_definition = {
         'title': "SOFB and FOFB BPM Mask",
