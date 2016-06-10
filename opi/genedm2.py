@@ -254,9 +254,9 @@ bpm_definition = {
 
 if __name__ == '__main__':
     layout = Layout(**corrector_definition)
-    with open('test.edl', 'w') as f:
+    with open('cors.edl', 'w') as f:
         f.write(layout.produce())
     layout = Layout(**bpm_definition)
-    with open('test2.edl', 'w') as f:
+    with open('bpms.edl', 'w') as f:
         f.write(layout.produce())
 
