@@ -14,8 +14,7 @@ class magnets_server(object):
 
         self.bpmen = zeros(len(mml.ao["bpmx"].s)) == 0
 
-        self.wf = [None, None]
-        self.rwf = [None, None]
+        self.wf = {}
 
         builder.SetDeviceName("SR-DI-EBPM-01")
         builder.WaveformOut("S", initial_value = mml.ao["bpmx"].s)
@@ -23,15 +22,17 @@ class magnets_server(object):
         nm = (("hcm", 'SR-PC-HSTR-01'),
               ("vcm", 'SR-PC-VSTR-01'))
 
+        w = [None, None]
+        rw = [None, None]
         for i, (k, v) in enumerate(nm):
             builder.SetDeviceName(v)
-            w = builder.WaveformOut(
+            w[i] = builder.WaveformOut(
                 "I", initial_value = zeros(len(mml.ao[k].s)))
-            rw = builder.WaveformOut(
+            rw[i] = builder.WaveformOut(
                 "MAG", initial_value = zeros(len(mml.ao[k].s)))
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
-            self.wf[i] = w
-            self.rwf[i] = rw
+        self.wf['current'] = w
+        self.wf['mag'] = rw
 
         self.create_controls()
 
@@ -78,23 +79,23 @@ class magnets_server(object):
 
         # write to waveforms (disabled are set to zero)
         for p in range(2):
-            w = self.wf[p].get()
+            w = self.wf['current'][p].get()
             w[en[p]] = hv[p]
             w[en[p] == False] = 0
-            self.wf[p].set(w)
+            self.wf['current'][p].set(w)
 
-            rw = self.rwf[p].get()
+            rw = self.wf['mag'][p].get()
             rw[en[p]] = rhv[p]
             rw[en[p] == False] = 0
-            self.rwf[p].set(rw)
+            self.wf['mag'][p].set(rw)
 
     def update(self, key, value, mode, element):
         "update corrector enabled vector from individual records"
         (k, i) = key
         if element == 'cor':
-            r = self.cenabled[mode][k]
+            r = self.wf['cor'][mode][k]
         elif element == 'bpm':
-            r = self.benabled[mode][k]
+            r = self.wf['bpm'][mode][k]
         else:
             raise ValueError
         wf = r.get()
@@ -103,12 +104,13 @@ class magnets_server(object):
 
     def create_controls(self):
 
-        self.cenabled = {}
-        self.cenabled['slow'] = [None, None]
-        self.cenabled['fast'] = [None, None]
-        self.benabled = {}
-        self.benabled['slow'] = [None, None]
-        self.benabled['fast'] = [None, None]
+        #PLANES = [0, 1]
+        self.wf['cor'] = {}
+        self.wf['cor']['slow'] = [None, None]
+        self.wf['cor']['fast'] = [None, None]
+        self.wf['bpm'] = {}
+        self.wf['bpm']['slow'] = [None, None]
+        self.wf['bpm']['fast'] = [None, None]
         self.maxval = [None, None]
         self.maxname = [None, None]
 
@@ -132,9 +134,9 @@ class magnets_server(object):
             self.maxval[p] = builder.aOut("MAXI", initial_value = 0)
             self.maxname[p] = builder.stringOut("MAXNAME")
 
-            self.cenabled['slow'][p] = builder.WaveformIn("SLOW:ENABLED",
+            self.wf['cor']['slow'][p] = builder.WaveformIn("SLOW:ENABLED",
                                                   initial_value = envec)
-            self.cenabled['fast'][p] = builder.WaveformIn("FAST:ENABLED",
+            self.wf['cor']['fast'][p] = builder.WaveformIn("FAST:ENABLED",
                                                   initial_value = envec)
             # build individual controls
             for n, c in enumerate(mml.ao[corr_fam].devices):
@@ -168,9 +170,9 @@ class magnets_server(object):
                             self.update((p, n), x, 'fast', 'bpm')))
 
             bpm_envec = zeros(len(mml.ao[bpm_fam].enabled))
-            self.benabled['slow'][p] = builder.WaveformIn("SLOW:ENABLED",
+            self.wf['bpm']['slow'][p] = builder.WaveformIn("SLOW:ENABLED",
                     initial_value = bpm_envec)
-            self.benabled['fast'][p] = builder.WaveformIn("FAST:ENABLED",
+            self.wf['bpm']['fast'][p] = builder.WaveformIn("FAST:ENABLED",
                     initial_value = bpm_envec)
 
     def write(self):
@@ -178,6 +180,6 @@ class magnets_server(object):
         for mode in ['slow', 'fast']:
             for p in range(2):
                 for n, r in enumerate(self.records['cor'][mode][p]):
-                    r.set(self.cenabled[mode][p].get()[n])
+                    r.set(self.wf['cor'][mode][p].get()[n])
                 for n, r in enumerate(self.records['bpm'][mode][p]):
-                    r.set(self.benabled[mode][p].get()[n])
+                    r.set(self.wf['bpm'][mode][p].get()[n])
