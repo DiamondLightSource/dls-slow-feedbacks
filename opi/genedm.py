@@ -29,7 +29,8 @@ endScreenProperties
 
 
 def title(x, y, w, h, value):
-    return """# (Static Text)
+    return """
+# (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
@@ -50,8 +51,8 @@ endObjectProperties
 """ % locals()
 
 
-def label(x, y, w, h, value):
-    return """
+def label(x, y, w, h, value, color=8, border_width=0):
+    text = """
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -64,13 +65,17 @@ w %(w)d
 h %(h)d
 font "helvetica-medium-r-12.0"
 fontAlign "center"
-fgColor index 1
-bgColor index 8
+fgColor index 14
+bgColor index %(color)d
 value {
           "%(value)s"
           }
-endObjectProperties
-""" % locals()
+"""
+    if border_width:
+        text = text + "border\n"
+        text = text + "lineWidth %(border_width)d\n"
+    text = text + "endObjectProperties\n"
+    return text % locals()
 
 
 def rectangle(x, y, w, h, pv=None, color=83, alarm=False, vis_pv=None):
@@ -268,10 +273,25 @@ bpm_definition = {
         }
 
 
+def corrector_key():
+    x = 558
+    y = 6
+    h = 18
+    w = 20
+    return (
+        label(x,   y,   w, h, 'SH', color=3, border_width=1) +
+        label(x+w, y,   w, h, 'SV', color=3, border_width=1) +
+        label(x,   y+h, w, h, 'FH', color=3, border_width=1) +
+        label(x+w, y+h, w, h, 'FV', color=3, border_width=1)
+    )
+
+
 if __name__ == '__main__':
     layout = Layout(**corrector_definition)
+    data = layout.produce()
+    data = data + corrector_key()
     with open('cors.edl', 'w') as f:
-        f.write(layout.produce())
+        f.write(data)
     layout = Layout(**bpm_definition)
     with open('bpms.edl', 'w') as f:
         f.write(layout.produce())
