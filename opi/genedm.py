@@ -241,7 +241,8 @@ def bpm_func(i, j, x, y):
     return (
         rectangle(x, y, width, BPM_HEADER, color=15, alarm=True, pv=bpm_dev) +
         rectangle(x, y+BPM_HEADER, half_width, height, pv=pvs[0]) +
-        rectangle(x+half_width, y+BPM_HEADER, half_width, height, pv=pvs[1]))
+        rectangle(x+half_width, y+BPM_HEADER, half_width, height, pv=pvs[1]) +
+        related(x, y, *(BPM_REGION + devs)))
 
 bpm_definition = {
         'title': "$(mode_string) Feedback BPM Mask",
