@@ -147,6 +147,25 @@ class TestTunefb(unittest.TestCase):
         except TunefbInvalid:
             self.fail('Should not throw an exception.')
 
+    @patch('tunefb_server.caput')
+    @patch('tunefb_server.caget')
+    def test_aggregate_setpoints_moves_values_to_setpoints(self, mock_caget, mock_caput):
+        self.tfb.aggregate_pv = MagicMock()
+        self.tfb.reset_integrated_current_pv = MagicMock()
+        rnd_integrated = numpy.random.rand(144)
+        rnd_setpoint = numpy.random.rand(144)
+        self.tfb.integrated_current = numpy.copy(rnd_integrated)
+        [self.tfb.mirror_pvs.append(MagicMock()) for q in range(144)]
+
+        mock_caget.side_effect = rnd_setpoint
+        # Actually call the function
+        self.tfb.aggregate_setpoints(1)
+
+        numpy.testing.assert_array_equal(self.tfb.integrated_current,
+                                       numpy.zeros(144))
+        calls = numpy.array([call[0][1] for call in mock_caput.call_args_list])
+        numpy.testing.assert_array_equal(rnd_integrated + rnd_setpoint, calls)
+
 
 class ca_float(float):
     severity = 0
