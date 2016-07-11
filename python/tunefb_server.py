@@ -387,24 +387,29 @@ class TunefbServer(object):
             log.warn('Unexpected exception: %s' % str(e))
             self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
 
-    def reset(self, dummy):
+    def reset_error(self, dummy):
         """Reset the error pv."""
         self.status_pv.set(Status.FEEDBACK_OFF)
         self.reset_pv.set(0)
         self.invalid_counter = 0
+
+    def _reset_state(self):
+        """Set internal current and tune state to zero."""
+        self.tune_int_h_pv.set(0)
+        self.tune_int_v_pv.set(0)
+        self.integrated_tunes = numpy.zeros(2)
+        self.integrated_current = numpy.zeros(self.integrated_current.shape)
 
     def reset_integrated_current(self, value):
         """Set all integrated currents to zero."""
         if value:
             self.reset_integrated_current_pv.set(0)
             # Set our local PVs and currents to zero
-            self.integrated_current = [0 for _ in self.integrated_current]
             for pv in self.mirror_pvs:
                 pv.set(0)
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
             log.warn('Reset all integrated currents to zero')
-            self.tune_int_h_pv.set(0)
-            self.tune_int_v_pv.set(0)
+            self._reset_state()
 
     def aggregate_setpoints(self, value):
         """Move offsets from this ioc to the quadrupole setpoints."""
@@ -415,11 +420,9 @@ class TunefbServer(object):
                 pv = pv + ':SETI'
                 caput(pv, caget(pv) + self.integrated_current[i])
                 self.mirror_pvs[i].set(0)
-                self.integrated_current[i] = 0
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
-            self.tune_int_h_pv.set(0)
-            self.tune_int_v_pv.set(0)
             log.warn('Aggregated offsets into setpoints')
+            self._reset_state()
 
     def update_max_i_pv(self):
         """Update value and severity of IMAX PV."""
@@ -469,7 +472,7 @@ class TunefbServer(object):
         self.power_pv = builder.boolOut(
                 'ONOFF', 'OFF', 'ON', initial_value=False)
         self.reset_pv = builder.aOut(
-                'RESET', initial_value=0, on_update=self.reset)
+                'RESET', initial_value=0, on_update=self.reset_error)
         self.aggregate_pv = builder.aOut(
                 'AGGREGATE', initial_value=0,
                 on_update=self.aggregate_setpoints)
