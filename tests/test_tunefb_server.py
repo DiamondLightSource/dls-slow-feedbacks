@@ -152,6 +152,7 @@ class TestTunefb(unittest.TestCase):
     def test_aggregate_setpoints_moves_values_to_setpoints(self, mock_caget, mock_caput):
         self.tfb.aggregate_pv = MagicMock()
         self.tfb.reset_integrated_current_pv = MagicMock()
+        self.tfb.integrated_tunes = numpy.array([1,2])
         rnd_integrated = numpy.random.rand(144)
         rnd_setpoint = numpy.random.rand(144)
         self.tfb.integrated_current = numpy.copy(rnd_integrated)
@@ -165,6 +166,22 @@ class TestTunefb(unittest.TestCase):
                                        numpy.zeros(144))
         calls = numpy.array([call[0][1] for call in mock_caput.call_args_list])
         numpy.testing.assert_array_equal(rnd_integrated + rnd_setpoint, calls)
+        numpy.testing.assert_array_equal(self.tfb.integrated_tunes, numpy.zeros(2))
+
+    def test_reset_integrated_current_sets_everything_to_zero(self):
+        self.tfb.aggregate_pv = MagicMock()
+        self.tfb.reset_integrated_current_pv = MagicMock()
+        self.tfb.integrated_tunes = numpy.array([1,2])
+        rnd_integrated = numpy.random.rand(144)
+        self.tfb.integrated_current = numpy.copy(rnd_integrated)
+        (self.tfb.mirror_pvs.append(MagicMock()) for q in range(144))
+
+        # Actually call the function
+        self.tfb.reset_integrated_current(1)
+
+        numpy.testing.assert_array_equal(self.tfb.integrated_current,
+                                       numpy.zeros(144))
+        numpy.testing.assert_array_equal(self.tfb.integrated_tunes, numpy.zeros(2))
 
 
 class ca_float(float):
