@@ -92,20 +92,23 @@ class sofb_server(object):
                 mag_ids.append(int(mag[2:4]) + 0.1*int(mag[-2:]))
         builder.WaveformIn("CMID", initial_value = mag_ids)
 
+        # PVs for demonstrating SVD effect
         svd_length = len(mml.ao['bpmx'].s)
         for plane in ['X', 'Y']:
-            self.sofb.svd[plane].length = builder.aIn(
+            sv_pvs = SingularValuePVs()
+            sv_pvs.length = builder.aIn(
                 'SVD:%s:LENGTH' % plane, initial_value = svd_length)
 
-            self.sofb.svd[plane].s = builder.WaveformIn(
+            sv_pvs.s = builder.WaveformIn(
                 'SVD:%s:S' % plane, initial_value = [0.0]*svd_length)
 
-            self.sofb.svd[plane].s_inv = builder.WaveformIn(
+            sv_pvs.s_inv = builder.WaveformIn(
                 'SVD:%s:S_INV' % plane, initial_value = [0.0]*svd_length)
 
-            self.sofb.svd[plane].s_inv_cut = builder.WaveformIn(
+            sv_pvs.s_inv_cut = builder.WaveformIn(
                 'SVD:%s:S_INV_CUT' % plane,
                 initial_value = [0.0]*svd_length)
+            self.sofb.svd[plane] = sv_pvs
 
         builder.aOut("CORRECT", initial_value = 0,
                      on_update = self.single, always_update = True)

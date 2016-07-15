@@ -13,10 +13,11 @@ def tkv_reg(m, mu, singular_values):
     # We use nan_to_num here to catch the case of singular m and zero mu.
     si = nan_to_num(s / (mu + s**2))
 
-    singular_values.s.set(s)
-    singular_values.s_inv.set(nan_to_num(1 / s))
-    singular_values.s_inv_cut.set(si)
-    singular_values.length.set(count_nonzero(s))
+    if singular_values is not None:
+        singular_values.s.set(s)
+        singular_values.s_inv.set(nan_to_num(1 / s))
+        singular_values.s_inv_cut.set(si)
+        singular_values.length.set(count_nonzero(s))
     return dot(vt.T * si, u.T)
 
 
@@ -38,7 +39,7 @@ class sofb(object):
     def __init__(self):
         self.step_limit = 0.1
         self.mu = 0.01
-        self.svd = {'X':SingularValuePVs(), 'Y':SingularValuePVs()}
+        self.svd = {'X':None, 'Y':None}
         self.cache = {}
 
     def set_step_limit(self, step_limit):
