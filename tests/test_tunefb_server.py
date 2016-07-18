@@ -10,12 +10,28 @@ require('numpy')
 require('scipy')
 require('iocbuilder')
 require('mock')
+require('pml')
+
 
 from mock import MagicMock, patch
 import unittest
 import time
 from tunefb_server import TunefbServer, TunefbError, TunefbInvalid
 import numpy
+
+import pml
+import aphla
+pml.initialise('SRI21')
+
+TFB_FAMILIES = ('Q1D', 'Q2D', 'Q3D', 'Q3B', 'Q2B', 'Q1B')
+
+
+def load_aphla_tfb_pvs():
+    tfb_elements = []
+    for family in TFB_FAMILIES:
+        tfb_elements.extend(aphla.getElements(family))
+    tfb_pvs = [pml.prefix_from_element(element) for element in tfb_elements]
+    return tfb_pvs
 
 
 class TestTunefb(unittest.TestCase):
@@ -32,6 +48,10 @@ class TestTunefb(unittest.TestCase):
             self.tfb.tune_int_h_pv = MagicMock()
             self.tfb.tune_int_v_pv = MagicMock()
             self.tfb.integrated_current = numpy.zeros(168)
+
+    def test_magnet_pvs_match_aphla(self):
+        aphla_tfb_pvs = load_aphla_tfb_pvs()
+        self.assertListEqual(self.tfb.mag_pvs, aphla_tfb_pvs)
 
     def test_check_current_does_nothing_if_current_valid(self):
         with patch('tunefb_server.caget') as mock_caget:
