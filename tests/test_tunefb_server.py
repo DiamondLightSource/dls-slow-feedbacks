@@ -15,15 +15,21 @@ require('pml')
 
 from mock import MagicMock, patch
 import unittest
+import os
 import time
+import tunefb_server
 from tunefb_server import TunefbServer, TunefbError, TunefbInvalid
 import numpy
 
 import pml
 import aphla
-pml.initialise('SRI21')
+
+RING_MODE = 'SRI21'
+pml.initialise(RING_MODE)
 
 TFB_FAMILIES = ('Q1D', 'Q2D', 'Q3D', 'Q3B', 'Q2B', 'Q1B')
+DATADIR = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata'
+RESPONSE_MATRIX = os.path.join(DATADIR, RING_MODE, 'GoldenTuneResp.mat')
 
 
 def load_aphla_tfb_pvs():
@@ -48,6 +54,11 @@ class TestTunefb(unittest.TestCase):
             self.tfb.tune_int_h_pv = MagicMock()
             self.tfb.tune_int_v_pv = MagicMock()
             self.tfb.integrated_current = numpy.zeros(168)
+
+    def test_load_tune_rm_dimensions(self):
+        aphla_tfb_pvs = load_aphla_tfb_pvs()
+        rm = tunefb_server.load_tune_rm(RESPONSE_MATRIX)
+        self.assertEqual(rm.shape, (2, len(aphla_tfb_pvs)))
 
     def test_magnet_pvs_match_aphla(self):
         aphla_tfb_pvs = load_aphla_tfb_pvs()
