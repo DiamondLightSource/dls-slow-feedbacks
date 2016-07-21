@@ -47,22 +47,22 @@ class TestTunefb(unittest.TestCase):
 
     def setUp(self):
         mode = MagicMock(listeners=[])
+        self.aphla_tfb_pvs = load_aphla_tfb_pvs()
+        self.nquads = len(self.aphla_tfb_pvs)
         with patch('tunefb_server.TunefbServer.records'):
             self.tfb = TunefbServer(mode)
             self.tfb.max_i_pv = MagicMock()
-            self.tfb.rm = numpy.zeros((2, 168))
+            self.tfb.rm = numpy.zeros((2, self.nquads))
             self.tfb.tune_int_h_pv = MagicMock()
             self.tfb.tune_int_v_pv = MagicMock()
-            self.tfb.integrated_current = numpy.zeros(168)
+            self.tfb.integrated_current = numpy.zeros(self.nquads)
 
     def test_load_tune_rm_dimensions(self):
-        aphla_tfb_pvs = load_aphla_tfb_pvs()
         rm = tunefb_server.load_tune_rm(RESPONSE_MATRIX)
-        self.assertEqual(rm.shape, (2, len(aphla_tfb_pvs)))
+        self.assertEqual(rm.shape, (2, self.nquads))
 
     def test_magnet_pvs_match_aphla(self):
-        aphla_tfb_pvs = load_aphla_tfb_pvs()
-        self.assertListEqual(self.tfb.mag_pvs, aphla_tfb_pvs)
+        self.assertListEqual(self.tfb.mag_pvs, self.aphla_tfb_pvs)
 
     def test_check_current_does_nothing_if_current_valid(self):
         with patch('tunefb_server.caget') as mock_caget:
@@ -146,19 +146,19 @@ class TestTunefb(unittest.TestCase):
         self.assertRaises(TunefbError, self.tfb.check_mag_limits, currents)
 
     def test_apply_correction_does_not_apply_nans_from_deltas(self):
-        deltas = numpy.zeros(168)
+        deltas = numpy.zeros(self.nquads)
         deltas[56] = numpy.nan
         # Awkward patch to control value of fetched_current
         with patch('numpy.array') as na:
-            z = numpy.zeros(168)
+            z = numpy.zeros(self.nquads)
             na.return_value = z
             self.assertRaises(TunefbError, self.tfb.apply_correction, deltas)
 
     def test_apply_correction_does_not_apply_nans_from_pv(self):
-        deltas = numpy.zeros(168)
+        deltas = numpy.zeros(self.nquads)
         # Awkward patch to control value of fetched_current
         with patch('numpy.array') as na:
-            z = numpy.zeros(168)
+            z = numpy.zeros(self.nquads)
             z[33] = numpy.nan
             na.return_value = z
             self.assertRaises(TunefbError, self.tfb.apply_correction, deltas)
@@ -184,17 +184,17 @@ class TestTunefb(unittest.TestCase):
         self.tfb.aggregate_pv = MagicMock()
         self.tfb.reset_integrated_current_pv = MagicMock()
         self.tfb.integrated_tunes = numpy.array([1,2])
-        rnd_integrated = numpy.random.rand(144)
-        rnd_setpoint = numpy.random.rand(144)
+        rnd_integrated = numpy.random.rand(self.nquads)
+        rnd_setpoint = numpy.random.rand(self.nquads)
         self.tfb.integrated_current = numpy.copy(rnd_integrated)
-        [self.tfb.mirror_pvs.append(MagicMock()) for q in range(144)]
+        [self.tfb.mirror_pvs.append(MagicMock()) for q in range(self.nquads)]
 
         mock_caget.side_effect = rnd_setpoint
         # Actually call the function
         self.tfb.aggregate_setpoints(1)
 
         numpy.testing.assert_array_equal(self.tfb.integrated_current,
-                                       numpy.zeros(144))
+                                       numpy.zeros(self.nquads))
         calls = numpy.array([call[0][1] for call in mock_caput.call_args_list])
         numpy.testing.assert_array_equal(rnd_integrated + rnd_setpoint, calls)
         numpy.testing.assert_array_equal(self.tfb.integrated_tunes, numpy.zeros(2))
@@ -203,15 +203,15 @@ class TestTunefb(unittest.TestCase):
         self.tfb.aggregate_pv = MagicMock()
         self.tfb.reset_integrated_current_pv = MagicMock()
         self.tfb.integrated_tunes = numpy.array([1,2])
-        rnd_integrated = numpy.random.rand(144)
+        rnd_integrated = numpy.random.rand(self.nquads)
         self.tfb.integrated_current = numpy.copy(rnd_integrated)
-        (self.tfb.mirror_pvs.append(MagicMock()) for q in range(144))
+        (self.tfb.mirror_pvs.append(MagicMock()) for q in range(self.nquads))
 
         # Actually call the function
         self.tfb.reset_integrated_current(1)
 
         numpy.testing.assert_array_equal(self.tfb.integrated_current,
-                                       numpy.zeros(144))
+                                       numpy.zeros(self.nquads))
         numpy.testing.assert_array_equal(self.tfb.integrated_tunes, numpy.zeros(2))
 
 
