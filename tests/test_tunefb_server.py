@@ -24,7 +24,7 @@ import numpy
 import pml
 import aphla
 
-RING_MODE = 'SRI21'
+RING_MODE = 'VMX'
 pml.initialise(RING_MODE)
 
 TFB_FAMILIES = ('Q1D', 'Q2D', 'Q3D', 'Q3B', 'Q2B', 'Q1B')
