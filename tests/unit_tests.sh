@@ -6,7 +6,7 @@
 
 cd $(dirname $0)
 
-PYTHONPATH=$PYTHONPATH:../python
+export PYTHONPATH=$PYTHONPATH:../python
 
 PYIOC=/dls_sw/prod/R3.14.12.3/support/pythonSoftIoc/2-5/pythonIoc
 
