@@ -95,7 +95,7 @@ class sofb_server(object):
         # PVs for demonstrating SVD effect
         svd_length = len(mml.ao['bpmx'].s)
         for plane in ['X', 'Y']:
-            sv_pvs = SingularValuePVs()
+            sv_pvs = sofb.SingularValuePVs()
             sv_pvs.length = builder.aIn(
                 'SVD:%s:LENGTH' % plane, initial_value = svd_length)
 
