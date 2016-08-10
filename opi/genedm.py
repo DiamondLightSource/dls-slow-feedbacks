@@ -257,6 +257,13 @@ def corrector_info():
     return label(360, 82, 240, 16, text, color=3)
 
 
+def corrector_dyanmics():
+    """Add warning about using slow correctors with FOFB"""
+    return (
+            label(44, 283, 8,  14, '', color=6) +
+            label(73, 283, 100, 14, 'Do not use', color=6))
+
+
 def bpm_key():
     """Generate text representing the bpm key"""
     x = 558
@@ -346,7 +353,8 @@ if __name__ == '__main__':
     # instantiate layout objects, add extra labels, and write to file
     layout = Layout(**corrector_definition)
     with open('cors.edl', 'w') as f:
-        f.write(layout.produce() + corrector_key() + corrector_info())
+        f.write(layout.produce() + corrector_key() +
+                corrector_info() + corrector_dyanmics())
     layout = Layout(**bpm_definition)
     with open('bpms.edl', 'w') as f:
         f.write(layout.produce() + bpm_key() + bpm_info())
