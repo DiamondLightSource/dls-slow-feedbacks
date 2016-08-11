@@ -45,17 +45,18 @@ class TestTunefb(unittest.TestCase):
     def __init__(self, caller):
         unittest.TestCase.__init__(self, caller)
 
-    def setUp(self):
+    @patch('tunefb_server.caget')
+    @patch('tunefb_server.TunefbServer.records')
+    def setUp(self, mock_records, mock_caget):
         mode = MagicMock(listeners=[])
         self.aphla_tfb_pvs = load_aphla_tfb_pvs()
         self.nquads = len(self.aphla_tfb_pvs)
-        with patch('tunefb_server.TunefbServer.records'):
-            self.tfb = TunefbServer(mode)
-            self.tfb.max_i_pv = MagicMock()
-            self.tfb.rm = numpy.zeros((2, self.nquads))
-            self.tfb.tune_int_h_pv = MagicMock()
-            self.tfb.tune_int_v_pv = MagicMock()
-            self.tfb.integrated_current = numpy.zeros(self.nquads)
+        self.tfb = TunefbServer(mode)
+        self.tfb.max_i_pv = MagicMock()
+        self.tfb.rm = numpy.zeros((2, self.nquads))
+        self.tfb.tune_int_h_pv = MagicMock()
+        self.tfb.tune_int_v_pv = MagicMock()
+        self.tfb.integrated_current = numpy.zeros(self.nquads)
 
     def test_load_tune_rm_dimensions(self):
         rm = tunefb_server.load_tune_rm(RESPONSE_MATRIX)

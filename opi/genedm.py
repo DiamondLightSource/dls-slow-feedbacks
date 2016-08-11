@@ -281,7 +281,7 @@ def bpm_key():
 def bpm_info():
     """Add label giving info about the BPM GUI"""
     # Use spaces as a crude padding due to centered text on widget
-    text = 'All globally eneabled BPMs\nare used by RF feedback    '
+    text = 'All globally enabled BPMs\nare used by RF feedback  '
     return label(354, 80, 164, 32, text, color=3)
 
 
