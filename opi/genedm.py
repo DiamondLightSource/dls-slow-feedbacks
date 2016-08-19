@@ -261,7 +261,8 @@ def corrector_dyanmics():
     """Add warning about using slow correctors with FOFB"""
     return (
             label(44, 283, 8,  14, '', color=6) +
-            label(73, 283, 100, 14, 'Do not use', color=6))
+            label( 73, 283, 220, 14,
+                'slow dynamics unsuitable for FOFB', color=6))
 
 
 def bpm_key():
