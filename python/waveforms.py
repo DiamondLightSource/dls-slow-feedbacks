@@ -72,7 +72,7 @@ class waveforms_server(object):
         "update corrector enabled vector from individual records"
         (k, i) = key
         r = self.wf[element][mode][k]
-        wf = r.get()
+        wf = r.get().copy()
         wf[i] = value
         r.set(wf)
 
