@@ -22,6 +22,7 @@ class waveforms_server(object):
     def __init__(self):
         self.wf = {}
         self.records = {}
+        self.latched = None
         self.create_info_waveforms()
         self.create_control_and_waveform_pvs()
 
@@ -57,6 +58,10 @@ class waveforms_server(object):
             i = argmax(abs(array(rhv[p])))
             self.maxval[p].set(rhv[p][i])
             self.maxname[p].set(pvs[i])
+
+        if self.latched:
+            self.write()
+            self.latched = None
 
         # write to waveforms (disabled are set to zero)
         for p in self.PLANES:
@@ -121,8 +126,9 @@ class waveforms_server(object):
                 ## Create waveform PVs
                 for speed in self.SPEEDS:
                     builder.SetDeviceName(device_name_func[fam_type](p))
-                    self.wf[fam_type][speed][p] = builder.WaveformIn(
+                    self.wf[fam_type][speed][p] = builder.WaveformOut(
                         "%s:ENABLED" % speed.upper(),
+                        on_update=self.latch,
                         initial_value=zeros(len(mml.ao[fam].enabled)))
                 ## Create individule control PVs
                 for n, c in enumerate(mml.ao[fam].devices):
@@ -137,6 +143,9 @@ class waveforms_server(object):
                                 on_update =
                                     lambda x, n=n, p=p, s=speed, f=fam_type:
                                         self.update((p, n), x, s, f)))
+
+    def latch(self, _):
+        self.latched = True
 
     def write(self):
         # set initial control values
