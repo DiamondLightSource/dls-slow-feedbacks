@@ -27,7 +27,10 @@ class waveforms_server(object):
         self.create_control_and_waveform_pvs()
 
     def init(self):
-        self.write()
+        for device in ['cor', 'bpm']:
+            for mode in self.SPEEDS:
+                for plane in self.PLANES:
+                    self.write(device, mode, plane)
         cothread.Spawn(self.timer)
 
     def timer(self):
@@ -60,8 +63,9 @@ class waveforms_server(object):
             self.maxname[p].set(pvs[i])
 
         if self.latched:
-            self.write()
+            self.write(*self.latched)
             self.latched = None
+            return
 
         # write to waveforms (disabled are set to zero)
         for p in self.PLANES:
@@ -128,7 +132,8 @@ class waveforms_server(object):
                     builder.SetDeviceName(device_name_func[fam_type](p))
                     self.wf[fam_type][speed][p] = builder.WaveformOut(
                         "%s:ENABLED" % speed.upper(),
-                        on_update=self.latch,
+                        on_update=lambda _, f=fam_type, s=speed, p=p:
+                            self.latch(f, s, p),
                         initial_value=zeros(len(mml.ao[fam].enabled)))
                 ## Create individule control PVs
                 for n, c in enumerate(mml.ao[fam].devices):
@@ -144,14 +149,10 @@ class waveforms_server(object):
                                     lambda x, n=n, p=p, s=speed, f=fam_type:
                                         self.update((p, n), x, s, f)))
 
-    def latch(self, _):
-        self.latched = True
+    def latch(self, device_type, speed, plane):
+        self.latched = (device_type, speed, plane)
 
-    def write(self):
-        # set initial control values
-        for mode in self.SPEEDS:
-            for p in self.PLANES:
-                for dev in ['cor', 'bpm']:
-                    for r, x in zip(self.records[dev][mode][p],
-                                    self.wf[dev][mode][p].get()):
-                        r.set(x)
+    def write(self, device, mode, plane):
+        for r, x in zip(self.records[device][mode][plane],
+                        self.wf[device][mode][plane].get()):
+            r.set(x)
