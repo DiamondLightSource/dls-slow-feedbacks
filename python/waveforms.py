@@ -143,5 +143,6 @@ class waveforms_server(object):
         for mode in self.SPEEDS:
             for p in self.PLANES:
                 for dev in ['cor', 'bpm']:
-                    for n, r in enumerate(self.records[dev][mode][p]):
-                        r.set(self.wf[dev][mode][p].get()[n])
+                    for r, x in zip(self.records[dev][mode][p],
+                                    self.wf[dev][mode][p].get()):
+                        r.set(x)
