@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PYIOC_VERSION=2-6
+PYIOC_VERSION=2-11
 PYIOC=/dls_sw/prod/R3.14.12.3/support/pythonSoftIoc/$PYIOC_VERSION/pythonIoc
 
 # If run with argument assume debug mode
