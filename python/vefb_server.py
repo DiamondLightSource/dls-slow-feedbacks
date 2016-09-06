@@ -188,7 +188,7 @@ class SkewQuadrupoles:
                        self.squad_pvs):
             if a >= b:
                 if self.last_levels_ok_fail != c:
-                    print "drive check", "DRVH <= DRVL", c
+                    print "vefb: drive check", "DRVH <= DRVL", c
                     self.last_levels_ok_fail = c
                 return False
         self.last_levels_ok_fail = None
@@ -199,8 +199,6 @@ class SkewQuadrupoles:
         if self.seti.ok:
             self.sp = +self.seti.values
             self.sum_delta = zeros(self.num)
-            print 'new set point'
-            print self.sp
 
 
     def use_setpoint(self, use):
@@ -216,7 +214,7 @@ class SkewQuadrupoles:
         for i in range(self.num):
             if values[i] < self.drvls[i]:
                 if self.last_drvl_fail != i:
-                    print "DRVL check", self.squad_pvs[i], \
+                    print "vefb: DRVL check", self.squad_pvs[i], \
                         ": New SQUAD value", values[i], "< DRVL", drvls[i]
                     self.last_drvl_fail = i
                     self.last_drvh_fail = None
@@ -225,7 +223,7 @@ class SkewQuadrupoles:
         for i in range(self.num):
             if values[i] > self.drvhs[i]:
                 if self.last_drvh_fail != i:
-                    print "DRVH check", self.squad_pvs[i], \
+                    print "vefb: DRVH check", self.squad_pvs[i], \
                         ": New SQUAD value", values[i], "> DRVH", self.drvhs[i]
                     self.last_drvh_fail = i
                     self.last_drvl_fail = None
@@ -244,7 +242,6 @@ class SkewQuadrupoles:
             self.sum_delta += delta
             new_sqvals = self.sp + self.sum_delta
         elif self.seti.ok:
-            print 'use current values'
             new_sqvals = self.seti.values + delta
         else:
             return False
@@ -258,6 +255,7 @@ class SkewQuadrupoles:
         results = caput(self.squad_pvs, new_sqvals, throw=False)
         ok = all(map(bool, results))
         if not ok:
+            print 'vefb: caput error' 
             for s in [str(r) for r in results if not bool(r)]:
                 print s
         return ok
@@ -297,7 +295,6 @@ class vefb_server:
         self.IRM = None
         self.last = None
         self.vemit_filtered = VEFBConstants.VEMIT_TARGET_INITIAL
-        self.last_status = VEFBStatus.OK
         self.last_calc_status = VEFBStatus.OK 
         self.delta = 0
 
@@ -321,7 +318,7 @@ class vefb_server:
 
 
     def init_wait(self, wait_time):
-        print 'init wait'
+        print 'vefb: init wait'
         end_time = time.time() + wait_time
 
         while True:
@@ -331,10 +328,10 @@ class vefb_server:
                          self.emit_status ]
 
             if all([pv.ok for pv in monitors]):
-                print 'initialised ok'
+                print 'vefb: initialised ok'
                 return
             if time.time() > end_time:
-                print 'init timeout'
+                print 'vefb: init timeout'
                 return
             cothread.Sleep(self.time_step)
 
@@ -355,7 +352,6 @@ class vefb_server:
 
     def run_single(self, value):
         if not self.enabled:
-            print 'single correct'
             try:
                 self.run_once(True, True)
             except:
@@ -363,12 +359,11 @@ class vefb_server:
                 traceback.print_exc()
                 self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
         else:
-             print 'single correct disabled in loopback mode'
+             print 'vefb: single correct disabled in loopback mode'
 
 
     def add_single(self, value):
         if not self.enabled:
-            print 'add delta single'
             try:
                 self.run_add_delta(self.vemit_single_delta.get())
             except:
@@ -376,11 +371,10 @@ class vefb_server:
                 traceback.print_exc()
                 self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
         else:
-             print 'add delta single disabled in loopback mode'
+             print 'vefb: add delta single disabled in loopback mode'
 
     def sub_single(self, value):
         if not self.enabled:
-            print 'subtract delta single'
             try:
                 self.run_add_delta(-self.vemit_single_delta.get())
             except:
@@ -388,7 +382,7 @@ class vefb_server:
                 traceback.print_exc()
                 self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
         else:
-             print 'subtract delta single disabled in loopback mode'
+             print 'vefb: subtract delta single disabled in loopback mode'
 
 
     def error_check(self):
@@ -446,7 +440,7 @@ class vefb_server:
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
             rm_file = os.path.join(
                 matDir, ringmode, 'GoldenCouplingEmittance.mat')
-            print 'emitfb: loadMatrix', ringmode, rm_file
+            print 'vefb: loadMatrix', ringmode, rm_file
 
             RM_load=loadmat(rm_file)
             RM=RM_load['RM']
@@ -456,7 +450,7 @@ class vefb_server:
             print 'IRM', self.IRM
 
         except:
-            print 'emitfb ringmode_change raised unexpected exception'
+            print 'vefb ringmode_change raised unexpected exception'
             traceback.print_exc()
 
         if self.enabled:
@@ -473,32 +467,19 @@ class vefb_server:
 
         status = self.filter_errors(status, do_correction)
         calc_status = status
-
-        if self.last_status != status:
-
-            print 'vefb status change', self.last_status, '->', status
-            
-            if status == VEFBStatus.NO_STORED_BEAM:
-                print 'no stored beam'
-
-            elif status ==  VEFBStatus.MAGNET_ERROR:
-                print 'magnet error'
-
-            elif status ==  VEFBStatus.EMITTANCE_WARNING:
-                print 'emittance status %d not ok, but not fatal yet - skip' \
-                        % self.emit_status.value
-
-            elif status == VEFBStatus.OK:
-                print 'OK again'
-
-
-        self.last_status = status
         
         if not single:
             self.last_calc_status = calc_status
             self.calc_status_pv.set(calc_status)
 
         if do_correction:
+            old_status = self.status_pv.get()
+            if status != old_status:
+                okStates = [ VEFBStatus.OK,
+                        VEFBStatus.INJECTING]
+                if status not in okStates or old_status not in okStates:
+                    print 'vefb: status change', old_status, '->', status
+
             self.status_pv.set(status)
             if status not in [ VEFBStatus.OK,
                        VEFBStatus.INJECTING,
@@ -526,13 +507,13 @@ class vefb_server:
 
         if self.enabled and \
                 self.error_or_recover_time > self.max_recovery_time_pv.get():
-            print 'time in error/recovery exceeds timeout', \
+            print 'vefb: time in error/recovery exceeds timeout', \
                       self.max_recovery_time_pv
             status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS
 
         elif self.enabled and \
                 (self.error_time > self.max_error_time_pv.get()):
-            print 'time in error exceeds timeout', \
+            print 'vefb: time in error exceeds timeout', \
                     self.max_error_time_pv
             status = VEFBStatus.PERSISTENT_EMITTANCE_ERRORS
 
@@ -554,7 +535,7 @@ class vefb_server:
 
             if self.no_effect_error_enable_pv.get() == 1 and \
                      abs(self.sum_delta_oor) > sum_delta_oor_threshold:
-                print 'oor v:%.2f t:%.2f me:%.2f' % (self.vemit_filtered,
+                print 'vefb: oor v:%.2f t:%.2f me:%.2f' % (self.vemit_filtered,
                          self.vemit_target_pv.get(), 
                          self.vemit_acceptable_error_pv.get() )
                 print 'sum_delta_oor %.6f exceeds threshold %.6f' \
@@ -578,7 +559,7 @@ class vefb_server:
                  if no_value_time < self.no_value_timeout.get():
                      status = VEFBStatus.OK
                  elif do_correction:
-                     print 'No value for %.2f. Exceeds threshold (%.2f)' \
+                     print 'vefb: No value for %.2f. Exceeds threshold (%.2f)' \
                              % ( no_value_time, self.no_value_timeout.get() )
 
         else:
@@ -596,12 +577,12 @@ class vefb_server:
 
             if recovery_time > min_recovery_timeout and \
                     self.camera_recovery_complete():
-                print 'camera recovery successful after %g seconds' \
+                print 'vefb: camera recovery successful after %g seconds' \
                         % recovery_time
                 self.recovering_cameras = False
 
             elif recovery_time > max_recovery_timeout:
-                print 'camera recovery timeout %g seconds exceeded' \
+                print 'vefb: camera recovery timeout %g seconds exceeded' \
                         % max_recovery_timeout
                 self.recovering_cameras = False
 
@@ -610,7 +591,7 @@ class vefb_server:
             if self.recovering_cameras:
                  current_time = time.time()
                  self.recovery_start_time = current_time
-                 print 'camera recovery started'
+                 print 'vefb: camera recovery started'
 
 
     def camera_recovery_started(self):
@@ -654,7 +635,7 @@ class vefb_server:
             
 
     def set_enabled(self, value):
-        print 'LOOP ENABLE:', value
+        print 'vefb: LOOP ENABLE:', value
         enabled = (value == 1)
         self.enabled = enabled
         self.enabled_first_time = True
@@ -773,14 +754,14 @@ class vefb_server:
                 return VEFBStatus.MAGNET_DELTA_ERROR
         else:
             if delta_max <= 0:
-                if apply_calc: print 'max delta non positive'
+                if apply_calc: print 'vefb: max delta non positive'
                 return VEFBStatus.MAGNET_DELTA_ERROR
 
             if delta > delta_max:
-                if apply_calc: print 'scaled ', delta, '->', delta_max
+                if apply_calc: print 'vefb: delta scaled ', delta, '->', delta_max
                 delta = delta_max
             elif delta < -delta_max:
-                if apply_calc: print 'scaled ', delta, '->', -delta_max
+                if apply_calc: print 'vefb: scaled ', delta, '->', -delta_max
                 delta = -delta_max
 
         self.delta = delta
