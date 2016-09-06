@@ -349,7 +349,7 @@ class vefb_server:
             except:
                 print 'Vemit FB raised unexpected exception'
                 traceback.print_exc()
-                self.handle_status(VEFBStatus.UNKNOWN_ERROR, self.enabled)
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, False)
 
 
     def run_single(self, value):
@@ -433,7 +433,7 @@ class vefb_server:
 
         self.vemit_filtered_pv.set(self.vemit_filtered)
 
-        self.handle_status(status, do_correction)
+        self.handle_status(status, single)
 
         self.enabled_first_time = False
 
@@ -464,13 +464,14 @@ class vefb_server:
             self.handle_status(VEFBStatus.OK, True)
 
 
-    def handle_status(self, status, do_correction):
+    def handle_status(self, status, single):
+        do_correction = single or self.enabled
 
         status = self.persistent_error_check(status)
         status = self.no_effect_check(status)
 
-        calc_status = status
         status = self.filter_errors(status, do_correction)
+        calc_status = status
 
         if self.last_status != status:
 
@@ -491,23 +492,20 @@ class vefb_server:
 
 
         self.last_status = status
-        self.last_calc_status = calc_status
+        
+        if not single:
+            self.last_calc_status = calc_status
+            self.calc_status_pv.set(calc_status)
 
-        self.calc_status_pv.set(calc_status)
-
-        if status in [ VEFBStatus.OK,
+        if do_correction:
+            self.status_pv.set(status)
+            if status not in [ VEFBStatus.OK,
                        VEFBStatus.INJECTING,
                        VEFBStatus.EMITTANCE_WARNING,
                        VEFBStatus.NO_EMITTANCE_VALUE,
                        VEFBStatus.BAD_EMITTANCE_VALUE,
                        VEFBStatus.RECOVERING_CAMERAS ]:
-            if do_correction or self.enabled:
-                self.status_pv.set(status)
-
-        elif do_correction or self.enabled:
-                self.status_pv.set(status)
                 self.enable_pv.set(0)
-
 
     def persistent_error_check(self, status):
 
