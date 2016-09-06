@@ -110,6 +110,10 @@ class VEFBStatus:
     # Feedback stops.
     AWAY_FROM_TARGET = 14
 
+    # Calculation method changed while running feedback.
+    # Feedback stops.
+    METHOD_CHANGE = 15
+
 #################################  Monitors  ###################################
 
 
@@ -292,7 +296,13 @@ class vefb_server:
         self.enabled_first_time = False
         self.time_step = 0.2
 
-        self.IRM = None
+        self.IRM        = None
+        self.skewhw     = None
+        self.IRM_old    = None
+        self.skewhw_old = None
+        self.IRM_new    = None
+        self.skewhw_new = None
+
         self.last = None
         self.vemit_filtered = VEFBConstants.VEMIT_TARGET_INITIAL
         self.last_calc_status = VEFBStatus.OK 
@@ -436,6 +446,10 @@ class vefb_server:
         try:
             self.last = None
             self.IRM = None
+            self.IRM_old = None
+            self.skewhw_old = None
+            self.IRM_new = None
+            self.skewhw_new = None
 
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
             rm_file = os.path.join(
@@ -444,10 +458,28 @@ class vefb_server:
 
             RM_load=loadmat(rm_file)
             RM=RM_load['RM']
-            print 'RM=', RM
-            self.IRM_ = linalg.pinv(RM)
-            self.IRM = 1/RM[0][0]
-            print 'IRM', self.IRM
+            print 'RM_old=', RM
+            self.IRM_old = 1/RM[0][0]
+            self.skewhw_old = ones(self.skew_quads.num)
+            print 'IRM_old', self.IRM_old
+            print 'skewhw_old', self.skewhw_old
+
+            rm_file = os.path.join(
+                matDir, ringmode, 'GoldenSkewVector.mat')
+            print 'vefb: loadSkewVector', ringmode, rm_file
+
+            RM_load=loadmat(rm_file)
+            RM=RM_load['RM']
+            print 'RM_new=', RM
+            skew=RM_load['skewhw'][0]
+            print 'skew', skew
+            print type(skew)
+            self.IRM_new = 1/RM[0][0]
+            self.skewhw_new = skew
+            print 'IRM_new', self.IRM_new
+            print 'skewhw_new', self.skewhw_new
+
+            self.update_calc_parameters()
 
         except:
             print 'vefb ringmode_change raised unexpected exception'
@@ -458,6 +490,20 @@ class vefb_server:
         else:
             self.handle_status(VEFBStatus.OK, True)
 
+    def on_method_change(self, value):
+        if self.enabled:
+           self.handle_status(VEFBStatus.METHOD_CHANGE, True)
+        self.update_calc_parameters()
+
+    def update_calc_parameters(self):
+        if self.method_pv.get() == 0:
+            self.IRM = self.IRM_old
+            self.skewhw = self.skewhw_old
+        else:
+            self.IRM = self.IRM_new
+            self.skewhw = self.skewhw_new
+        print 'IRM', self.IRM
+        print 'skewhw', self.skewhw
 
     def handle_status(self, status, single):
         do_correction = single or self.enabled
@@ -660,7 +706,9 @@ class vefb_server:
 
 
     def calc_parameters_ok(self):
-        return self.IRM is not None
+        return self.IRM is not None and \
+                self.skewhw is not None and \
+                len(self.skewhw) == self.skew_quads.num
 
 
     def do_calc(self, apply_calc, use_filter=True, check_limits=True):
@@ -767,8 +815,7 @@ class vefb_server:
         self.delta = delta
 
         # same correction applied to all skew quads
-        num_squads = self.skew_quads.num
-        sq_delta = delta * ones(num_squads)
+        sq_delta = delta * self.skewhw
 
         if apply_calc:
             # apply correction to skew quads
@@ -800,6 +847,11 @@ class vefb_server:
 
         self.sub_delta_pv = builder.aOut("SUB_DELTA", initial_value = 0,
                      on_update = self.sub_single, always_update = True)
+
+        self.method_pv = builder.mbbOut(
+                "METHOD", ("OLD", 0), ("NEW", 1),
+                on_update = self.on_method_change,
+                initial_value = 0)
 
         self.afrac_pv = builder.aOut(
                 "AFRAC", initial_value = VEFBConstants.AFRAC_INITIAL,
@@ -917,6 +969,7 @@ class vefb_server:
                  VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
              ("Having no effect", VEFBStatus.HAVING_NO_EFFECT, "MAJOR"),
              ("Away from target", VEFBStatus.AWAY_FROM_TARGET, "MAJOR"),
+             ("Method change", VEFBStatus.METHOD_CHANGE, "MAJOR"),
              initial_value = VEFBStatus.OK)
 
 
@@ -937,5 +990,6 @@ class vefb_server:
              ("Persistent emittance err",
                  VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
              ("Away from target", VEFBStatus.AWAY_FROM_TARGET, "MINOR"),
+             ("Method change", VEFBStatus.METHOD_CHANGE, "MINOR"),
              initial_value = VEFBStatus.OK)
 
