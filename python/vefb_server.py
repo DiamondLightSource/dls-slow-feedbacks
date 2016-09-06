@@ -341,7 +341,7 @@ class vefb_server:
             except:
                 print 'Vemit FB raised unexpected exception'
                 traceback.print_exc()
-                self.handle_status(VEFBStatus.UNKNOWN_ERROR, do_correction)
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, self.enabled)
 
 
     def run_single(self, value):
