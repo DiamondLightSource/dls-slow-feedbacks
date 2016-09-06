@@ -502,17 +502,19 @@ class vefb_server:
 
         if err > self.vemit_acceptable_error_pv.get():
             self.sum_delta_oor += self.delta
-            print 'oor v:%.2f t:%.2f me:%.2f' % (self.vemit_filtered,
-                     self.vemit_target_pv.get(), 
-                     self.vemit_acceptable_error_pv.get() )
+
+            sum_delta_oor_threshold = self.oor_squad_delta_max_pv.get()
+
             if self.no_effect_error_enable_pv.get() == 1 and \
-                     abs(self.sum_delta_oor) > self.oor_squad_delta_max_pv.get():
+                     abs(self.sum_delta_oor) > sum_delta_oor_threshold:
+                print 'oor v:%.2f t:%.2f me:%.2f' % (self.vemit_filtered,
+                         self.vemit_target_pv.get(), 
+                         self.vemit_acceptable_error_pv.get() )
                 print 'sum_delta_oor %.6f exceeds threshold %.6f' \
-                         % ( self.sum_delta_oor, self.oor_squad_delta_max_pv.get())
+                         % ( self.sum_delta_oor, sum_delta_oor_threshold
+)
                 status = VEFBStatus.HAVING_NO_EFFECT
-            else:
-                print 'sum_delta_oor %.6f within threshold %.6f' \
-                         % ( self.sum_delta_oor, self.oor_squad_delta_max_pv.get())
+
         else:
             self.sum_delta_oor = 0
 
