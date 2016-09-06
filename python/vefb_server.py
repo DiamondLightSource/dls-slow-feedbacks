@@ -15,6 +15,7 @@ class VEFBConstants:
     MAX_TS_AGE = 0.35
     SQUAD_DELTA_MAX_INITIAL = 0.01
     VEMIT_TARGET_ERR_MAX_INITIAL = 1.0
+    VEMIT_FB_START_ERR_MAX_INITIAL = 0.5
     VEMIT_SINGLE_DELTA_INITIAL = 0.002
     NO_VALUE_TIMEOUT_INITIAL = 2.0
     MAX_ERROR_TIME_INITIAL = 24.0
@@ -103,6 +104,10 @@ class VEFBStatus:
     # Applying corrections is having no effect.
     # Feedback stops before skew quads driven to bad position.
     HAVING_NO_EFFECT  = 13
+
+    # VEMIT is too far away from target to start.
+    # Feedback stops.
+    AWAY_FROM_TARGET = 14
 
 #################################  Monitors  ###################################
 
@@ -285,6 +290,7 @@ class vefb_server:
         self.skew_quads = SkewQuadrupoles()
 
         self.enabled = False
+        self.enabled_first_time = False
         self.time_step = 0.2
 
         self.IRM = None
@@ -399,6 +405,9 @@ class vefb_server:
         elif self.recovering_cameras:
             status = VEFBStatus.RECOVERING_CAMERAS
 
+        elif self.away_from_target():
+            status = VEFBStatus.AWAY_FROM_TARGET
+
         elif self.is_injecting():
             status = VEFBStatus.INJECTING
 
@@ -411,6 +420,9 @@ class vefb_server:
 
         status = self.error_check()
 
+        if single and status == VEFBStatus.AWAY_FROM_TARGET:
+            status = VEFBStatus.OK
+
         if status == VEFBStatus.OK:
             if single:
                 status = self.single_correct()
@@ -421,8 +433,9 @@ class vefb_server:
 
         self.vemit_filtered_pv.set(self.vemit_filtered)
 
-        self.handle_status(status, do_correction)       
+        self.handle_status(status, do_correction)
 
+        self.enabled_first_time = False
 
     def on_ringmode_change(self, ringmode):
         try:
@@ -629,10 +642,23 @@ class vefb_server:
               EmittanceStatus.INJECTING ]
 
 
+    def away_from_target(self):
+        if (not self.enabled and not self.is_injecting()) \
+                 or self.enabled_first_time:
+            target = self.vemit_target_pv.get()
+            threshold = self.vemit_fb_start_err_max_pv.get()
+            err= min(abs(self.vemit.value - target), \
+                abs(self.vemit_mean.value - target))
+            if err > threshold:
+                return True
+        return False
+            
+
     def set_enabled(self, value):
         print 'LOOP ENABLE:', value
         enabled = (value == 1)
         self.enabled = enabled
+        self.enabled_first_time = True
         self.error_or_recover_time = 0
         self.error_time = 0
         if enabled:
@@ -711,7 +737,7 @@ class vefb_server:
         else:
             status = self.error_check()
 
-        if status == VEFBStatus.OK:
+        if status == VEFBStatus.OK or status == VEFBStatus.AWAY_FROM_TARGET:
             status = self.apply_delta(delta)
 
         self.handle_status(status, True)
@@ -751,6 +777,7 @@ class vefb_server:
 
     def monitors(self):
         self.vemit = PVMonitor('SR-DI-EMIT-01:VEMIT')
+        self.vemit_mean = PVMonitor('SR-DI-EMIT-01:VEMIT_MEAN')
         self.beam_current = PVMonitor('SR21C-DI-DCCT-01:SIGNAL')
         self.emit_status =  PVMonitor('SR-DI-EMIT-01:STATUS')
 
@@ -799,6 +826,12 @@ class vefb_server:
                 "VEMIT_TARGET_ERR_MAX",
                 initial_value = VEFBConstants.VEMIT_TARGET_ERR_MAX_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
+
+        self.vemit_fb_start_err_max_pv = builder.aOut(
+                "VEMIT_FB_START_ERR_MAX",
+                initial_value = VEFBConstants.VEMIT_FB_START_ERR_MAX_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
+
 
         self.vemit_acceptable_error_pv = builder.aOut(
                 "VEMIT_ACCEPTABLE_ERR",
@@ -875,6 +908,7 @@ class vefb_server:
              ("Persistent emittance err",
                  VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MAJOR"),
              ("Having no effect", VEFBStatus.HAVING_NO_EFFECT, "MAJOR"),
+             ("Away from target", VEFBStatus.AWAY_FROM_TARGET, "MAJOR"),
              initial_value = VEFBStatus.OK)
 
 
@@ -894,5 +928,6 @@ class vefb_server:
              ("No emittance value", VEFBStatus.NO_EMITTANCE_VALUE, "MINOR"),
              ("Persistent emittance err",
                  VEFBStatus.PERSISTENT_EMITTANCE_ERRORS, "MINOR"),
+             ("Away from target", VEFBStatus.AWAY_FROM_TARGET, "MINOR"),
              initial_value = VEFBStatus.OK)
 
