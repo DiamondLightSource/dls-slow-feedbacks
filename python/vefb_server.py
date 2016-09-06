@@ -239,7 +239,7 @@ class SkewQuadrupoles:
 
     def put_delta(self, delta):
         if self._use_setpoint:
-            if self.sp == None:
+            if self.sp is None:
                 return False
             self.sum_delta += delta
             new_sqvals = self.sp + self.sum_delta
