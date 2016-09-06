@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 540
-y 136
+x 875
+y 371
 w 342
-h 475
+h 510
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -592,5 +592,43 @@ nullColor index 0
 useHexPrefix
 newPos
 objType "controls"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 472
+w 200
+h 24
+font "courier-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "METHOD"
+}
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 216
+y 472
+w 120
+h 24
+fgColor index 14
+bgColor index 3
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 14
+controlPv "SR-CS-VEFB-01:METHOD"
+font "helvetica-bold-r-14.0"
 endObjectProperties
 
