@@ -706,7 +706,10 @@ class vefb_server:
 
 
     def run_add_delta(self, delta):
-        status = self.error_check()
+        if (self.check_status_on_delta_pv.get() == 0):
+            status = VEFBStatus.OK
+        else:
+            status = self.error_check()
 
         if status == VEFBStatus.OK:
             status = self.apply_delta(delta)
@@ -788,6 +791,9 @@ class vefb_server:
                 DRVH = VEFBConstants.SQUAD_DELTA_MAX_INITIAL,
                 DRVL = 0.0, PREC = 4, EGU = "A")
 
+        self.check_status_on_delta_pv = builder.mbbOut(
+                "CHECK_STATUS_ON_DELTA", ("DISABLED", 0), ("ENABLED", 1),
+                 initial_value = 1)
 
         self.vemit_err_max_pv = builder.aOut(
                 "VEMIT_TARGET_ERR_MAX",
