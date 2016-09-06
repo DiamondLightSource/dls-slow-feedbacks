@@ -23,7 +23,7 @@ class VEFBConstants:
     MAX_RECOVERY_TIME_INITIAL = 120.0
     MIN_CAM_RECOVERY_TIME_INITIAL = 35.0
     MAX_CAM_RECOVERY_TIME_INITIAL = 50.0
-    NO_EFFECT_SQUAD_DELTA_MAX_INITIAL = 0.02
+    NO_EFFECT_FACTOR_DELTA_MAX_INITIAL = 1.5
     VEMIT_ACCEPTABLE_ERR_INITIAL = 0.1
 
 
@@ -550,7 +550,7 @@ class vefb_server:
         if err > self.vemit_acceptable_error_pv.get():
             self.sum_delta_oor += self.delta
 
-            sum_delta_oor_threshold = self.oor_squad_delta_max_pv.get()
+            sum_delta_oor_threshold = self.oor_factor_max_pv.get() * self.IRM
 
             if self.no_effect_error_enable_pv.get() == 1 and \
                      abs(self.sum_delta_oor) > sum_delta_oor_threshold:
@@ -864,9 +864,10 @@ class vefb_server:
                 initial_value = VEFBConstants.VEMIT_ACCEPTABLE_ERR_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
-        self.oor_squad_delta_max_pv = builder.aOut(
-                "NO_EFFECT_SQUAD_DELTA_MAX",
-                initial_value = VEFBConstants.NO_EFFECT_SQUAD_DELTA_MAX_INITIAL,
+        self.oor_factor_max_pv = builder.aOut(
+                "NO_EFFECT_FACTOR_DELTA_MAX",
+                initial_value =
+                    VEFBConstants.NO_EFFECT_FACTOR_DELTA_MAX_INITIAL,
                 PREC = 4, EGU = "A")
 
         self.vemit_target_pv = builder.aOut(
