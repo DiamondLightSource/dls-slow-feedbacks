@@ -15,6 +15,7 @@ class VEFBConstants:
     MAX_TS_AGE = 0.35
     SQUAD_DELTA_MAX_INITIAL = 0.01
     VEMIT_TARGET_ERR_MAX_INITIAL = 1.0
+    VEMIT_SINGLE_DELTA_INITIAL = 0.002
     NO_VALUE_TIMEOUT_INITIAL = 2.0
     MAX_ERROR_TIME_INITIAL = 24.0
     MAX_RECOVERY_TIME_INITIAL = 120.0
@@ -22,6 +23,7 @@ class VEFBConstants:
     MAX_CAM_RECOVERY_TIME_INITIAL = 50.0
     NO_EFFECT_SQUAD_DELTA_MAX_INITIAL = 0.02
     VEMIT_ACCEPTABLE_ERR_INITIAL = 0.1
+
 
 class EmittanceStatus:
     # Successful emittance calculation.
@@ -357,8 +359,34 @@ class vefb_server:
              print 'single correct disabled in loopback mode'
 
 
-    def run_once(self, do_correction, single = False):
-        status = VEFBStatus.UNKNOWN_ERROR
+    def add_single(self, value):
+        if not self.enabled:
+            print 'add delta single'
+            try:
+                self.run_add_delta(self.vemit_single_delta.get())
+            except:
+                print 'Vemit FB raised unexpected exception'
+                traceback.print_exc()
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
+        else:
+             print 'add delta single disabled in loopback mode'
+
+    def sub_single(self, value):
+        if not self.enabled:
+            print 'subtract delta single'
+            try:
+                self.run_add_delta(-self.vemit_single_delta.get())
+            except:
+                print 'Vemit FB raised unexpected exception'
+                traceback.print_exc()
+                self.handle_status(VEFBStatus.UNKNOWN_ERROR, True)
+        else:
+             print 'subtract delta single disabled in loopback mode'
+
+
+    def error_check(self):
+
+        status = VEFBStatus.OK
 
         self.check_camera_state()
 
@@ -377,7 +405,13 @@ class vefb_server:
         elif self.emittance_status_bad():
             status = VEFBStatus.EMITTANCE_WARNING
 
-        else:
+        return status
+
+    def run_once(self, do_correction, single = False):
+
+        status = self.error_check()
+
+        if status == VEFBStatus.OK:
             if single:
                 status = self.single_correct()
             elif do_correction:
@@ -447,6 +481,7 @@ class vefb_server:
         self.last_calc_status = calc_status
 
         self.calc_status_pv.set(calc_status)
+
         if status in [ VEFBStatus.OK,
                        VEFBStatus.INJECTING,
                        VEFBStatus.EMITTANCE_WARNING,
@@ -652,6 +687,7 @@ class vefb_server:
                     print 'vemit too low - skip', 'vemit ', vemit, 'MIN ', vmin
                 return VEFBStatus.BAD_EMITTANCE_VALUE
 
+
         # apply filter (IIR) if required
         if use_filter:
             filter_frac = self.iir_frac_pv.get()
@@ -666,6 +702,19 @@ class vefb_server:
         fraction = self.afrac_pv.get()
         delta = -fraction * self.IRM * (vemit_used-target)
 
+        return self.apply_delta(delta, apply_calc, check_limits)
+
+
+    def run_add_delta(self, delta):
+        status = self.error_check()
+
+        if status == VEFBStatus.OK:
+            status = self.apply_delta(delta)
+
+        self.handle_status(status, True)
+
+
+    def apply_delta(self, delta, apply_calc = True, check_limits = False):
         # check delta within limits and raise error or scale
         delta_max = self.squad_delta_max_pv.get()
         if check_limits:
@@ -697,7 +746,6 @@ class vefb_server:
 
         return VEFBStatus.OK
 
-
     def monitors(self):
         self.vemit = PVMonitor('SR-DI-EMIT-01:VEMIT')
         self.beam_current = PVMonitor('SR21C-DI-DCCT-01:SIGNAL')
@@ -711,8 +759,14 @@ class vefb_server:
                 "LOOP", ("OFF", 0, "MINOR"), ("ON", 1),
                 initial_value = 0, on_update = self.set_enabled)
 
-        builder.aOut("SINGLE", initial_value = 0,
+        self.single_pv = builder.aOut("SINGLE", initial_value = 0,
                      on_update = self.run_single, always_update = True)
+
+        self.add_delta_pv = builder.aOut("ADD_DELTA", initial_value = 0,
+                     on_update = self.add_single, always_update = True)
+
+        self.sub_delta_pv = builder.aOut("SUB_DELTA", initial_value = 0,
+                     on_update = self.sub_single, always_update = True)
 
         self.afrac_pv = builder.aOut(
                 "AFRAC", initial_value = VEFBConstants.AFRAC_INITIAL,
@@ -727,6 +781,13 @@ class vefb_server:
         self.dcct_threshold_pv = builder.aOut(
                 "DCCT_THRESHOLD", initial_value = 5,
                 DRVH = 1000, DRVL = 0, PREC = 4, EGU = "mA")
+
+        self.vemit_single_delta = builder.aOut(
+                "VEMIT_SINGLE_DELTA",
+                initial_value = VEFBConstants.VEMIT_SINGLE_DELTA_INITIAL,
+                DRVH = VEFBConstants.SQUAD_DELTA_MAX_INITIAL,
+                DRVL = 0.0, PREC = 4, EGU = "A")
+
 
         self.vemit_err_max_pv = builder.aOut(
                 "VEMIT_TARGET_ERR_MAX",

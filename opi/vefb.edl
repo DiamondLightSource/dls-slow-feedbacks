@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1245
-y 699
+x 540
+y 136
 w 342
-h 425
+h 475
 font "helvetica-bold-r-14.0"
 ctlFont "helvetica-bold-r-14.0"
 btnFont "helvetica-bold-r-14.0"
@@ -29,7 +29,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 8
 w 336
@@ -48,7 +48,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 56
 w 200
@@ -66,7 +66,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 216
 y 56
@@ -90,10 +90,10 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 216
-y 376
+y 408
 w 120
 h 24
 fgColor index 14
@@ -114,9 +114,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
-y 376
+y 408
 w 200
 h 24
 font "courier-bold-r-12.0"
@@ -133,9 +133,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
-y 344
+y 376
 w 200
 h 24
 font "courier-bold-r-12.0"
@@ -154,7 +154,7 @@ major 4
 minor 0
 release 0
 x 216
-y 344
+y 376
 w 120
 h 24
 fgColor index 14
@@ -170,7 +170,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 208
 y 216
@@ -195,7 +195,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 216
 w 200
@@ -214,7 +214,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 248
 w 200
@@ -232,13 +232,13 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 216
-y 248
+y 280
 w 112
 h 24
-controlPv "SR-CS-VEFB-01:IIRF_PARAM"
+controlPv "SR-CS-VEFB-01:VEMIT_SINGLE_DELTA"
 font "courier-bold-r-12.0"
 fontAlign "right"
 fgColor index 14
@@ -257,9 +257,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
-y 280
+y 312
 w 104
 h 24
 font "courier-bold-r-12.0"
@@ -275,10 +275,10 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 120
-y 280
+y 312
 w 216
 h 24
 controlPv "SR-CS-VEFB-01:STATUS"
@@ -300,9 +300,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
-y 312
+y 344
 w 104
 h 24
 font "courier-bold-r-12.0"
@@ -318,10 +318,10 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 120
-y 312
+y 344
 w 216
 h 24
 controlPv "SR-CS-VEFB-01:CALC_STATUS"
@@ -343,7 +343,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 88
 w 200
@@ -362,7 +362,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 120
 w 200
@@ -380,7 +380,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 216
 y 120
@@ -404,7 +404,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 216
 y 88
@@ -428,7 +428,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 5
+minor 6
 release 0
 x 208
 y 184
@@ -453,7 +453,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 184
 w 200
@@ -472,7 +472,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 8
 y 152
 w 328
@@ -484,5 +484,113 @@ bgColor index 9
 value {
   "VERTICAL EMITTANCE FEEDBACK"
 }
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 440
+w 200
+h 24
+font "courier-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "ADD/SUBTRACT DELTA"
+}
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 216
+y 440
+w 56
+h 24
+fgColor index 14
+onColor index 3
+offColor index 3
+topShadowColor index 0
+botShadowColor index 14
+controlPv "SR-CS-VEFB-01:ADD_DELTA"
+pressValue "1"
+onLabel "+"
+offLabel "+"
+3d
+font "helvetica-bold-r-14.0"
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 280
+y 440
+w 56
+h 24
+fgColor index 14
+onColor index 3
+offColor index 3
+topShadowColor index 0
+botShadowColor index 14
+controlPv "SR-CS-VEFB-01:SUB_DELTA"
+pressValue "1"
+onLabel "-"
+offLabel "-"
+3d
+font "helvetica-bold-r-14.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 8
+y 280
+w 200
+h 24
+font "courier-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 4
+value {
+  "DELTA"
+}
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 216
+y 248
+w 112
+h 24
+controlPv "SR-CS-VEFB-01:IIRF_PARAM"
+font "courier-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+editable
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "controls"
 endObjectProperties
 
