@@ -16,6 +16,7 @@ class VEFBConstants:
     SQUAD_DELTA_MAX_INITIAL = 0.01
     VEMIT_TARGET_ERR_MAX_INITIAL = 1.0
     VEMIT_FB_START_ERR_MAX_INITIAL = 0.5
+    VEMIT_EXTRA_TARGET_ERR_MAX_INITIAL = 0.2
     VEMIT_SINGLE_DELTA_INITIAL = 0.002
     NO_VALUE_TIMEOUT_INITIAL = 2.0
     MAX_ERROR_TIME_INITIAL = 24.0
@@ -697,19 +698,25 @@ class vefb_server:
         if age > VEFBConstants.MAX_TS_AGE:
             return VEFBStatus.NO_EMITTANCE_VALUE
 
+        truncated = False
+        vemit_raw = vemit
+
         # values ok?
         if check_limits:
-            vmax = target + self.vemit_err_max_pv.get()
+
+            vmax = target + self.vemit_err_max_pv.get() + \
+                self.vemit_extra_err_max_pv.get()
             if vemit > vmax:
                 if apply_calc:
-                     print 'vemit too high - skip', vemit, 'MAX ', vmax
-                return VEFBStatus.BAD_EMITTANCE_VALUE
+                    vemit = vmax
+                    truncated = True
 
-            vmin = target - self.vemit_err_max_pv.get()
+            vmin = target - self.vemit_err_max_pv.get() - \
+                self.vemit_extra_err_max_pv.get()
             if vemit < vmin:
                 if apply_calc:
-                    print 'vemit too low - skip', 'vemit ', vemit, 'MIN ', vmin
-                return VEFBStatus.BAD_EMITTANCE_VALUE
+                    vemit = vmin
+                    truncated = True
 
 
         # apply filter (IIR) if required
@@ -717,11 +724,27 @@ class vefb_server:
             filter_frac = self.iir_frac_pv.get()
             filtered = filter_frac * vemit + \
                 (1-filter_frac) * self.vemit_filtered
-            vemit_used = filtered if use_filter else vemit
+            vemit_used = filtered
             self.vemit_filtered = filtered
         else:
             vemit_used = vemit
 
+        if check_limits:
+            if truncated:
+                print 'vemit truncated', vemit_raw, vemit, vemit_used
+
+            vwrite_max = target + self.vemit_err_max_pv.get()
+            if vemit_used > vwrite_max:
+                if apply_calc:
+                     print 'vemit too high - skip', vemit_used, 'MAX ', vwrite_max
+                return VEFBStatus.BAD_EMITTANCE_VALUE
+            vwrite_min = target - self.vemit_err_max_pv.get()
+            if vemit_used < vwrite_min:
+                if apply_calc:
+                    print 'vemit too low - skip', vemit_used, 'MIN ', vwrite_min
+                return VEFBStatus.BAD_EMITTANCE_VALUE
+
+        
         # calc skew quad delta
         fraction = self.afrac_pv.get()
         delta = -fraction * self.IRM * (vemit_used-target)
@@ -730,6 +753,7 @@ class vefb_server:
 
 
     def run_add_delta(self, delta):
+
         if (self.check_status_on_delta_pv.get() == 0):
             status = VEFBStatus.OK
         else:
@@ -830,6 +854,10 @@ class vefb_server:
                 initial_value = VEFBConstants.VEMIT_FB_START_ERR_MAX_INITIAL,
                 DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
+        self.vemit_extra_err_max_pv = builder.aOut(
+                "VEMIT_EXTRA_TARGET_ERR_MAX",
+                initial_value = VEFBConstants.VEMIT_EXTRA_TARGET_ERR_MAX_INITIAL,
+                DRVH = 100.0, DRVL = 0.0, PREC = 4, EGU = "pm rad")
 
         self.vemit_acceptable_error_pv = builder.aOut(
                 "VEMIT_ACCEPTABLE_ERR",
