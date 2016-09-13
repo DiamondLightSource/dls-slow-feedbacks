@@ -47,7 +47,7 @@ rffb = rffb_server.rffb_server(mode)
 sofb = sofb_server.sofb_server(mode)
 
 # Vertical emittance feedback.
-#vefb = vefb_server.vefb_server(mode)
+vefb = vefb_server.vefb_server(mode)
 
 # Tune feedback.
 tunefb = tunefb_server.TunefbServer(mode)
@@ -75,7 +75,7 @@ mode.init()
 wavs.init()
 rffb.init()
 sofb.init()
-#vefb.init()
+vefb.init()
 tunefb.init()
 
 softioc.interactive_ioc(globals())
