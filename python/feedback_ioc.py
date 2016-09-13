@@ -4,7 +4,7 @@ import os, sys
 from pkg_resources import require
 require('cothread==2.10')
 require('scipy==0.10.1')
-require('iocbuilder==3.45')
+require('epicsdbbuilder==1.0')
 
 
 if sys.argv[1:]:
@@ -17,7 +17,7 @@ if sys.argv[1:]:
 
 
 from softioc import builder, softioc
-from iocbuilder import records
+from epicsdbbuilder import records
 
 
 import rffb_server
