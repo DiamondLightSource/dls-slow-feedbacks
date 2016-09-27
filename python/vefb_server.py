@@ -401,6 +401,9 @@ class vefb_server:
 
         self.check_camera_state()
 
+        if not self.calc_parameters_ok():
+            return VEFBStatus.MISSING_CALC_PARAMETERS
+
         if not self.have_stored_beam():
             status = VEFBStatus.NO_STORED_BEAM
 
