@@ -851,7 +851,7 @@ class vefb_server:
         self.method_pv = builder.mbbOut(
                 "METHOD", ("OLD", 0), ("NEW", 1),
                 on_update = self.on_method_change,
-                initial_value = 0)
+                initial_value = 1)
 
         self.afrac_pv = builder.aOut(
                 "AFRAC", initial_value = VEFBConstants.AFRAC_INITIAL,
