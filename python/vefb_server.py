@@ -446,13 +446,16 @@ class vefb_server:
         self.enabled_first_time = False
 
     def on_ringmode_change(self, ringmode):
+        self.last = None
+        self.IRM = None
+        self.IRM_old = None
+        self.skewhw_old = None
+        self.IRM_new = None
+        self.skewhw_new = None
+
         try:
-            self.last = None
-            self.IRM = None
-            self.IRM_old = None
-            self.skewhw_old = None
-            self.IRM_new = None
-            self.skewhw_new = None
+            self.skewhw_old = ones(self.skew_quads.num)
+            print 'skewhw_old', self.skewhw_old
 
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
             rm_file = os.path.join(
@@ -463,10 +466,13 @@ class vefb_server:
             RM=RM_load['RM']
             print 'RM_old=', RM
             self.IRM_old = 1/RM[0][0]
-            self.skewhw_old = ones(self.skew_quads.num)
             print 'IRM_old', self.IRM_old
-            print 'skewhw_old', self.skewhw_old
 
+        except:
+            print 'vefb ringmode_change raised unexpected exception'
+            traceback.print_exc()
+
+        try:
             rm_file = os.path.join(
                 matDir, ringmode, 'GoldenSkewVector.mat')
             print 'vefb: loadSkewVector', ringmode, rm_file
@@ -476,17 +482,16 @@ class vefb_server:
             print 'RM_new=', RM
             skew=RM_load['skewhw'][0]
             print 'skew', skew
-            print type(skew)
             self.IRM_new = 1/RM[0][0]
             self.skewhw_new = skew
             print 'IRM_new', self.IRM_new
             print 'skewhw_new', self.skewhw_new
 
-            self.update_calc_parameters()
-
         except:
             print 'vefb ringmode_change raised unexpected exception'
             traceback.print_exc()
+
+        self.update_calc_parameters()
 
         if self.enabled:
            self.handle_status(VEFBStatus.RING_MODE_CHANGE, True)
