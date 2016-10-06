@@ -58,7 +58,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 74
 value {
-  "$(devicev):FAST"
+  "$(deviceh):FAST"
 }
 endObjectProperties
 
@@ -153,7 +153,7 @@ fontAlign "center"
 fgColor index 14
 bgColor index 74
 value {
-  "$(deviceh):FAST"
+  "$(devicev):FAST"
 }
 endObjectProperties
 
