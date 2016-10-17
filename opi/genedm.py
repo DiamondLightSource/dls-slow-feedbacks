@@ -257,6 +257,14 @@ def corrector_info():
     return label(360, 82, 240, 16, text, color=3)
 
 
+def corrector_dyanmics():
+    """Add warning about using slow correctors with FOFB"""
+    return (
+            label(44, 283, 8,  14, '', color=6) +
+            label( 73, 283, 220, 14,
+                'slow dynamics unsuitable for FOFB', color=6))
+
+
 def bpm_key():
     """Generate text representing the bpm key"""
     x = 558
@@ -283,18 +291,30 @@ RATES = ['SLOW', 'FAST']
 def corrector_func(i, j, x, y):
     """Callback function to generate cells on the corrector GUI"""
     quart_region = [CORRECTOR_REGION[0]/2, CORRECTOR_REGION[1]/2]
-    devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
-    if j in [0, 1]:  ## Skip cells without mini beta correctors
-        if i not in [8, 12]:
+    if j < 7:  ## Align numbered rows with labels
+        devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
+    else:
+        devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-3) for p in [0, 1]]
+    if j in [0, 1]:
+        if i not in [8, 12]:  ## Skip cells without mini beta correctors
             return ""
         devs = ["SR%02dS-PC-%sSTR-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
+    if j in [7, 8, 11, 12] and i not in [1]:  # Skip non DDBA correctors
+        return ""
+    if i in [1] and j in [3, 4, 9]:  # Skip correctors not in DDBA cell
+        return ""
+    if i in [1] and j in [7, 8]:
+        devs = ["SR%02dA-PC-%sSCOR-%02d" % (i+1, 'HV'[p], j-6) for p in [0, 1]]
+    if j in [12]:
+        devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-2) for p in [0, 1]]
     pvs = [d + ':%s:DISABLED' % r for r in RATES for d in devs]
     return generate_quad(x, y, CORRECTOR_REGION, pvs, devs)
 
 corrector_definition = {
         'title': "SOFB and FOFB Corrector Enable",
         'x_names': ['%02d' % x for x in range(1, 25)],
-        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 8)],
+        'y_names': ['S1', 'S2', '01', '02', '03', '04', '05',
+            'C1', 'C2', '06', '07', '08', '10'],
         'region': CORRECTOR_REGION,
         'region_func': corrector_func,
         }
@@ -334,7 +354,8 @@ if __name__ == '__main__':
     # instantiate layout objects, add extra labels, and write to file
     layout = Layout(**corrector_definition)
     with open('cors.edl', 'w') as f:
-        f.write(layout.produce() + corrector_key() + corrector_info())
+        f.write(layout.produce() + corrector_key() +
+                corrector_info() + corrector_dyanmics())
     layout = Layout(**bpm_definition)
     with open('bpms.edl', 'w') as f:
         f.write(layout.produce() + bpm_key() + bpm_info())

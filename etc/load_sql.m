@@ -1,4 +1,4 @@
-storageringinit SRI21;
+storageringinit VMX;
 
 SQL_HEADER = 'CREATE TABLE devices (family text, idx int, setpoint text, readback text, enabled int, hw2physics real, s real, devices text);\n';
 SQL_TEMPLATE = 'INSERT INTO "devices" VALUES("%s", %d, "%s", "%s", %d, %0.10f, %0.5f, "%s");\n';

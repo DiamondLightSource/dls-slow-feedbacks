@@ -88,6 +88,8 @@ class sofb_server(object):
         for mag in mml.ao['hcm'].devices:
             if mag[4] == 'S':
                 mag_ids.append(int(mag[2:4]) + 0.1*(int(mag[-2:]) - 2))
+            elif mag[10:14] == 'SCOR':
+                mag_ids.append(int(mag[2:4]) + 0.5 + (2./30)*(int(mag[-2:])))
             else:
                 mag_ids.append(int(mag[2:4]) + 0.1*int(mag[-2:]))
         builder.WaveformIn("CMID", initial_value = mag_ids)

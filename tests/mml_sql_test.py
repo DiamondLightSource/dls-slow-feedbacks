@@ -8,7 +8,7 @@ pkg_resources.require('pml')
 import numpy
 import aphla as ap
 import pml
-pml.initialise('SRI21')
+pml.initialise('VMX')
 import mml
 
 

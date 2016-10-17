@@ -16,7 +16,7 @@ import rffb_calc
 class ringmode(object):
     ring_modes = [
         "SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
-        "SRLETHz", "SRI0913_MOGA", "SRI21"]
+        "SRLETHz", "SRI0913_MOGA", "SRI21", "VMX", "VMXSP"]
 
     def __init__(self):
         self.records()
@@ -28,7 +28,7 @@ class ringmode(object):
             *zip(self.ring_modes, range(len(self.ring_modes))))
 
     def init(self):
-        self.mode.set(self.ring_modes.index("SRI0913"))
+        self.mode.set(self.ring_modes.index("VMX"))
 
     def set_mode(self, mode):
         for l in self.listeners:
