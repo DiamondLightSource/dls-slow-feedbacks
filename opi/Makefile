@@ -1,9 +1,6 @@
 all: cors.edl bpms.edl
 
-cors.edl: genedm.py
-	./genedm.py
-
-bpms.edl: genedm.py
+bpms.edl cors.edl: genedm.py
 	./genedm.py
 
 clean:
