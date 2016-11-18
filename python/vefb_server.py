@@ -268,6 +268,9 @@ class SkewQuadrupoles:
     def monitors(self):
         squad_pv_names = ['SR%02dA-PC-SQUAD-%02d' % (n,m)\
             for n in range(1,25) for m in range (1,5)]
+        # Suitable only for post-DDBA configurations.
+        squad_pv_names.insert(8, 'SR02A-PC-SQUAD-05')
+        squad_pv_names.insert(9, 'SR02A-PC-SQUAD-06')
 
         squad_pvs = ['%s:SETI' % name for name in squad_pv_names ]
         self.squad_pvs = squad_pvs
