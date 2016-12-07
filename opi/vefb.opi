@@ -1,0 +1,772 @@
+<?xml version='1.0' encoding='utf-8'?>
+<display typeId="org.csstudio.opibuilder.Display" version="1.0">
+  <x>875</x>
+  <y>371</y>
+  <width>342</width>
+  <height>510</height>
+  <font>
+    <fontdata fontName="liberation sans" height="10" style="1" />
+  </font>
+  <boy_version>4.0.0</boy_version>
+  <foreground_color>
+    <color blue="0" green="0" name="Black" red="0" />
+  </foreground_color>
+  <background_color>
+    <color blue="200" green="200" name="Canvas" red="200" />
+  </background_color>
+  <show_grid>true</show_grid>
+  <grid_space>8</grid_space>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>8</y>
+    <width>336</width>
+    <height>40</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>VERTICAL EMITTANCE FEEDBACK CS-DI-IOC-09</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="198" green="181" name="DI title" red="198" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>56</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>VERTICAL EMITTANCE</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+    <x>216</x>
+    <y>56</y>
+    <width>120</width>
+    <height>24</height>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-DI-EMIT-01:VEMIT</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>true</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>216</x>
+    <y>408</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <font>
+      <fontdata fontName="liberation sans" height="10" style="1" />
+    </font>
+    <width>121</width>
+    <height>25</height>
+    <name>EDM Message Button</name>
+    <text>CORRECTION</text>
+    <pv_name>SR-CS-VEFB-01:SINGLE</pv_name>
+    <actions hook="true" hook_all="true">
+      <action type="WRITE_PV">
+        <pv_name>$(pv_name)</pv_name>
+        <value>1</value>
+      </action>
+    </actions>
+    <rules>
+      <rule name="OnOffBackgroundRule" out_exp="false" prop_id="background_color">
+        <exp bool_exp="widget.getValue() == 1">
+          <value>
+            <color blue="205" green="205" name="Controller: BG" red="205" />
+          </value>
+        </exp>
+        <exp bool_exp="true">
+          <value>
+            <color blue="205" green="205" name="Controller: BG" red="205" />
+          </value>
+        </exp>
+        <pv trig="true">SR-CS-VEFB-01:SINGLE</pv>
+      </rule>
+    </rules>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>408</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>SINGLE CORRECTION</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>376</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>FEEDBACK LOOP</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>216</x>
+    <y>376</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="205" green="205" name="Controller: BG" red="205" />
+    </background_color>
+    <font>
+      <fontdata fontName="liberation sans" height="10" style="1" />
+    </font>
+    <width>121</width>
+    <height>25</height>
+    <name>EDM menu button</name>
+    <pv_name>SR-CS-VEFB-01:LOOP</pv_name>
+    <actions_from_pv>true</actions_from_pv>
+    <show_down_arrow>true</show_down_arrow>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextInput" version="1.0">
+    <x>208</x>
+    <y>216</y>
+    <width>120</width>
+    <height>24</height>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-CS-VEFB-01:AFRAC</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>216</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>FRACTION TO APPLY</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>248</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>FILTER PARAMETER</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextInput" version="1.0">
+    <x>216</x>
+    <y>280</y>
+    <width>112</width>
+    <height>24</height>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-CS-VEFB-01:VEMIT_SINGLE_DELTA</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>312</y>
+    <width>104</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>STATUS</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+    <x>120</x>
+    <y>312</y>
+    <width>216</width>
+    <height>24</height>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <forecolor_alarm_sensitive>true</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color blue="0" green="255" name="Green" red="0" />
+    </foreground_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-CS-VEFB-01:STATUS</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>344</y>
+    <width>104</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>CALC STATUS</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+    <x>120</x>
+    <y>344</y>
+    <width>216</width>
+    <height>24</height>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <forecolor_alarm_sensitive>true</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color blue="0" green="255" name="Green" red="0" />
+    </foreground_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-CS-VEFB-01:CALC_STATUS</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>88</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>COUPLING</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>120</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>BEAM CURRENT</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+    <x>216</x>
+    <y>120</y>
+    <width>120</width>
+    <height>24</height>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-DI-DCCT-01:SIGNAL</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>true</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+    <x>216</x>
+    <y>88</y>
+    <width>120</width>
+    <height>24</height>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-DI-EMIT-01:COUPLING</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>true</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextInput" version="1.0">
+    <x>208</x>
+    <y>184</y>
+    <width>120</width>
+    <height>24</height>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-CS-VEFB-01:VEMIT_TARGET</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>184</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>TARGET EMITTANCE (pm rad)</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>152</y>
+    <width>328</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>VERTICAL EMITTANCE FEEDBACK</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </border_color>
+    <background_color>
+      <color blue="128" green="128" name="Grey 50%" red="128" />
+    </background_color>
+    <foreground_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>440</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>ADD/SUBTRACT DELTA</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>216</x>
+    <y>440</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <font>
+      <fontdata fontName="liberation sans" height="10" style="1" />
+    </font>
+    <width>57</width>
+    <height>25</height>
+    <name>EDM Message Button</name>
+    <text>+</text>
+    <pv_name>SR-CS-VEFB-01:ADD_DELTA</pv_name>
+    <actions hook="true" hook_all="true">
+      <action type="WRITE_PV">
+        <pv_name>$(pv_name)</pv_name>
+        <value>1</value>
+      </action>
+    </actions>
+    <rules>
+      <rule name="OnOffBackgroundRule" out_exp="false" prop_id="background_color">
+        <exp bool_exp="widget.getValue() == 1">
+          <value>
+            <color blue="205" green="205" name="Controller: BG" red="205" />
+          </value>
+        </exp>
+        <exp bool_exp="true">
+          <value>
+            <color blue="205" green="205" name="Controller: BG" red="205" />
+          </value>
+        </exp>
+        <pv trig="true">SR-CS-VEFB-01:ADD_DELTA</pv>
+      </rule>
+    </rules>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>280</x>
+    <y>440</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <font>
+      <fontdata fontName="liberation sans" height="10" style="1" />
+    </font>
+    <width>57</width>
+    <height>25</height>
+    <name>EDM Message Button</name>
+    <text>-</text>
+    <pv_name>SR-CS-VEFB-01:SUB_DELTA</pv_name>
+    <actions hook="true" hook_all="true">
+      <action type="WRITE_PV">
+        <pv_name>$(pv_name)</pv_name>
+        <value>1</value>
+      </action>
+    </actions>
+    <rules>
+      <rule name="OnOffBackgroundRule" out_exp="false" prop_id="background_color">
+        <exp bool_exp="widget.getValue() == 1">
+          <value>
+            <color blue="205" green="205" name="Controller: BG" red="205" />
+          </value>
+        </exp>
+        <exp bool_exp="true">
+          <value>
+            <color blue="205" green="205" name="Controller: BG" red="205" />
+          </value>
+        </exp>
+        <pv trig="true">SR-CS-VEFB-01:SUB_DELTA</pv>
+      </rule>
+    </rules>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>280</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>DELTA</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextInput" version="1.0">
+    <x>216</x>
+    <y>248</y>
+    <width>112</width>
+    <height>24</height>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="255" green="255" name="White" red="255" />
+    </background_color>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <pv_name>SR-CS-VEFB-01:IIRF_PARAM</pv_name>
+    <precision_from_pv>true</precision_from_pv>
+    <show_units>false</show_units>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <precision>0</precision>
+    <horizontal_alignment>2</horizontal_alignment>
+    <format_type>0</format_type>
+    <border_style>None</border_style>
+    <transparent>true</transparent>
+    <name>EDM TextInput</name>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>472</y>
+    <width>200</width>
+    <height>24</height>
+    <font>
+      <fontdata fontName="monospace" height="9" style="1" />
+    </font>
+    <name>EDM Label</name>
+    <text>METHOD</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="192" green="192" name="Grey 75%" red="192" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>216</x>
+    <y>472</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="205" green="205" name="Controller: BG" red="205" />
+    </background_color>
+    <font>
+      <fontdata fontName="liberation sans" height="10" style="1" />
+    </font>
+    <width>121</width>
+    <height>25</height>
+    <name>EDM menu button</name>
+    <pv_name>SR-CS-VEFB-01:METHOD</pv_name>
+    <actions_from_pv>true</actions_from_pv>
+    <show_down_arrow>true</show_down_arrow>
+  </widget>
+</display>
