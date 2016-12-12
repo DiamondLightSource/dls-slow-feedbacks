@@ -50,13 +50,13 @@
     <axis_0_maximum>173.0</axis_0_maximum>
     <axis_0_minimum>0.0</axis_0_minimum>
     <axis_0_scale_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
+      <fontdata fontName="Liberation Sans" height="10" style="0" />
     </axis_0_scale_font>
     <axis_0_scale_format></axis_0_scale_format>
     <axis_0_show_grid>false</axis_0_show_grid>
     <axis_0_time_format>0</axis_0_time_format>
     <axis_0_title_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
+      <opifont.name fontName="Liberation Sans" height="11" style="0">Default</opifont.name>
     </axis_0_title_font>
     <axis_0_visible>true</axis_0_visible>
     <axis_1_auto_scale>false</axis_1_auto_scale>
@@ -74,13 +74,13 @@
     <axis_1_maximum>100.0</axis_1_maximum>
     <axis_1_minimum>1.0E-4</axis_1_minimum>
     <axis_1_scale_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
+      <opifont.name fontName="Liberation Sans" height="11" style="0">Default</opifont.name>
     </axis_1_scale_font>
     <axis_1_scale_format></axis_1_scale_format>
     <axis_1_show_grid>false</axis_1_show_grid>
     <axis_1_time_format>0</axis_1_time_format>
     <axis_1_title_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
+      <fontdata fontName="Liberation Sans" height="10" style="0" />
     </axis_1_title_font>
     <axis_1_visible>true</axis_1_visible>
     <axis_2_auto_scale>true</axis_2_auto_scale>
@@ -155,7 +155,7 @@ $(trace_2_y_pv_value)
 $(trace_3_y_pv)
 $(trace_3_y_pv_value)</tooltip>
     <trace_0_anti_alias>false</trace_0_anti_alias>
-    <trace_0_buffer_size>176</trace_0_buffer_size>
+    <trace_0_buffer_size>173</trace_0_buffer_size>
     <trace_0_concatenate_data>true</trace_0_concatenate_data>
     <trace_0_line_width>2</trace_0_line_width>
     <trace_0_name>$(trace_0_y_pv)</trace_0_name>
@@ -176,7 +176,7 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_0_y_pv>SR-CS-SOFB-01:SVD:X:S_INV</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_1_anti_alias>false</trace_1_anti_alias>
-    <trace_1_buffer_size>176</trace_1_buffer_size>
+    <trace_1_buffer_size>173</trace_1_buffer_size>
     <trace_1_concatenate_data>true</trace_1_concatenate_data>
     <trace_1_line_width>2</trace_1_line_width>
     <trace_1_name>$(trace_1_y_pv)</trace_1_name>
@@ -197,7 +197,7 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_1_y_pv>SR-CS-SOFB-01:SVD:X:S_INV_CUT</trace_1_y_pv>
     <trace_1_y_pv_value />
     <trace_2_anti_alias>false</trace_2_anti_alias>
-    <trace_2_buffer_size>176</trace_2_buffer_size>
+    <trace_2_buffer_size>173</trace_2_buffer_size>
     <trace_2_concatenate_data>true</trace_2_concatenate_data>
     <trace_2_line_width>2</trace_2_line_width>
     <trace_2_name>$(trace_2_y_pv)</trace_2_name>
@@ -218,7 +218,7 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_2_y_pv>SR-CS-SOFB-01:SVD:Y:S_INV</trace_2_y_pv>
     <trace_2_y_pv_value />
     <trace_3_anti_alias>false</trace_3_anti_alias>
-    <trace_3_buffer_size>176</trace_3_buffer_size>
+    <trace_3_buffer_size>173</trace_3_buffer_size>
     <trace_3_concatenate_data>true</trace_3_concatenate_data>
     <trace_3_line_width>2</trace_3_line_width>
     <trace_3_name>$(trace_3_y_pv)</trace_3_name>
@@ -631,7 +631,7 @@ $(pv_value)</tooltip>
     <border_width>1</border_width>
     <enabled>true</enabled>
     <font>
-      <fontdata fontName="liberation sans" height="10" style="0" />
+      <fontdata fontName="Liberation Sans" height="10" style="0" />
     </font>
     <foreground_color>
       <color name="Text: FG" red="0" green="0" blue="0" />
