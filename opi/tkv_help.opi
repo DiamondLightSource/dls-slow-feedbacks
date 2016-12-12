@@ -155,7 +155,7 @@ $(trace_2_y_pv_value)
 $(trace_3_y_pv)
 $(trace_3_y_pv_value)</tooltip>
     <trace_0_anti_alias>false</trace_0_anti_alias>
-    <trace_0_buffer_size>1</trace_0_buffer_size>
+    <trace_0_buffer_size>176</trace_0_buffer_size>
     <trace_0_concatenate_data>true</trace_0_concatenate_data>
     <trace_0_line_width>2</trace_0_line_width>
     <trace_0_name>$(trace_0_y_pv)</trace_0_name>
@@ -176,7 +176,7 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_0_y_pv>SR-CS-SOFB-01:SVD:X:S_INV</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_1_anti_alias>false</trace_1_anti_alias>
-    <trace_1_buffer_size>1</trace_1_buffer_size>
+    <trace_1_buffer_size>176</trace_1_buffer_size>
     <trace_1_concatenate_data>true</trace_1_concatenate_data>
     <trace_1_line_width>2</trace_1_line_width>
     <trace_1_name>$(trace_1_y_pv)</trace_1_name>
@@ -197,7 +197,7 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_1_y_pv>SR-CS-SOFB-01:SVD:X:S_INV_CUT</trace_1_y_pv>
     <trace_1_y_pv_value />
     <trace_2_anti_alias>false</trace_2_anti_alias>
-    <trace_2_buffer_size>1</trace_2_buffer_size>
+    <trace_2_buffer_size>176</trace_2_buffer_size>
     <trace_2_concatenate_data>true</trace_2_concatenate_data>
     <trace_2_line_width>2</trace_2_line_width>
     <trace_2_name>$(trace_2_y_pv)</trace_2_name>
@@ -218,7 +218,7 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_2_y_pv>SR-CS-SOFB-01:SVD:Y:S_INV</trace_2_y_pv>
     <trace_2_y_pv_value />
     <trace_3_anti_alias>false</trace_3_anti_alias>
-    <trace_3_buffer_size>1</trace_3_buffer_size>
+    <trace_3_buffer_size>176</trace_3_buffer_size>
     <trace_3_concatenate_data>true</trace_3_concatenate_data>
     <trace_3_line_width>2</trace_3_line_width>
     <trace_3_name>$(trace_3_y_pv)</trace_3_name>
