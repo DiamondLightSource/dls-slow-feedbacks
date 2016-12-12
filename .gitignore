@@ -1,6 +1,8 @@
 *.pyc
 /opi/cors.edl
 /opi/bpms.edl
+/opi/runcss.sh
+/configure/VERSION
 
 # Testing cache
 .cache
