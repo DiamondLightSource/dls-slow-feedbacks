@@ -161,11 +161,11 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_0_name>$(trace_0_y_pv)</trace_0_name>
     <trace_0_plot_mode>0</trace_0_plot_mode>
     <trace_0_point_size>2</trace_0_point_size>
-    <trace_0_point_style>1</trace_0_point_style>
+    <trace_0_point_style>0</trace_0_point_style>
     <trace_0_trace_color>
       <color name="Blue" red="0" green="0" blue="255" />
     </trace_0_trace_color>
-    <trace_0_trace_type>2</trace_0_trace_type>
+    <trace_0_trace_type>0</trace_0_trace_type>
     <trace_0_update_delay>100</trace_0_update_delay>
     <trace_0_update_mode>3</trace_0_update_mode>
     <trace_0_visible>true</trace_0_visible>
@@ -203,11 +203,11 @@ $(trace_3_y_pv_value)</tooltip>
     <trace_2_name>$(trace_2_y_pv)</trace_2_name>
     <trace_2_plot_mode>0</trace_2_plot_mode>
     <trace_2_point_size>2</trace_2_point_size>
-    <trace_2_point_style>1</trace_2_point_style>
+    <trace_2_point_style>0</trace_2_point_style>
     <trace_2_trace_color>
       <color name="Red" red="255" green="0" blue="0" />
     </trace_2_trace_color>
-    <trace_2_trace_type>2</trace_2_trace_type>
+    <trace_2_trace_type>0</trace_2_trace_type>
     <trace_2_update_delay>100</trace_2_update_delay>
     <trace_2_update_mode>3</trace_2_update_mode>
     <trace_2_visible>true</trace_2_visible>
