@@ -1,0 +1,309 @@
+<?xml version='1.0' encoding='utf-8'?>
+<display typeId="org.csstudio.opibuilder.Display" version="1.0">
+  <x>1033</x>
+  <y>253</y>
+  <width>584</width>
+  <height>232</height>
+  <font>
+    <fontdata fontName="liberation sans" height="13" style="0" />
+  </font>
+  <boy_version>4.0.0</boy_version>
+  <foreground_color>
+    <color blue="0" green="0" name="Black" red="0" />
+  </foreground_color>
+  <background_color>
+    <color blue="200" green="200" name="Canvas" red="200" />
+  </background_color>
+  <show_grid>true</show_grid>
+  <grid_space>8</grid_space>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>72</x>
+    <y>8</y>
+    <width>248</width>
+    <height>40</height>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <name>EDM Label</name>
+    <text>$(deviceh):SLOW</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="198" green="181" name="DI title" red="198" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>72</x>
+    <y>104</y>
+    <width>248</width>
+    <height>40</height>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <name>EDM Label</name>
+    <text>$(deviceh):FAST</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="198" green="181" name="DI title" red="198" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>512</x>
+    <y>200</y>
+    <foreground_color>
+      <color blue="192" green="0" name="Exit: FG" red="192" />
+    </foreground_color>
+    <background_color>
+      <color blue="205" green="205" name="Controller: BG" red="205" />
+    </background_color>
+    <font>
+      <fontdata fontName="liberation sans" height="9" style="0" />
+    </font>
+    <width>65</width>
+    <height>25</height>
+    <name>EDM Exit Button</name>
+    <actions hook="false" hook_all="false">
+      <action type="EXECUTE_JAVASCRIPT">
+        <embedded>true</embedded>
+        <scriptText>importPackage(Packages.org.csstudio.opibuilder.scriptUtil);ScriptUtil.closeAssociatedOPI(widget);</scriptText>
+      </action>
+    </actions>
+    <text>EXIT</text>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>72</x>
+    <y>144</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="205" green="205" name="Controller: BG" red="205" />
+    </background_color>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <width>249</width>
+    <height>41</height>
+    <name>EDM menu button</name>
+    <pv_name>$(deviceh):FAST:DISABLED</pv_name>
+    <actions_from_pv>true</actions_from_pv>
+    <show_down_arrow>true</show_down_arrow>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>328</x>
+    <y>8</y>
+    <width>248</width>
+    <height>40</height>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <name>EDM Label</name>
+    <text>$(devicev):SLOW</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="198" green="181" name="DI title" red="198" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>328</x>
+    <y>144</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="205" green="205" name="Controller: BG" red="205" />
+    </background_color>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <width>249</width>
+    <height>41</height>
+    <name>EDM menu button</name>
+    <pv_name>$(devicev):FAST:DISABLED</pv_name>
+    <actions_from_pv>true</actions_from_pv>
+    <show_down_arrow>true</show_down_arrow>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>328</x>
+    <y>104</y>
+    <width>248</width>
+    <height>40</height>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <name>EDM Label</name>
+    <text>$(devicev):FAST</text>
+    <auto_size>false</auto_size>
+    <border_style>0</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="198" green="181" name="DI title" red="198" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>104</y>
+    <width>56</width>
+    <height>80</height>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <name>EDM Label</name>
+    <text>Fast</text>
+    <auto_size>false</auto_size>
+    <border_style>1</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="198" green="181" name="DI title" red="198" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>72</x>
+    <y>48</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="205" green="205" name="Controller: BG" red="205" />
+    </background_color>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <width>249</width>
+    <height>41</height>
+    <name>EDM menu button</name>
+    <pv_name>$(deviceh):SLOW:DISABLED</pv_name>
+    <actions_from_pv>true</actions_from_pv>
+    <show_down_arrow>true</show_down_arrow>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>328</x>
+    <y>48</y>
+    <foreground_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </foreground_color>
+    <background_color>
+      <color blue="205" green="205" name="Controller: BG" red="205" />
+    </background_color>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <width>249</width>
+    <height>41</height>
+    <name>EDM menu button</name>
+    <pv_name>$(devicev):SLOW:DISABLED</pv_name>
+    <actions_from_pv>true</actions_from_pv>
+    <show_down_arrow>true</show_down_arrow>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <x>8</x>
+    <y>8</y>
+    <width>56</width>
+    <height>80</height>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" />
+    </font>
+    <name>EDM Label</name>
+    <text>Slow</text>
+    <auto_size>false</auto_size>
+    <border_style>1</border_style>
+    <border_color>
+      <color blue="0" green="0" name="Black" red="0" />
+    </border_color>
+    <background_color>
+      <color blue="198" green="181" name="DI title" red="198" />
+    </background_color>
+    <foreground_color>
+      <color blue="0" green="0" name="Text: FG" red="0" />
+    </foreground_color>
+    <transparent>false</transparent>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Rectangle" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <line_width>3</line_width>
+    <x>7</x>
+    <y>103</y>
+    <width>571</width>
+    <height>83</height>
+    <name>EDM Rectangle</name>
+    <line_color>
+      <color blue="128" green="128" name="Grey 50%" red="128" />
+    </line_color>
+    <transparent>true</transparent>
+    <background_color>
+      <color blue="128" green="128" name="Grey 50%" red="128" />
+    </background_color>
+    <visible>true</visible>
+    <line_style>0</line_style>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Rectangle" version="1.0">
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <line_width>3</line_width>
+    <x>7</x>
+    <y>7</y>
+    <width>571</width>
+    <height>83</height>
+    <name>EDM Rectangle</name>
+    <line_color>
+      <color blue="128" green="128" name="Grey 50%" red="128" />
+    </line_color>
+    <transparent>true</transparent>
+    <background_color>
+      <color blue="128" green="128" name="Grey 50%" red="128" />
+    </background_color>
+    <visible>true</visible>
+    <line_style>0</line_style>
+  </widget>
+</display>
