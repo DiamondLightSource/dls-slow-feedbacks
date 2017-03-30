@@ -1,165 +1,419 @@
-<?xml version='1.0' encoding='utf-8'?>
-<display typeId="org.csstudio.opibuilder.Display" version="1.0">
+<?xml version="1.0" encoding="UTF-8"?>
+<display typeId="org.csstudio.opibuilder.Display" version="1.0.0">
+  <actions hook="false" hook_all="false" />
+  <auto_scale_widgets>
+    <auto_scale_widgets>false</auto_scale_widgets>
+    <min_width>-1</min_width>
+    <min_height>-1</min_height>
+  </auto_scale_widgets>
+  <auto_zoom_to_fit_all>true</auto_zoom_to_fit_all>
+  <background_color>
+    <color name="Canvas" red="200" green="200" blue="200" />
+  </background_color>
+  <boy_version>5.1.0.201703300946</boy_version>
+  <foreground_color>
+    <color name="Black" red="0" green="0" blue="0" />
+  </foreground_color>
+  <grid_space>8</grid_space>
+  <height>732</height>
+  <macros>
+    <include_parent_macros>true</include_parent_macros>
+  </macros>
+  <name>Diagnostics Storage Ring BPMs</name>
+  <rules />
+  <scripts />
+  <show_close_button>true</show_close_button>
+  <show_edit_range>true</show_edit_range>
+  <show_grid>true</show_grid>
+  <show_ruler>true</show_ruler>
+  <snap_to_geometry>true</snap_to_geometry>
+  <widget_type>Display</widget_type>
+  <width>1008</width>
+  <wuid>7ae5651b:15b1f3c2b0c:-688c</wuid>
   <x>2597</x>
   <y>1</y>
-  <width>1008</width>
-  <height>732</height>
-  <font>
-    <fontdata fontName="liberation sans" height="9" style="0" />
-  </font>
-  <boy_version>4.0.0</boy_version>
-  <foreground_color>
-    <color blue="0" green="0" name="Black" red="0" />
-  </foreground_color>
-  <background_color>
-    <color blue="200" green="200" name="Canvas" red="200" />
-  </background_color>
-  <name>Diagnostics Storage Ring BPMs</name>
-  <show_grid>true</show_grid>
-  <grid_space>8</grid_space>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
-    <border_alarm_sensitive>false</border_alarm_sensitive>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>32</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Beam Position</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>992</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-688b</wuid>
     <x>8</x>
     <y>56</y>
-    <width>992</width>
-    <height>32</height>
-    <font>
-      <fontdata fontName="liberation sans" height="13" style="0" />
-    </font>
-    <name>EDM Label</name>
-    <text>Beam Position</text>
-    <auto_size>false</auto_size>
-    <border_style>0</border_style>
-    <border_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </border_color>
-    <background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </background_color>
-    <foreground_color>
-      <color blue="0" green="0" name="Text: FG" red="0" />
-    </foreground_color>
-    <transparent>false</transparent>
-    <horizontal_alignment>1</horizontal_alignment>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="1.0">
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <x>952</x>
-    <y>704</y>
-    <foreground_color>
-      <color blue="192" green="0" name="Exit: FG" red="192" />
-    </foreground_color>
-    <background_color>
-      <color blue="205" green="205" name="Controller: BG" red="205" />
-    </background_color>
-    <font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </font>
-    <width>49</width>
-    <height>23</height>
-    <name>EDM Exit Button</name>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
     <actions hook="false" hook_all="false">
       <action type="EXECUTE_JAVASCRIPT">
+        <path></path>
+        <scriptText><![CDATA[importPackage(Packages.org.csstudio.opibuilder.scriptUtil);ScriptUtil.closeAssociatedOPI(widget);]]></scriptText>
         <embedded>true</embedded>
-        <scriptText>importPackage(Packages.org.csstudio.opibuilder.scriptUtil);ScriptUtil.closeAssociatedOPI(widget);</scriptText>
+        <description></description>
       </action>
     </actions>
-    <text>EXIT</text>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0">
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Controller: BG" red="205" green="205" blue="205" />
+    </background_color>
     <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Exit: FG" red="196" green="0" blue="196" />
+    </foreground_color>
+    <height>23</height>
+    <image></image>
+    <name>EDM Exit Button</name>
+    <push_action_index>0</push_action_index>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>EXIT</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>49</width>
+    <wuid>7ae5651b:15b1f3c2b0c:-688a</wuid>
+    <x>952</x>
+    <y>704</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>false</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title>BPM ID</axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>25.0</axis_0_maximum>
+    <axis_0_minimum>1.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_0_title_font>
+    <axis_0_visible>true</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title>mm</axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>-1.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_1_title_font>
+    <axis_1_visible>true</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>280</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)
+$(trace_1_y_pv)
+$(trace_1_y_pv_value)
+$(trace_0_x_pv)
+$(trace_0_x_pv_value)
+$(trace_1_x_pv)
+$(trace_1_x_pv_value)</tooltip>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
+    <trace_0_buffer_size>65536</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>6</trace_0_point_size>
+    <trace_0_point_style>2</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>3</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv>SR-DI-EBPM-01:BPMID</trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>SR-DI-EBPM-01:SA:X</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_1_anti_alias>false</trace_1_anti_alias>
+    <trace_1_buffer_size>65536</trace_1_buffer_size>
+    <trace_1_concatenate_data>false</trace_1_concatenate_data>
+    <trace_1_line_width>1</trace_1_line_width>
+    <trace_1_name>$(trace_1_y_pv)</trace_1_name>
+    <trace_1_plot_mode>0</trace_1_plot_mode>
+    <trace_1_point_size>6</trace_1_point_size>
+    <trace_1_point_style>2</trace_1_point_style>
+    <trace_1_trace_color>
+      <color name="Red" red="255" green="0" blue="0" />
+    </trace_1_trace_color>
+    <trace_1_trace_type>0</trace_1_trace_type>
+    <trace_1_update_delay>0</trace_1_update_delay>
+    <trace_1_update_mode>3</trace_1_update_mode>
+    <trace_1_visible>true</trace_1_visible>
+    <trace_1_x_axis_index>0</trace_1_x_axis_index>
+    <trace_1_x_pv>SR-DI-EBPM-01:BPMID</trace_1_x_pv>
+    <trace_1_x_pv_value />
+    <trace_1_y_axis_index>1</trace_1_y_axis_index>
+    <trace_1_y_pv>SR-DI-EBPM-01:SA:Y</trace_1_y_pv>
+    <trace_1_y_pv_value />
+    <trace_count>2</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>992</width>
+    <wuid>7ae5651b:15b1f3c2b0c:-6889</wuid>
     <x>8</x>
     <y>96</y>
-    <width>992</width>
-    <height>280</height>
-    <foreground_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </foreground_color>
-    <font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </font>
-    <name>EDM xyGraph</name>
-    <show_toolbar>false</show_toolbar>
-    <axis_count>3</axis_count>
-    <axis_0_axis_title>BPM ID</axis_0_axis_title>
-    <axis_1_axis_title>mm</axis_1_axis_title>
-    <axis_2_axis_title />
-    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
-    <axis_0_axis_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_0_axis_color>
-    <axis_1_axis_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_1_axis_color>
-    <axis_2_axis_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_2_axis_color>
-    <background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </background_color>
-    <plot_area_background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </plot_area_background_color>
-    <axis_0_grid_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_0_grid_color>
-    <axis_1_grid_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_1_grid_color>
-    <axis_2_grid_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_2_grid_color>
-    <border_width>0</border_width>
-    <border_style>0</border_style>
-    <show_plot_area_border>false</show_plot_area_border>
-    <axis_0_visible>true</axis_0_visible>
-    <axis_1_visible>true</axis_1_visible>
-    <axis_2_visible>false</axis_2_visible>
-    <axis_0_minimum>1.0</axis_0_minimum>
-    <axis_1_minimum>-1.0</axis_1_minimum>
-    <axis_2_minimum>0.0</axis_2_minimum>
-    <axis_0_maximum>25.0</axis_0_maximum>
-    <axis_1_maximum>1.0</axis_1_maximum>
-    <axis_2_maximum>1.0</axis_2_maximum>
-    <axis_0_show_grid>false</axis_0_show_grid>
-    <axis_1_show_grid>false</axis_1_show_grid>
-    <axis_2_show_grid>false</axis_2_show_grid>
-    <show_legend>false</show_legend>
-    <axis_0_scale_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_0_scale_font>
-    <axis_0_title_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_0_title_font>
-    <axis_1_scale_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_1_scale_font>
-    <axis_1_title_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_1_title_font>
-    <axis_0_time_format>0</axis_0_time_format>
-    <axis_1_logScale>false</axis_1_logScale>
-    <axis_2_logScale>false</axis_2_logScale>
-    <axis_1_time_format>0</axis_1_time_format>
-    <axis_2_time_format>0</axis_2_time_format>
-    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
-    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
     <axis_0_auto_scale>false</axis_0_auto_scale>
-    <axis_1_auto_scale>true</axis_1_auto_scale>
-    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
+    <axis_0_auto_scale_tight>false</axis_0_auto_scale_tight>
+    <axis_0_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title>Corrector ID</axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_0_grid_color>
     <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>25.0</axis_0_maximum>
+    <axis_0_minimum>1.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>false</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_0_title_font>
+    <axis_0_visible>true</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
+    <axis_1_auto_scale_tight>false</axis_1_auto_scale_tight>
+    <axis_1_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title>Abs Magnitude</axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_1_grid_color>
     <axis_1_log_scale>false</axis_1_log_scale>
-    <trace_count>2</trace_count>
-    <trace_0_update_delay>0</trace_0_update_delay>
-    <trace_0_concatenate_data>false</trace_0_concatenate_data>
-    <trace_0_anti_alias>false</trace_0_anti_alias>
-    <trace_1_update_delay>0</trace_1_update_delay>
-    <trace_1_concatenate_data>false</trace_1_concatenate_data>
-    <trace_1_anti_alias>false</trace_1_anti_alias>
-    <trace_0_y_pv>SR-DI-EBPM-01:SA:X</trace_0_y_pv>
-    <trace_1_y_pv>SR-DI-EBPM-01:SA:Y</trace_1_y_pv>
-    <trace_0_x_pv>SR-DI-EBPM-01:BPMID</trace_0_x_pv>
-    <trace_1_x_pv>SR-DI-EBPM-01:BPMID</trace_1_x_pv>
+    <axis_1_maximum>1.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>false</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <fontdata fontName="liberation sans" height="9" style="0" pixels="false" />
+    </axis_1_title_font>
+    <axis_1_visible>true</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_auto_scale_tight>false</axis_2_auto_scale_tight>
+    <axis_2_axis_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title></axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>1.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Liberation Sans" height="15" style="0" pixels="true">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>false</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <fontdata fontName="Arial" height="9" style="1" pixels="true" />
+    </axis_2_title_font>
+    <axis_2_visible>false</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_count>3</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>0</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>272</height>
+    <name>EDM xyGraph</name>
+    <plot_area_background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </plot_area_background_color>
+    <pv_name>$(trace_0_y_pv)</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>false</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>false</show_toolbar>
+    <title></title>
+    <title_font>
+      <fontdata fontName="Arial" height="12" style="1" pixels="true" />
+    </title_font>
     <tooltip>$(trace_0_y_pv)
 $(trace_0_y_pv_value)
 $(trace_1_y_pv)
@@ -168,342 +422,425 @@ $(trace_0_x_pv)
 $(trace_0_x_pv_value)
 $(trace_1_x_pv)
 $(trace_1_x_pv_value)</tooltip>
-    <pv_name>$(trace_0_y_pv)</pv_name>
-    <trace_0_trace_color>
-      <color blue="255" green="0" name="Blue" red="0" />
-    </trace_0_trace_color>
-    <trace_1_trace_color>
-      <color blue="0" green="0" name="Red" red="255" />
-    </trace_1_trace_color>
-    <trace_0_update_mode>3</trace_0_update_mode>
-    <trace_1_update_mode>3</trace_1_update_mode>
+    <trace_0_anti_alias>false</trace_0_anti_alias>
     <trace_0_buffer_size>65536</trace_0_buffer_size>
-    <trace_0_point_style>2</trace_0_point_style>
-    <trace_1_point_style>2</trace_1_point_style>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
     <trace_0_point_size>6</trace_0_point_size>
-    <trace_1_point_size>6</trace_1_point_size>
-    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_point_style>2</trace_0_point_style>
+    <trace_0_trace_color>
+      <color name="Blue" red="0" green="0" blue="255" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>2</trace_0_trace_type>
+    <trace_0_update_delay>0</trace_0_update_delay>
+    <trace_0_update_mode>3</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv>SR-CS-SOFB-01:CMID</trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>SR-PC-HSTR-01:MAG</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_1_anti_alias>false</trace_1_anti_alias>
     <trace_1_buffer_size>65536</trace_1_buffer_size>
-    <trace_1_trace_type>0</trace_1_trace_type>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.dawn.xygraph" version="1.0">
-    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <trace_1_concatenate_data>false</trace_1_concatenate_data>
+    <trace_1_line_width>1</trace_1_line_width>
+    <trace_1_name>$(trace_1_y_pv)</trace_1_name>
+    <trace_1_plot_mode>0</trace_1_plot_mode>
+    <trace_1_point_size>6</trace_1_point_size>
+    <trace_1_point_style>2</trace_1_point_style>
+    <trace_1_trace_color>
+      <color name="Red" red="255" green="0" blue="0" />
+    </trace_1_trace_color>
+    <trace_1_trace_type>2</trace_1_trace_type>
+    <trace_1_update_delay>0</trace_1_update_delay>
+    <trace_1_update_mode>3</trace_1_update_mode>
+    <trace_1_visible>true</trace_1_visible>
+    <trace_1_x_axis_index>0</trace_1_x_axis_index>
+    <trace_1_x_pv>SR-CS-SOFB-01:CMID</trace_1_x_pv>
+    <trace_1_x_pv_value />
+    <trace_1_y_axis_index>1</trace_1_y_axis_index>
+    <trace_1_y_pv>SR-PC-VSTR-01:MAG</trace_1_y_pv>
+    <trace_1_y_pv_value />
+    <trace_count>2</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>Dawn XY Graph</widget_type>
+    <width>992</width>
+    <wuid>7ae5651b:15b1f3c2b0c:-6888</wuid>
     <x>8</x>
     <y>424</y>
-    <width>992</width>
-    <height>272</height>
-    <foreground_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </foreground_color>
-    <font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </font>
-    <name>EDM xyGraph</name>
-    <show_toolbar>false</show_toolbar>
-    <axis_count>3</axis_count>
-    <axis_0_axis_title>Corrector ID</axis_0_axis_title>
-    <axis_1_axis_title>Abs Magnitude</axis_1_axis_title>
-    <axis_2_axis_title />
-    <axis_2_left_bottom_side>false</axis_2_left_bottom_side>
-    <axis_0_axis_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_0_axis_color>
-    <axis_1_axis_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_1_axis_color>
-    <axis_2_axis_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_2_axis_color>
-    <background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </background_color>
-    <plot_area_background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </plot_area_background_color>
-    <axis_0_grid_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_0_grid_color>
-    <axis_1_grid_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_1_grid_color>
-    <axis_2_grid_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </axis_2_grid_color>
-    <border_width>0</border_width>
-    <border_style>0</border_style>
-    <show_plot_area_border>false</show_plot_area_border>
-    <axis_0_visible>true</axis_0_visible>
-    <axis_1_visible>true</axis_1_visible>
-    <axis_2_visible>false</axis_2_visible>
-    <axis_0_minimum>1.0</axis_0_minimum>
-    <axis_1_minimum>0.0</axis_1_minimum>
-    <axis_2_minimum>0.0</axis_2_minimum>
-    <axis_0_maximum>25.0</axis_0_maximum>
-    <axis_1_maximum>1.0</axis_1_maximum>
-    <axis_2_maximum>1.0</axis_2_maximum>
-    <axis_0_show_grid>false</axis_0_show_grid>
-    <axis_1_show_grid>false</axis_1_show_grid>
-    <axis_2_show_grid>false</axis_2_show_grid>
-    <show_legend>false</show_legend>
-    <axis_0_scale_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_0_scale_font>
-    <axis_0_title_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_0_title_font>
-    <axis_1_scale_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_1_scale_font>
-    <axis_1_title_font>
-      <fontdata fontName="liberation sans" height="9" style="0" />
-    </axis_1_title_font>
-    <axis_0_time_format>0</axis_0_time_format>
-    <axis_1_logScale>false</axis_1_logScale>
-    <axis_2_logScale>false</axis_2_logScale>
-    <axis_1_time_format>0</axis_1_time_format>
-    <axis_2_time_format>0</axis_2_time_format>
-    <axis_0_auto_scale_threshold>0.95</axis_0_auto_scale_threshold>
-    <axis_1_auto_scale_threshold>0.95</axis_1_auto_scale_threshold>
-    <axis_0_auto_scale>false</axis_0_auto_scale>
-    <axis_1_auto_scale>true</axis_1_auto_scale>
-    <axis_2_auto_scale>true</axis_2_auto_scale>
-    <axis_0_log_scale>false</axis_0_log_scale>
-    <axis_1_log_scale>false</axis_1_log_scale>
-    <trace_count>2</trace_count>
-    <trace_0_update_delay>0</trace_0_update_delay>
-    <trace_0_concatenate_data>false</trace_0_concatenate_data>
-    <trace_0_anti_alias>false</trace_0_anti_alias>
-    <trace_1_update_delay>0</trace_1_update_delay>
-    <trace_1_concatenate_data>false</trace_1_concatenate_data>
-    <trace_1_anti_alias>false</trace_1_anti_alias>
-    <trace_0_y_pv>SR-PC-HSTR-01:MAG</trace_0_y_pv>
-    <trace_1_y_pv>SR-PC-VSTR-01:MAG</trace_1_y_pv>
-    <trace_0_x_pv>SR-CS-SOFB-01:CMID</trace_0_x_pv>
-    <trace_1_x_pv>SR-CS-SOFB-01:CMID</trace_1_x_pv>
-    <tooltip>$(trace_0_y_pv)
-$(trace_0_y_pv_value)
-$(trace_1_y_pv)
-$(trace_1_y_pv_value)
-$(trace_0_x_pv)
-$(trace_0_x_pv_value)
-$(trace_1_x_pv)
-$(trace_1_x_pv_value)</tooltip>
-    <pv_name>$(trace_0_y_pv)</pv_name>
-    <trace_0_trace_color>
-      <color blue="255" green="0" name="Blue" red="0" />
-    </trace_0_trace_color>
-    <trace_1_trace_color>
-      <color blue="0" green="0" name="Red" red="255" />
-    </trace_1_trace_color>
-    <trace_0_update_mode>3</trace_0_update_mode>
-    <trace_1_update_mode>3</trace_1_update_mode>
-    <trace_0_buffer_size>65536</trace_0_buffer_size>
-    <trace_0_point_style>2</trace_0_point_style>
-    <trace_1_point_style>2</trace_1_point_style>
-    <trace_0_point_size>6</trace_0_point_size>
-    <trace_1_point_size>6</trace_1_point_size>
-    <trace_0_trace_type>2</trace_0_trace_type>
-    <trace_1_buffer_size>65536</trace_1_buffer_size>
-    <trace_1_trace_type>2</trace_1_trace_type>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
-    <border_alarm_sensitive>false</border_alarm_sensitive>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>32</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Corrector Magnets</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>992</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6887</wuid>
     <x>8</x>
     <y>384</y>
-    <width>992</width>
-    <height>32</height>
-    <font>
-      <fontdata fontName="liberation sans" height="13" style="0" />
-    </font>
-    <name>EDM Label</name>
-    <text>Corrector Magnets</text>
-    <auto_size>false</auto_size>
-    <border_style>0</border_style>
-    <border_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </border_color>
-    <background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </background_color>
-    <foreground_color>
-      <color blue="0" green="0" name="Text: FG" red="0" />
-    </foreground_color>
-    <transparent>false</transparent>
-    <horizontal_alignment>1</horizontal_alignment>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
-    <border_alarm_sensitive>false</border_alarm_sensitive>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="DI title" red="198" green="181" blue="198" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="13" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>40</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>Slow Orbit Feedback</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>992</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6886</wuid>
     <x>8</x>
     <y>8</y>
-    <width>992</width>
-    <height>40</height>
-    <font>
-      <fontdata fontName="liberation sans" height="13" style="0" />
-    </font>
-    <name>EDM Label</name>
-    <text>Slow Orbit Feedback</text>
-    <auto_size>false</auto_size>
-    <border_style>0</border_style>
-    <border_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </border_color>
-    <background_color>
-      <color blue="198" green="181" name="DI title" red="198" />
-    </background_color>
-    <foreground_color>
-      <color blue="0" green="0" name="Text: FG" red="0" />
-    </foreground_color>
-    <transparent>false</transparent>
-    <horizontal_alignment>1</horizontal_alignment>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
-    <border_alarm_sensitive>false</border_alarm_sensitive>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="10" style="1" pixels="false" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>24</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>RELATIVE MAX HSTR</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>152</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6885</wuid>
     <x>8</x>
     <y>704</y>
-    <width>152</width>
-    <height>24</height>
-    <font>
-      <fontdata fontName="liberation sans" height="10" style="1" />
-    </font>
-    <name>EDM Label</name>
-    <text>RELATIVE MAX HSTR</text>
-    <auto_size>false</auto_size>
-    <border_style>0</border_style>
-    <border_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </border_color>
-    <background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </background_color>
-    <foreground_color>
-      <color blue="0" green="0" name="Text: FG" red="0" />
-    </foreground_color>
-    <transparent>false</transparent>
-    <horizontal_alignment>1</horizontal_alignment>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0">
-    <border_alarm_sensitive>false</border_alarm_sensitive>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color name="Grey 75%" red="192" green="192" blue="192" />
+    </background_color>
+    <border_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="10" style="1" pixels="false" />
+    </font>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>24</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <text>RELATIVE MAX VSTR</text>
+    <tooltip></tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>152</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6884</wuid>
     <x>432</x>
     <y>704</y>
-    <width>152</width>
-    <height>24</height>
-    <font>
-      <fontdata fontName="liberation sans" height="10" style="1" />
-    </font>
-    <name>EDM Label</name>
-    <text>RELATIVE MAX VSTR</text>
-    <auto_size>false</auto_size>
-    <border_style>0</border_style>
-    <border_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </border_color>
-    <background_color>
-      <color blue="192" green="192" name="Grey 75%" red="192" />
-    </background_color>
-    <foreground_color>
-      <color blue="0" green="0" name="Text: FG" red="0" />
-    </foreground_color>
-    <transparent>false</transparent>
-    <horizontal_alignment>1</horizontal_alignment>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <auto_size>false</auto_size>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="White" red="255" green="255" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="9" style="1" pixels="false" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <format_type>0</format_type>
+    <height>24</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM TextInput</name>
+    <precision>0</precision>
+    <precision_from_pv>true</precision_from_pv>
+    <pv_name>SR-PC-HSTR-01:MAXNAME</pv_name>
+    <pv_value />
+    <rotation_angle>0.0</rotation_angle>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_units>false</show_units>
+    <text>######</text>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Text Update</widget_type>
+    <width>160</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6883</wuid>
     <x>168</x>
     <y>704</y>
-    <width>160</width>
-    <height>24</height>
-    <foreground_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </foreground_color>
-    <background_color>
-      <color blue="255" green="255" name="White" red="255" />
-    </background_color>
-    <font>
-      <fontdata fontName="liberation sans" height="9" style="1" />
-    </font>
-    <pv_name>SR-PC-HSTR-01:MAXNAME</pv_name>
-    <precision_from_pv>true</precision_from_pv>
-    <show_units>false</show_units>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <precision>0</precision>
-    <horizontal_alignment>1</horizontal_alignment>
-    <format_type>0</format_type>
-    <border_style>None</border_style>
-    <transparent>true</transparent>
-    <name>EDM TextInput</name>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <auto_size>false</auto_size>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="White" red="255" green="255" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="9" style="1" pixels="false" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <format_type>0</format_type>
+    <height>24</height>
+    <horizontal_alignment>2</horizontal_alignment>
+    <name>EDM TextInput</name>
+    <precision>3</precision>
+    <precision_from_pv>false</precision_from_pv>
+    <pv_name>SR-PC-HSTR-01:MAXI</pv_name>
+    <pv_value />
+    <rotation_angle>0.0</rotation_angle>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_units>false</show_units>
+    <text>######</text>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Text Update</widget_type>
+    <width>80</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6882</wuid>
     <x>328</x>
     <y>704</y>
-    <width>80</width>
-    <height>24</height>
-    <foreground_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </foreground_color>
-    <background_color>
-      <color blue="255" green="255" name="White" red="255" />
-    </background_color>
-    <font>
-      <fontdata fontName="liberation sans" height="9" style="1" />
-    </font>
-    <pv_name>SR-PC-HSTR-01:MAXI</pv_name>
-    <precision_from_pv>false</precision_from_pv>
-    <show_units>false</show_units>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <precision>3</precision>
-    <horizontal_alignment>2</horizontal_alignment>
-    <format_type>0</format_type>
-    <border_style>None</border_style>
-    <transparent>true</transparent>
-    <name>EDM TextInput</name>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <auto_size>false</auto_size>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="White" red="255" green="255" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="9" style="1" pixels="false" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <format_type>0</format_type>
+    <height>24</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>EDM TextInput</name>
+    <precision>0</precision>
+    <precision_from_pv>true</precision_from_pv>
+    <pv_name>SR-PC-VSTR-01:MAXNAME</pv_name>
+    <pv_value />
+    <rotation_angle>0.0</rotation_angle>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_units>false</show_units>
+    <text>######</text>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Text Update</widget_type>
+    <width>160</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6881</wuid>
     <x>592</x>
     <y>704</y>
-    <width>160</width>
-    <height>24</height>
-    <foreground_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </foreground_color>
-    <background_color>
-      <color blue="255" green="255" name="White" red="255" />
-    </background_color>
-    <font>
-      <fontdata fontName="liberation sans" height="9" style="1" />
-    </font>
-    <pv_name>SR-PC-VSTR-01:MAXNAME</pv_name>
-    <precision_from_pv>true</precision_from_pv>
-    <show_units>false</show_units>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <precision>0</precision>
-    <horizontal_alignment>1</horizontal_alignment>
-    <format_type>0</format_type>
-    <border_style>None</border_style>
-    <transparent>true</transparent>
-    <name>EDM TextInput</name>
   </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0">
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <auto_size>false</auto_size>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="White" red="255" green="255" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="liberation sans" height="9" style="1" pixels="false" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Black" red="0" green="0" blue="0" />
+    </foreground_color>
+    <format_type>0</format_type>
+    <height>24</height>
+    <horizontal_alignment>2</horizontal_alignment>
+    <name>EDM TextInput</name>
+    <precision>3</precision>
+    <precision_from_pv>false</precision_from_pv>
+    <pv_name>SR-PC-VSTR-01:MAXI</pv_name>
+    <pv_value />
+    <rotation_angle>0.0</rotation_angle>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_units>false</show_units>
+    <text>######</text>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Text Update</widget_type>
+    <width>80</width>
+    <wrap_words>false</wrap_words>
+    <wuid>7ae5651b:15b1f3c2b0c:-6880</wuid>
     <x>760</x>
     <y>704</y>
-    <width>80</width>
-    <height>24</height>
-    <foreground_color>
-      <color blue="0" green="0" name="Black" red="0" />
-    </foreground_color>
-    <background_color>
-      <color blue="255" green="255" name="White" red="255" />
-    </background_color>
-    <font>
-      <fontdata fontName="liberation sans" height="9" style="1" />
-    </font>
-    <pv_name>SR-PC-VSTR-01:MAXI</pv_name>
-    <precision_from_pv>false</precision_from_pv>
-    <show_units>false</show_units>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <precision>3</precision>
-    <horizontal_alignment>2</horizontal_alignment>
-    <format_type>0</format_type>
-    <border_style>None</border_style>
-    <transparent>true</transparent>
-    <name>EDM TextInput</name>
   </widget>
 </display>
