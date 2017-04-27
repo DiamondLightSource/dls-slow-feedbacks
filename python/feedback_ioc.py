@@ -19,7 +19,7 @@ if sys.argv[1:]:
 from softioc import builder, softioc
 from epicsdbbuilder import records
 
-
+import mode
 import rffb_server
 import waveforms
 import sofb_server
@@ -35,7 +35,7 @@ from softioc import pvlog
 
 # Used externally to select the operating ring mode, used to define appropriate
 # feedback parameters internally.
-mode = rffb_server.ringmode()
+mode = mode.RingMode()
 
 # Monitors magnet settings and creates aggregated waveforms.
 wavs = waveforms.waveforms_server()

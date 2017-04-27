@@ -13,31 +13,6 @@ import mml
 import rffb_calc
 
 
-class ringmode(object):
-    ring_modes = [
-        "SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
-        "SRLETHz", "SRI0913_MOGA", "SRI21", "VMX", "VMXSP", "VMXTHz"]
-
-    def __init__(self):
-        self.records()
-        self.listeners = []
-
-    def records(self):
-        builder.SetDeviceName('SR-CS-RING-01')
-        self.mode = builder.mbbOut("MODE", on_update = self.set_mode,
-            *zip(self.ring_modes, range(len(self.ring_modes))))
-
-    def init(self):
-        self.mode.set(self.ring_modes.index("VMX"))
-
-    def set_mode(self, mode):
-        for l in self.listeners:
-            l(self.ring_modes[mode])
-
-    def add_listener(self, listener):
-        self.listeners.append(listener)
-
-
 class rffb_server(object):
 
     def __init__(self, mode):
