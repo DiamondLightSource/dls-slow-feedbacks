@@ -13,7 +13,7 @@ import mml
 import rffb_calc
 
 
-class rffb_server(object):
+class RffbServer(object):
 
     def __init__(self, mode):
         self.tick = 0

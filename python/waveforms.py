@@ -8,8 +8,7 @@ from cothread.catools import caget, ca_nothing, FORMAT_CTRL
 from numpy import *
 
 
-class waveforms_server(object):
-
+class WaveformsServer(object):
 
     PLANES = [0, 1]
     FAMILIES = {

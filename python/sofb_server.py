@@ -8,10 +8,11 @@ from numpy import *
 from scipy.io import loadmat
 import sofb
 
-class sofb_server(object):
+
+class SofbServer(object):
 
     def __init__(self, mode):
-        self.sofb = sofb.sofb()
+        self.sofb = sofb.Sofb()
         self.power = 0
         self.records()
         self.dataroot = \
