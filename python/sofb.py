@@ -63,14 +63,6 @@ class sofb(object):
         self.cache[key] = irm
         return irm
 
-    def tick(self):
-        while True:
-            Sleep(1.0)
-            try:
-                self.correction()
-            except:
-                traceback.print_exc()
-
     def correction(self):
 
         # calculate inverse response matrix on demand
