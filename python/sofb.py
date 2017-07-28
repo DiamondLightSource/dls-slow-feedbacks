@@ -45,17 +45,6 @@ class sofb(object):
         self.mu = 0.01
         self.svd = {'X':None, 'Y':None}
         self.cache = {}
-        self.psu_monitors = self.get_psu_monitor_array()
-
-    def get_psu_monitor_array(self):
-        device_names = concatenate(
-                (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
-        pv_names = [d + ':ERCSUM' for d in device_names]
-        pv_values = zeros(device_names.size)
-        def callback(x, i):
-            pv_values[i] = x
-        camonitor(pv_names, callback)
-        return pv_values
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
@@ -87,7 +76,11 @@ class sofb(object):
         hbpmen = logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
         vbpmen = logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
 
-        if self.psu_monitors[concatenate((hen, ven))].any():
+        device_names = concatenate(
+                (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
+        pv_names = [d + ':ERCSUM' for d in device_names]
+        pv_values = caget(pv_names)
+        if pv_values[concatenate((hen, ven))].any():
             raise CalculationException('Required corrector in error')
 
         # calculate inverse response matrix on demand
