@@ -64,9 +64,6 @@ class sofb(object):
         return irm
 
     def correction(self):
-
-        # calculate inverse response matrix on demand
-
         afrac = caget("SR-CS-SOFB-01:AFRAC")
         hen = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
         ven = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
@@ -75,6 +72,7 @@ class sofb(object):
         hbpmen = logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
         vbpmen = logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
 
+        # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
 
         bpmx = caget(mml.ao["bpmx"].readback)[hbpmen]
