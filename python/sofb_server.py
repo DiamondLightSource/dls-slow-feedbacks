@@ -57,6 +57,10 @@ class sofb_server(object):
                         self.pv_error.set("OK")
                     else:
                         self.power_pv.set(0)
+            except sofb.CalculationException, e:
+                self.pv_error.set(e.message)
+                self.power_pv.set(0)
+                self.calc_error.set(1)
             except ca_nothing, e:
                 self.pv_error.set(e.name)
                 self.power_pv.set(0)
