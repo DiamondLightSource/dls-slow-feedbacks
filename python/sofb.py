@@ -45,6 +45,9 @@ class sofb(object):
         self.mu = 0.01
         self.svd = {'X':None, 'Y':None}
         self.cache = {}
+        device_names = concatenate(
+                (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
+        self.psc_pv_names = array([d + ':ERCSUM' for d in device_names])
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
@@ -76,11 +79,8 @@ class sofb(object):
         hbpmen = logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
         vbpmen = logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
 
-        device_names = concatenate(
-                (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
-        pv_names = [d + ':ERCSUM' for d in device_names]
-        pv_values = caget(pv_names)
-        if pv_values[concatenate((hen, ven))].any():
+        pv_values = array(caget(self.psc_pv_names[concatenate((hen, ven))]))
+        if pv_values.any():
             raise CalculationException('Required corrector in error')
 
         # calculate inverse response matrix on demand
