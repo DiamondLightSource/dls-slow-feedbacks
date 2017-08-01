@@ -4,7 +4,6 @@ import mml
 from softioc import builder
 import cothread
 from cothread.catools import caget, ca_nothing
-from numpy import *
 from scipy.io import loadmat
 import sofb
 

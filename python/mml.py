@@ -1,7 +1,8 @@
 "MML for RFFB and SOFB, loaded from SQL config file"
 
 import sys, os
-from numpy import *
+import numpy as np
+import sqlite3
 
 mml_sql = os.path.join(os.path.dirname(__file__), "mml.sql")
 
@@ -12,7 +13,6 @@ class family(object):
 
 def fromsql():
     "load accelerator object from SQL"
-    import sqlite3
     conn = sqlite3.connect(":memory:")
     conn.text_factory = str
     for line in file(mml_sql).readlines():
@@ -28,7 +28,7 @@ def fromsql():
         fdict = {}
         for c in cols:
             rows = conn.execute(query % {"col": c}, (f,)).fetchall()
-            v = array([r[0] for r in rows])
+            v = np.array([r[0] for r in rows])
             fdict[c] = v
         ao2[f] = family(**fdict)
     # fix up vector channels
