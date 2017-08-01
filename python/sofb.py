@@ -7,6 +7,10 @@ from cothread import Spawn, Sleep, WaitForQuit
 import mml
 
 
+# PSC Enum constants
+PSC_STATE_ON = 2
+
+
 def tkv_reg(m, mu, singular_values):
     # Tikhonov regularization
     u, s, vt = svd(m, full_matrices = False)
@@ -47,7 +51,8 @@ class sofb(object):
         self.cache = {}
         device_names = concatenate(
                 (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
-        self.psc_pv_names = array([d + ':ERCSUM' for d in device_names])
+        self.psc_error_names = array([d + ':ERCSUM' for d in device_names])
+        self.psc_state_names = array([d + ':STATE' for d in device_names])
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
@@ -79,9 +84,15 @@ class sofb(object):
         hbpmen = logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
         vbpmen = logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
 
-        pv_values = array(caget(self.psc_pv_names[concatenate((hen, ven))]))
-        if pv_values.any():
-            raise CalculationException('Required corrector in error')
+        psc_errors = array(caget(self.psc_error_names[concatenate((hen, ven))]))
+        if psc_errors.any():
+            raise CalculationException(
+                    'Required corrector in error')
+
+        psc_states = array(caget(self.psc_state_names[concatenate((hen, ven))]))
+        if not (psc_states == PSC_STATE_ON).all():
+            raise CalculationException(
+                    'Required corrector in bad state')
 
         # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
