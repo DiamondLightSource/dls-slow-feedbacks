@@ -86,13 +86,17 @@ class sofb(object):
 
         psc_errors = array(caget(self.psc_error_names[concatenate((hen, ven))]))
         if psc_errors.any():
+            error_index = nonzero(psc_errors)[0] + 1
+            print 'Correctors with ERCSUM nonzero:', error_index
             raise CalculationException(
-                    'Required corrector in error')
+                    'Corrector {} in error'.format(error_index[0]))
 
         psc_states = array(caget(self.psc_state_names[concatenate((hen, ven))]))
         if not (psc_states == PSC_STATE_ON).all():
+            error_index = nonzero(psc_states != PSC_STATE_ON)[0] + 1
+            print 'Correctors with state not on:', error_index
             raise CalculationException(
-                    'Required corrector in bad state')
+                    'Corrector {} in bad state'.format(error_index[0]))
 
         # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
