@@ -57,17 +57,29 @@ class sofb_server(object):
                         self.pv_error.set("OK")
                     else:
                         self.power_pv.set(0)
-            except ca_nothing, e:
-                self.pv_error.set(e.name)
-                self.power_pv.set(0)
-                self.calc_error.set(1)
-            except:
-                traceback.print_exc()
-                self.power_pv.set(0)
-                self.calc_error.set(1)
+            except Exception as e:
+                self.handle_exception(e)
+
+    def handle_exception(self, exception):
+        if isinstance(exception, sofb.CalculationException):
+            self.pv_error.set(exception.message)
+            self.power_pv.set(0)
+            self.calc_error.set(1)
+        elif isinstance(exception, ca_nothing):
+            self.pv_error.set(exception.name)
+            self.power_pv.set(0)
+            self.calc_error.set(1)
+        else:
+            self.power_pv.set(0)
+            self.calc_error.set(1)
+        # Log why we have failed
+        traceback.print_exc()
 
     def single(self, value):
-        self.sofb.correction()
+        try:
+            self.sofb.correction()
+        except Exception as e:
+            self.handle_exception(e)
 
     def records(self):
         builder.SetDeviceName("SR-CS-SOFB-01")
