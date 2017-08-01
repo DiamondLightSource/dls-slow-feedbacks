@@ -66,7 +66,7 @@ class sofb_server(object):
             self.power_pv.set(0)
             self.calc_error.set(1)
         elif isinstance(exception, ca_nothing):
-            self.pv_error.set(e.name)
+            self.pv_error.set(exception.name)
             self.power_pv.set(0)
             self.calc_error.set(1)
         else:
