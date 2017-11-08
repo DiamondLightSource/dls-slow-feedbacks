@@ -2,7 +2,8 @@ import os
 import traceback
 from softioc import builder
 import cothread
-from cothread.catools import *
+from cothread.catools import caput, camonitor, FORMAT_TIME
+import numpy as np
 from numpy import *
 from scipy.io import loadmat
 import time
@@ -137,12 +138,12 @@ class PVMonitor:
 
 
 class WFMonitor:
-    def __init__(self, names, dtype=double):
+    def __init__(self, names, dtype=np.double):
         self.names = names
         self.ok = False
-        self.oks = zeros(len(names), dtype=bool)
-        self.values = zeros(len(names), dtype=dtype)
-        self.timestamps = zeros(len(names))
+        self.oks = np.zeros(len(names), dtype=np.bool)
+        self.values = np.zeros(len(names), dtype=dtype)
+        self.timestamps = np.zeros(len(names))
         camonitor(names, self.on_update,
             format = FORMAT_TIME, notify_disconnect = True)
 
@@ -152,7 +153,7 @@ class WFMonitor:
             self.values[index] = +value
             self.timestamps[index] = value.timestamp
         else:
-            self.values[index] = nan
+            self.values[index] = np.nan
             self.timestamps[index] = time.time()
         self.ok = all(self.oks)
 
@@ -164,7 +165,7 @@ class SkewQuadrupoles:
     def __init__(self):
         self.monitors()
         self.sp = None
-        self.sum_delta = zeros(self.num)
+        self.sum_delta = np.zeros(self.num)
         self._use_setpoint = False
 
         self.last_levels_ok_fail = None
@@ -202,7 +203,7 @@ class SkewQuadrupoles:
     def make_setpoint(self):
         if self.seti.ok:
             self.sp = +self.seti.values
-            self.sum_delta = zeros(self.num)
+            self.sum_delta = np.zeros(self.num)
 
 
     def use_setpoint(self, use):
@@ -257,9 +258,9 @@ class SkewQuadrupoles:
             return False
 
         results = caput(self.squad_pvs, new_sqvals, throw=False)
-        ok = all(map(bool, results))
+        ok = np.all(map(bool, results))
         if not ok:
-            print 'vefb: caput error' 
+            print 'vefb: caput error'
             for s in [str(r) for r in results if not bool(r)]:
                 print s
         return ok
@@ -340,7 +341,7 @@ class vefb_server:
                          self.beam_current,
                          self.emit_status ]
 
-            if all([pv.ok for pv in monitors]):
+            if np.all([pv.ok for pv in monitors]):
                 print 'vefb: initialised ok'
                 return
             if time.time() > end_time:
@@ -457,7 +458,7 @@ class vefb_server:
         self.skewhw_new = None
 
         try:
-            self.skewhw_old = ones(self.skew_quads.num)
+            self.skewhw_old = np.ones(self.skew_quads.num)
             print 'skewhw_old', self.skewhw_old
 
             matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
@@ -809,7 +810,7 @@ class vefb_server:
         # check delta within limits and raise error or scale
         delta_max = self.squad_delta_max_pv.get()
         if check_limits:
-            if abs(delta) > delta_max:
+            if np.abs(delta) > delta_max:
                 return VEFBStatus.MAGNET_DELTA_ERROR
         else:
             if delta_max <= 0:

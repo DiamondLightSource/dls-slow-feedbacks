@@ -1,9 +1,8 @@
 import sys, os, traceback
 
-from numpy import *
-from numpy.linalg import *
-from cothread.catools import *
-from cothread import Spawn, Sleep, WaitForQuit
+import numpy as np
+from numpy import linalg
+from cothread.catools import caput, caget
 import mml
 
 
@@ -13,16 +12,16 @@ PSC_STATE_ON = 2
 
 def tkv_reg(m, mu, singular_values):
     # Tikhonov regularization
-    u, s, vt = svd(m, full_matrices = False)
+    u, s, vt = linalg.svd(m, full_matrices = False)
     # We use nan_to_num here to catch the case of singular m and zero mu.
-    si = nan_to_num(s / (mu + s**2))
+    si = np.nan_to_num(s / (mu + s**2))
 
     if singular_values is not None:
         singular_values.s.set(s)
-        singular_values.s_inv.set(nan_to_num(1 / s))
+        singular_values.s_inv.set(np.nan_to_num(1 / s))
         singular_values.s_inv_cut.set(si)
-        singular_values.length.set(count_nonzero(s))
-    return dot(vt.T * si, u.T)
+        singular_values.length.set(np.count_nonzero(s))
+    return np.dot(vt.T * si, u.T)
 
 
 class SingularValuePVs(object):
@@ -49,10 +48,10 @@ class sofb(object):
         self.mu = 0.01
         self.svd = {'X':None, 'Y':None}
         self.cache = {}
-        device_names = concatenate(
+        device_names = np.concatenate(
                 (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
-        self.psc_error_names = array([d + ':ERCSUM' for d in device_names])
-        self.psc_state_names = array([d + ':STATE' for d in device_names])
+        self.psc_error_names = np.array([d + ':ERCSUM' for d in device_names])
+        self.psc_state_names = np.array([d + ':STATE' for d in device_names])
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
@@ -66,11 +65,11 @@ class sofb(object):
             return self.cache[key]
         print "new response matrix"
         irm = [None, None]
-        rmx = self.rmx[ix_(hbpmen, hen)]
-        rmy = self.rmy[ix_(vbpmen, ven)]
+        rmx = self.rmx[np.ix_(hbpmen, hen)]
+        rmy = self.rmy[np.ix_(vbpmen, ven)]
         irm = [
-            tkv_reg(rmx, mu, self.svd['X']) if rmx.size else array([]),
-            tkv_reg(rmy, mu, self.svd['Y']) if rmy.size else array([])]
+            tkv_reg(rmx, mu, self.svd['X']) if rmx.size else np.array([]),
+            tkv_reg(rmy, mu, self.svd['Y']) if rmy.size else np.array([])]
         self.cache.clear()
         self.cache[key] = irm
         return irm
@@ -81,19 +80,21 @@ class sofb(object):
         ven = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
 
         bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
-        hbpmen = logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
-        vbpmen = logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
+        hbpmen = np.logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
+        vbpmen = np.logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
 
-        psc_errors = array(caget(self.psc_error_names[concatenate((hen, ven))]))
+        psc_errors = np.array(
+                caget(self.psc_error_names[np.concatenate((hen, ven))]))
         if psc_errors.any():
-            error_index = nonzero(psc_errors)[0] + 1
+            error_index = np.nonzero(psc_errors)[0] + 1
             print 'Correctors with ERCSUM nonzero:', error_index
             raise CalculationException(
                     'Corrector {} in error'.format(error_index[0]))
 
-        psc_states = array(caget(self.psc_state_names[concatenate((hen, ven))]))
+        psc_states = np.array(
+                caget(self.psc_state_names[np.concatenate((hen, ven))]))
         if not (psc_states == PSC_STATE_ON).all():
-            error_index = nonzero(psc_states != PSC_STATE_ON)[0] + 1
+            error_index = np.nonzero(psc_states != PSC_STATE_ON)[0] + 1
             print 'Correctors with state not on:', error_index
             raise CalculationException(
                     'Corrector {} in bad state'.format(error_index[0]))
@@ -108,12 +109,12 @@ class sofb(object):
         vcm = caget(mml.ao["vcm"].setpoint[ven])
 
         if not irm[0].size == 0:
-            hdelta = dot(irm[0], bpmx)
+            hdelta = np.dot(irm[0], bpmx)
             hdelta = hdelta * self.scale(hdelta)
             caput(mml.ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
 
         if not irm[1].size == 0:
-            vdelta = dot(irm[1], bpmy)
+            vdelta = np.dot(irm[1], bpmy)
             vdelta = vdelta * self.scale(vdelta)
             caput(mml.ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
 

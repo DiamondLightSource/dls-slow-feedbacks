@@ -1,9 +1,7 @@
 import sys, os
 
-from scipy.io.matlab import *
-from numpy import *
+import numpy as np
 from numpy.linalg import svd, pinv
-from cothread.catools import *
 
 cache = {}
 
@@ -19,9 +17,9 @@ def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp, rad_over_A):
 
     # disable bpms
     dispx = dispx[enabled_bpm]
-    rmx = rmx[ix_(enabled_bpm, enabled_cor)] / rad_over_A[enabled_cor]
+    rmx = rmx[np.ix_(enabled_bpm, enabled_cor)] / rad_over_A[enabled_cor]
 
-    dispcor = dot(pinv(rmx), dispx)
+    dispcor = np.dot(pinv(rmx), dispx)
 
     cache.clear()
     cache[key] = dispcor
@@ -34,5 +32,5 @@ def calc_rffb(bpmresp, disp, enabled_bpm, enabled_cor, hcm, rad_over_A):
     # the "inverse" of a vector v is: v / |v|^2
     # same as you get from the svd pinv:
     # pinv([v])[0] = v / sum(v**2)
-    drf = dot(hcm * rad_over_A[enabled_cor], dispcor / sum(dispcor**2))
+    drf = np.dot(hcm * rad_over_A[enabled_cor], dispcor / sum(dispcor**2))
     return drf

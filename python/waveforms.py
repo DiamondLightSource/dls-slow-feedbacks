@@ -5,11 +5,10 @@ import mml
 from softioc import builder
 import cothread
 from cothread.catools import caget, ca_nothing, FORMAT_CTRL
-from numpy import *
+import numpy as np
 
 
 class waveforms_server(object):
-
 
     PLANES = [0, 1]
     FAMILIES = {
@@ -17,7 +16,6 @@ class waveforms_server(object):
             'bpm': ['bpmx', 'bpmy'],
             }
     SPEEDS = ['slow', 'fast']
-
 
     def __init__(self):
         self.wf = {}
@@ -56,9 +54,9 @@ class waveforms_server(object):
             hv[p] = caget(pvs, format=FORMAT_CTRL)
             # convert to relative magnitude
             mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
-            rhv[p] = 2 * abs(array(hv[p]) / mag[p])
+            rhv[p] = 2 * abs(np.array(hv[p]) / mag[p])
             # update max value and name
-            i = argmax(abs(array(rhv[p])))
+            i = np.argmax(abs(np.array(rhv[p])))
             self.maxval[p].set(rhv[p][i])
             self.maxname[p].set(pvs[i])
 
@@ -97,9 +95,9 @@ class waveforms_server(object):
         for i, (k, v) in enumerate(nm):
             builder.SetDeviceName(v)
             self.wf['current'].append(builder.WaveformOut(
-                "I", initial_value = zeros(len(mml.ao[k].s))))
+                "I", initial_value = np.zeros(len(mml.ao[k].s))))
             self.wf['mag'].append(builder.WaveformOut(
-                "MAG", initial_value = zeros(len(mml.ao[k].s))))
+                "MAG", initial_value = np.zeros(len(mml.ao[k].s))))
             builder.WaveformOut("S", initial_value = mml.ao[k].s)
 
     def create_control_and_waveform_pvs(self):
@@ -134,7 +132,7 @@ class waveforms_server(object):
                         "%s:ENABLED" % speed.upper(),
                         on_update=lambda _, f=fam_type, s=speed, p=p:
                             self.latch(f, s, p),
-                        initial_value=zeros(len(mml.ao[fam].enabled)))
+                        initial_value=np.zeros(len(mml.ao[fam].enabled)))
                 ## Create individule control PVs
                 for n, c in enumerate(mml.ao[fam].devices):
                     # Replace bpm names with plane dependant names
