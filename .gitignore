@@ -1,4 +1,7 @@
+# Compiled python
 *.pyc
+
+# Generated files
 /opi/cors.edl
 /opi/bpms.edl
 /opi/runcss.sh
@@ -6,3 +9,7 @@
 
 # Testing cache
 .cache
+
+# Vim
+*.swp
+*.swo

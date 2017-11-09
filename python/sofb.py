@@ -41,7 +41,7 @@ class CalculationException(Exception):
     pass
 
 
-class sofb(object):
+class Sofb(object):
 
     def __init__(self):
         self.step_limit = 0.1
