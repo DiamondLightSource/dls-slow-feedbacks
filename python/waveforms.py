@@ -60,13 +60,6 @@ class WaveformsServer(object):
             self.maxval[p].set(rhv[p][i])
             self.maxname[p].set(pvs[i])
 
-        if self.latched:
-            self.write(*self.latched)
-            self.latched = None
-            return
-
-        # write to waveforms (disabled are set to zero)
-        for p in self.PLANES:
             w = self.wf['current'][p].get()
             w = hv[p]
             self.wf['current'][p].set(w)
@@ -74,6 +67,13 @@ class WaveformsServer(object):
             rw = self.wf['mag'][p].get()
             rw = rhv[p]
             self.wf['mag'][p].set(rw)
+
+        # update individule records on waveform change. we must latch the
+        # change to prevent the record and waveform from recursivly updating
+        if self.latched:
+            self.write(*self.latched)
+            self.latched = None
+            return
 
     def update(self, key, value, mode, element):
         "update corrector enabled vector from individual records"
