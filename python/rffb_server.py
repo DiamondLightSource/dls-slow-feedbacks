@@ -119,10 +119,12 @@ class RffbServer(object):
         rffb_calc.cache.clear()
         path = os.path.join(self.dataroot, datadir)
         try:
-            self.bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
-            self.disp = loadmat(os.path.join(path, "GoldenDisp"))
-            assert(self.bpmresp["Rmat"][0,0]["Units"] == "Hardware")
-            assert(self.disp["BPMxDisp"]["Units"] == "Hardware")
+            raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
+            raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
+            self.bpmresp = raw_bpmresp["Rmat"][0,0]["Data"]
+            self.disp = raw_disp["BPMxDisp"]["Data"][0,0]
+            assert(raw_bpmresp["Rmat"][0,0]["Units"] == "Hardware")
+            assert(raw_disp["BPMxDisp"]["Units"] == "Hardware")
             self.matrix_error.set(0)
             print "RFFB loaded matrix %s" % datadir
         except:

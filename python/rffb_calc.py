@@ -12,8 +12,8 @@ def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp, rad_over_A):
     if key in cache:
         return cache[key]
 
-    dispx = disp["BPMxDisp"]["Data"][0,0]
-    rmx = bpmresp["Rmat"][0,0]["Data"]
+    dispx = disp
+    rmx = bpmresp
 
     # disable bpms
     dispx = dispx[enabled_bpm]
