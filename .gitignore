@@ -13,3 +13,6 @@
 # Vim
 *.swp
 *.swo
+
+# Pycharm
+/.idea
