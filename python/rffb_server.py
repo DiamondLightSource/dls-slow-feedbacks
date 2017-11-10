@@ -11,6 +11,7 @@ import numpy
 
 import mml
 import rffb_calc
+import mode
 
 
 class RffbServer(object):
@@ -126,6 +127,9 @@ class RffbServer(object):
             assert(raw_bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             assert(raw_disp["BPMxDisp"]["Units"] == "Hardware")
             self.matrix_error.set(0)
+            # insert missing corrector 11-5 into DIAD response matrices
+            if datadir in mode.DIAD_MODES:
+                self.bpmresp = numpy.insert(self.bpmresp, 77, 0, axis=1)
             print "RFFB loaded matrix %s" % datadir
         except:
             traceback.print_exc()

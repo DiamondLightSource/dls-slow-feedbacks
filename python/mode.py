@@ -2,7 +2,10 @@ from softioc import builder
 
 
 RING_MODES = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
-              "SRLETHz", "SRI0913_MOGA", "SRI21", "VMX", "VMXSP", "VMXTHz"]
+              "SRLETHz", "SRI0913_MOGA", "SRI21", "VMX", "VMXSP", "VMXTHz",
+              "DIAD", "DIADSP", "DIADTHz"]
+
+DIAD_MODES = ['DIAD', 'DIADSP', 'DIADTHz']
 
 
 class RingMode(object):

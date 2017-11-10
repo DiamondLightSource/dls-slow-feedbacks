@@ -5,7 +5,10 @@ from softioc import builder
 import cothread
 from cothread.catools import caget, ca_nothing
 from scipy.io import loadmat
+import numpy as np
+
 import sofb
+import mode
 
 
 class SofbServer(object):
@@ -27,6 +30,8 @@ class SofbServer(object):
             assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             self.sofb.rmx = bpmresp["Rmat"][0,0]["Data"]
             self.sofb.rmy = bpmresp["Rmat"][1,1]["Data"]
+            if datadir in mode.DIAD_MODES:
+                self.sofb.rmx = np.insert(self.sofb.rmx, 77, 0, axis=1)
             print "SOFB loaded matrix %s" % datadir
             self.matrix_error.set(0)
         except:
