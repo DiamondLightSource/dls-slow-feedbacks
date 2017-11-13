@@ -3,7 +3,6 @@ import sys, os, traceback
 import numpy as np
 from numpy import linalg
 from cothread.catools import caput, caget
-import mml
 
 
 # PSC Enum constants
@@ -43,13 +42,15 @@ class CalculationException(Exception):
 
 class Sofb(object):
 
-    def __init__(self):
+    def __init__(self, lattice):
+        self.lattice = lattice
         self.step_limit = 0.1
         self.mu = 0.01
         self.svd = {'X':None, 'Y':None}
         self.cache = {}
         device_names = np.concatenate(
-                (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
+                (lattice.get_device_names('HSTR', 'b0'),
+                 lattice.get_device_names('VSTR', 'a0')))
         self.psc_error_names = np.array([d + ':ERCSUM' for d in device_names])
         self.psc_state_names = np.array([d + ':STATE' for d in device_names])
 
@@ -102,21 +103,21 @@ class Sofb(object):
         # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
 
-        bpmx = caget(mml.ao["bpmx"].readback)[hbpmen]
-        hcm = caget(mml.ao["hcm"].setpoint[hen])
+        bpmx = caget(lattice.get_pv_names('BPM', 'x', pytac.RB))[hbpmen]
+        hcm = caget(lattice.get_pv_names('HSTR', 'b0'))[hen]
 
-        bpmy = caget(mml.ao["bpmy"].readback)[vbpmen]
-        vcm = caget(mml.ao["vcm"].setpoint[ven])
+        bpmx = caget(lattice.get_pv_names('BPM', 'y', pytac.RB))[vbpmen]
+        vcm = caget(lattice.get_pv_names('VSTR', 'a0', pytac.RB))[ven]
 
         if not irm[0].size == 0:
             hdelta = np.dot(irm[0], bpmx)
             hdelta = hdelta * self.scale(hdelta)
-            caput(mml.ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
+            caput(lattice.get_pv_names('HSTR', 'b0', pytac.SP), hcm - hdelta * afrac)
 
         if not irm[1].size == 0:
             vdelta = np.dot(irm[1], bpmy)
             vdelta = vdelta * self.scale(vdelta)
-            caput(mml.ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
+            caput(lattice.get_pv_names('VSTR', 'a0', pytac.SP), vcm - vdelta * afrac)
 
         caput("CS-CS-MSTAT-01:FBHEART", 10)
 

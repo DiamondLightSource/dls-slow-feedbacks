@@ -1,6 +1,5 @@
 import os
 import traceback
-import mml
 from softioc import builder
 import cothread
 from cothread.catools import caget, ca_nothing
@@ -14,9 +13,9 @@ import mode
 class SofbServer(object):
 
     def __init__(self, ring_mode):
-        self.sofb = sofb.Sofb()
+        self.sofb = sofb.Sofb(ring_mode.lattice)
         self.power = 0
-        self.records()
+        self.records(ring_mode.lattice)
         ring_mode.add_listener(self.set_datadir)
 
     def set_datadir(self, lattice):
@@ -83,7 +82,7 @@ class SofbServer(object):
         except Exception as e:
             self.handle_exception(e)
 
-    def records(self):
+    def records(self, lattice):
         builder.SetDeviceName("SR-CS-SOFB-01")
 
         self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
@@ -99,7 +98,7 @@ class SofbServer(object):
         # Corrector magnet ID, in floating point format: cell.position_in_cell
         # This matches the format of SR-DI-EBPM-01:BPMID
         mag_ids = []
-        for mag in mml.ao['hcm'].devices:
+        for mag in lattice.get_device_names('HCM', 'b0'):
             if mag[4] == 'S':
                 mag_ids.append(int(mag[2:4]) + 0.1*(int(mag[-2:]) - 2))
             elif mag[10:14] == 'SCOR':
@@ -109,7 +108,8 @@ class SofbServer(object):
         builder.WaveformIn("CMID", initial_value = mag_ids)
 
         # PVs for demonstrating SVD effect
-        svd_length = len(mml.ao['bpmx'].s)
+        bpms = lattice.get_elements('BPM')
+        svd_length = len(bpms)
         for plane in ['X', 'Y']:
             sv_pvs = sofb.SingularValuePVs()
             sv_pvs.length = builder.aIn(
