@@ -160,18 +160,18 @@ class TunefbServer(object):
         # Initalise EPICS records
         self.records()
 
-    def set_datadir(self, datadir):
+    def set_datadir(self, lattice):
         """Load required data from files in datadir."""
         # Load tune config file into environment
         env = {}
         execfile(GOLDEN_TUNE_CONFIG, env)
 
         # Select correct tune based on ringmode
-        tune_h = env['X_tune_' + datadir] * 0.0001
-        tune_v = env['Y_tune_' + datadir] * 0.0001
+        tune_h = env['X_tune_' + lattice.name] * 0.0001
+        tune_v = env['Y_tune_' + lattice.name] * 0.0001
 
         # Load data from file
-        mode_dir = os.path.join(mode.DATAROOT, datadir)
+        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
         self.rm = load_tune_rm(os.path.join(mode_dir, 'GoldenTuneResp.mat'))
 
         # Invert response matrix

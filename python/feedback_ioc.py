@@ -3,7 +3,7 @@
 import os, sys
 from pkg_resources import require
 require('cothread==2.10')
-require('scipy==0.10.1')
+require('scipy==0.19.1')
 require('epicsdbbuilder==1.0')
 
 

@@ -19,17 +19,17 @@ class SofbServer(object):
         self.records()
         ring_mode.add_listener(self.set_datadir)
 
-    def set_datadir(self, datadir):
+    def set_datadir(self, lattice):
         self.sofb.cache.clear()
-        path = os.path.join(mode.DATAROOT, datadir)
+        path = os.path.join(mode.DATAROOT, lattice.name)
         try:
             bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             self.sofb.rmx = bpmresp["Rmat"][0,0]["Data"]
             self.sofb.rmy = bpmresp["Rmat"][1,1]["Data"]
-            if datadir in mode.DIAD_MODES:
+            if lattice.name in mode.DIAD_MODES:
                 self.sofb.rmx = np.insert(self.sofb.rmx, 77, 0, axis=1)
-            print "SOFB loaded matrix %s" % datadir
+            print "SOFB loaded matrix %s" % lattice.name
             self.matrix_error.set(0)
         except:
             traceback.print_exc()

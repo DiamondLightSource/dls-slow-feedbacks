@@ -21,7 +21,6 @@ class RffbServer(object):
         self.power = 0
         self.rfstep = 0.1
         self.period = 10
-        self.datadir = "SR"
         # use MML database
         self.rad_over_A = mml.ao["hcm"].hw2physics
         self.correctors = mml.ao["hcm"].readback
@@ -113,9 +112,9 @@ class RffbServer(object):
     def set_valid(self, valid):
         self.valid = valid
 
-    def set_datadir(self, datadir):
+    def set_datadir(self, lattice):
         rffb_calc.cache.clear()
-        path = os.path.join(mode.DATAROOT, datadir)
+        path = os.path.join(mode.DATAROOT, lattice.name)
         try:
             raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
@@ -125,9 +124,9 @@ class RffbServer(object):
             assert(raw_disp["BPMxDisp"]["Units"] == "Hardware")
             self.matrix_error.set(0)
             # insert missing corrector 11-5 into DIAD response matrices
-            if datadir in mode.DIAD_MODES:
+            if lattice.name in mode.DIAD_MODES:
                 self.bpmresp = numpy.insert(self.bpmresp, 77, 0, axis=1)
-            print "RFFB loaded matrix %s" % datadir
+            print "RFFB loaded matrix %s" % lattice.name
         except:
             traceback.print_exc()
             self.bpmresp = None

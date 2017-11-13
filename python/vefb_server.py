@@ -454,7 +454,7 @@ class VefbServer(object):
 
         self.enabled_first_time = False
 
-    def on_ringmode_change(self, ringmode):
+    def on_ringmode_change(self, lattice):
         self.last = None
         self.IRM = None
         self.IRM_old = None
@@ -463,7 +463,7 @@ class VefbServer(object):
         self.skewhw_new = None
 
         # Remove skew quad 11-3 when we're using DIAD
-        if ringmode in mode.DIAD_MODES:
+        if lattice.name in mode.DIAD_MODES:
             self.skew_quads = SkewQuadrupoles([44])
         else:
             self.skew_quads = SkewQuadrupoles()
@@ -473,8 +473,8 @@ class VefbServer(object):
             print 'skewhw_old', self.skewhw_old
 
             rm_file = os.path.join(
-                mode.DATAROOT, ringmode, 'GoldenCouplingEmittance.mat')
-            print 'vefb: loadMatrix', ringmode, rm_file
+                mode.DATAROOT, lattice.name, 'GoldenCouplingEmittance.mat')
+            print 'vefb: loadMatrix', lattice.name, rm_file
 
             RM_load=loadmat(rm_file)
             RM=RM_load['RM']
@@ -488,8 +488,8 @@ class VefbServer(object):
 
         try:
             rm_file = os.path.join(
-                mode.DATAROOT, ringmode, 'GoldenSkewVector.mat')
-            print 'vefb: loadSkewVector', ringmode, rm_file
+                mode.DATAROOT, lattice.name, 'GoldenSkewVector.mat')
+            print 'vefb: loadSkewVector', lattice.name, rm_file
 
             RM_load=loadmat(rm_file)
             RM=RM_load['RM']
