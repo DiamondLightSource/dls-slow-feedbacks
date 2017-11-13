@@ -107,7 +107,7 @@ class TunefbServer(object):
         corrects tune towards a setpoint.
     """
 
-    def __init__(self, mode):
+    def __init__(self, ring_mode):
         """Fetch data from files and set up soft IOC."""
         # Initial values for PVs
         self.afrac = 0.2
@@ -139,8 +139,8 @@ class TunefbServer(object):
         # Load data from files (and on ringmode change)
         self.rm = None
         self.irm = None
-        if self.set_datadir not in mode.listeners:
-            mode.add_listener(self.set_datadir)
+        if self.set_datadir not in ring_mode.listeners:
+            ring_mode.add_listener(self.set_datadir)
 
         # Magnet setpoint PVs
         self.mag_ctrl_pvs = [pv + ':I' for pv in self.local_pvs]
