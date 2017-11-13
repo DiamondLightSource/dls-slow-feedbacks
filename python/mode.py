@@ -26,6 +26,7 @@ class RingMode(object):
         self.records()
         self.listeners = []
         self.name = DEFAULT_RING_MODE
+        self.lattice = load_pml_lattice(self.name)
 
     def records(self):
         builder.SetDeviceName('SR-CS-RING-01')

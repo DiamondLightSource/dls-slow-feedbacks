@@ -126,10 +126,8 @@ class TunefbServer(object):
         # Count consecutive invalid exceptions to eventually trip
         self.invalid_counter = 0
 
-        # Load magnet PVs from file in this directory.
-        pydir = os.path.dirname(os.path.realpath(__file__))
-        pvs_file = os.path.join(pydir, 'TunePvs.txt')
-        self.mag_pvs = load_magnet_pvs(pvs_file)
+        # Load magnet PVs from Pytac
+        self.mag_pvs = load_magnet_pvs(ring_mode.lattice)
         self.local_pvs = rename_pvs(self.mag_pvs)
 
         # List of references to locally hosted mirror PVs, created
@@ -141,9 +139,6 @@ class TunefbServer(object):
         self.irm = None
         if self.set_datadir not in ring_mode.listeners:
             ring_mode.add_listener(self.set_datadir)
-
-        # Magnet setpoint PVs
-        self.mag_ctrl_pvs = [pv + ':I' for pv in self.local_pvs]
 
         # fetch values from the PVs we will be mirroring, before
         # starting up.
@@ -162,6 +157,10 @@ class TunefbServer(object):
 
     def set_datadir(self, lattice):
         """Load required data from files in datadir."""
+        # Load magnet PVs from Pytac
+        self.mag_pvs = load_magnet_pvs(ring_mode.lattice)
+        self.local_pvs = rename_pvs(self.mag_pvs)
+
         # Load tune config file into environment
         env = {}
         execfile(GOLDEN_TUNE_CONFIG, env)

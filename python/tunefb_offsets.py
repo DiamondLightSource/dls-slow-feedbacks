@@ -4,13 +4,8 @@ Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
 Each .INP is set to the local PV mirrored in our IOC.
 '''
-
-from pkg_resources import require
-require('cothread')
-import cothread
-from cothread.catools import caget, caput
 import sys
-import os
+import mode
 
 # Constants
 BEAM_DAMP_TIME = 0.001
@@ -20,16 +15,21 @@ OFFSET_INPUT = ':OFFSET1.INP'
 LOCAL_LINK =':LOFFSET1 CPP MS'
 
 
-def load_magnet_pvs(txt_file):
+TUNE_QUAD_FAMILIES = ('Q1D', 'Q2D', 'Q3D', 'Q3B', 'Q2B', 'Q1B')
+
+
+def load_magnet_pvs(lattice):
     '''
     Load corrector magnet PVs from the specific format
     in the file.
     '''
-    mag_pvs = []
-    with open(txt_file) as f:
-        for line in f:
-            mag_pvs.append(line.strip())
-    return mag_pvs
+    quad_names = []
+    for family in TUNE_QUAD_FAMILIES:
+        quad_elements = lattice.get_elements(family)
+        devices = [q.get_device('b1').name for q in quad_elements]
+        quad_names.extend(devices)
+
+    return quad_names
 
 
 def rename_pvs(pvs):
@@ -42,18 +42,23 @@ def rename_pvs(pvs):
         new_pvs.append(new_pv)
     return new_pvs
 
+
 def all_forwarded(local_pvs, mag_pvs):
+    # import here to make sure that cothread has been loaded
+    from cothread.catools import caget
     inps = caget([pv + OFFSET_INPUT for pv in mag_pvs], timeout=1.)
     expected = [pv + CURRENT_LINK for pv in local_pvs]
     return inps == expected
 
 
 if __name__ == "__main__":
-    # load file from same directory as the script
-    PYDIR = os.path.dirname(os.path.realpath(__file__))
-    PVS_FILE = os.path.join(PYDIR, 'TunePvs.txt')
+    from pkg_resources import require
+    require('cothread')
+    import cothread
+    from cothread.catools import caget, caput
 
-    mag_pvs = load_magnet_pvs(PVS_FILE)
+    lattice = pytac.load_csv(mode.DEFAULT_RING_MODE)
+    mag_pvs = load_magnet_pvs(lattice)
     local_pvs = rename_pvs(mag_pvs)
 
     if 'test' in sys.argv:
