@@ -7,6 +7,8 @@ RING_MODES = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
 
 DIAD_MODES = ['DIAD', 'DIADSP', 'DIADTHz']
 
+DEFAULT_RING_MODE = 'VMX'
+
 DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
 
 
@@ -22,7 +24,7 @@ class RingMode(object):
                                    *zip(RING_MODES, range(len(RING_MODES))))
 
     def init(self):
-        self.mode.set(RING_MODES.index("VMX"))
+        self.mode.set(RING_MODES.index(DEFAULT_RING_MODE))
 
     def set_mode(self, mode):
         for l in self.listeners:
