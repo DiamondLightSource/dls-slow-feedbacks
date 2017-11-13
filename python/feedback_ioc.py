@@ -38,7 +38,7 @@ from softioc import pvlog
 ring_mode = mode.RingMode()
 
 # Monitors magnet settings and creates aggregated waveforms.
-wavs = waveforms.WaveformsServer()
+wavs = waveforms.WaveformsServer(ring_mode)
 
 # Adjusts RF frequency to minimise horizontal dispersion.
 rffb = rffb_server.RffbServer(ring_mode)

@@ -1,7 +1,7 @@
 "waveforms and control PVs"
 
 import traceback
-import mml
+import pytac
 from softioc import builder
 import cothread
 from cothread.catools import caget, ca_nothing, FORMAT_CTRL
@@ -12,12 +12,13 @@ class WaveformsServer(object):
 
     PLANES = [0, 1]
     FAMILIES = {
-            'cor': ['hcm', 'vcm'],
-            'bpm': ['bpmx', 'bpmy'],
+            'cor': [('HSTR', 'b0'), ('VSTR', 'a0')],
+            'bpm': [('BPM', 'x'), ('BPM', 'y')]
             }
     SPEEDS = ['slow', 'fast']
 
-    def __init__(self):
+    def __init__(self, ring_mode):
+        self.lattice = ring_mode.lattice
         self.wf = {}
         self.records = {}
         self.latched = None
@@ -50,7 +51,7 @@ class WaveformsServer(object):
 
         # get corrector readbacks
         for p in self.PLANES:
-            pvs = mml.ao[fam[p]].readback
+            pvs = self.lattice.get_pv_names(fam[p][0], fam[p][1], pytac.RB)
             hv[p] = caget(pvs, format=FORMAT_CTRL)
             # convert to relative magnitude
             mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
@@ -85,20 +86,21 @@ class WaveformsServer(object):
 
     def create_info_waveforms(self):
         builder.SetDeviceName("SR-DI-EBPM-01")
-        builder.WaveformOut("S", initial_value = mml.ao["bpmx"].s)
+        builder.WaveformOut("S", initial_value = self.lattice.get_family_s("BPM"))
 
-        nm = (("hcm", 'SR-PC-HSTR-01'),
-              ("vcm", 'SR-PC-VSTR-01'))
+        nm = (("HSTR", 'SR-PC-HSTR-01'),
+              ("VSTR", 'SR-PC-VSTR-01'))
 
         self.wf['current'] = []
         self.wf['mag'] = []
         for i, (k, v) in enumerate(nm):
+            elements = self.lattice.get_elements(k)
             builder.SetDeviceName(v)
             self.wf['current'].append(builder.WaveformOut(
-                "I", initial_value = np.zeros(len(mml.ao[k].s))))
+                "I", initial_value = np.zeros(len(elements))))
             self.wf['mag'].append(builder.WaveformOut(
-                "MAG", initial_value = np.zeros(len(mml.ao[k].s))))
-            builder.WaveformOut("S", initial_value = mml.ao[k].s)
+                "MAG", initial_value = np.zeros(len(elements))))
+            builder.WaveformOut("S", initial_value = self.lattice.get_family_s(k))
 
     def create_control_and_waveform_pvs(self):
         self.maxval = [None, None]
@@ -124,7 +126,7 @@ class WaveformsServer(object):
                     'bpm': lambda p: "SR-PC-%sBPM-01" % "HV"[p]
                     }
             for fam_type in self.FAMILIES.keys():
-                fam = self.FAMILIES[fam_type][p]
+                fam, field = self.FAMILIES[fam_type][p]
                 ## Create waveform PVs
                 for speed in self.SPEEDS:
                     builder.SetDeviceName(device_name_func[fam_type](p))
@@ -132,10 +134,10 @@ class WaveformsServer(object):
                         "%s:ENABLED" % speed.upper(),
                         on_update=lambda _, f=fam_type, s=speed, p=p:
                             self.latch(f, s, p),
-                        initial_value=np.zeros(len(mml.ao[fam].enabled)))
-                ## Create individule control PVs
-                for n, c in enumerate(mml.ao[fam].devices):
-                    # Replace bpm names with plane dependant names
+                        initial_value=np.zeros(len(self.lattice.get_elements(fam))))
+                ## Create individual control PVs
+                for n, c in enumerate(self.lattice.get_device_names(fam, field)):
+                    # Replace bpm names with plane-dependent names
                     c = c.replace('DI-EBPM', 'PC-%sBPM' % 'HV'[p])
                     builder.SetDeviceName(c)
                     for speed in self.SPEEDS:
