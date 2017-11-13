@@ -7,6 +7,8 @@ RING_MODES = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
 
 DIAD_MODES = ['DIAD', 'DIADSP', 'DIADTHz']
 
+DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
+
 
 class RingMode(object):
 

@@ -13,18 +13,15 @@ import mode
 
 class SofbServer(object):
 
-    def __init__(self, mode):
+    def __init__(self, ring_mode):
         self.sofb = sofb.Sofb()
         self.power = 0
         self.records()
-        self.dataroot = \
-            "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
-
-        mode.add_listener(self.set_datadir)
+        ring_mode.add_listener(self.set_datadir)
 
     def set_datadir(self, datadir):
         self.sofb.cache.clear()
-        path = os.path.join(self.dataroot, datadir)
+        path = os.path.join(mode.DATAROOT, datadir)
         try:
             bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")

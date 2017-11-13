@@ -16,22 +16,19 @@ import mode
 
 class RffbServer(object):
 
-    def __init__(self, mode):
+    def __init__(self, ring_mode):
         self.tick = 0
         self.power = 0
         self.rfstep = 0.1
         self.period = 10
         self.datadir = "SR"
-        self.dataroot = \
-            "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
-
         # use MML database
         self.rad_over_A = mml.ao["hcm"].hw2physics
         self.correctors = mml.ao["hcm"].readback
 
         self.records()
 
-        mode.add_listener(self.set_datadir)
+        ring_mode.add_listener(self.set_datadir)
 
     def init(self):
         cothread.Spawn(self.timer)
@@ -118,7 +115,7 @@ class RffbServer(object):
 
     def set_datadir(self, datadir):
         rffb_calc.cache.clear()
-        path = os.path.join(self.dataroot, datadir)
+        path = os.path.join(mode.DATAROOT, datadir)
         try:
             raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             raw_disp = loadmat(os.path.join(path, "GoldenDisp"))

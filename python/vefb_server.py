@@ -298,7 +298,7 @@ class SkewQuadrupoles(object):
 
 class VefbServer(object):
 
-    def __init__(self, mode):
+    def __init__(self, ringmode):
         self.skew_quads = SkewQuadrupoles()
 
         self.enabled = False
@@ -329,7 +329,7 @@ class VefbServer(object):
         self.monitors()
         self.records()
 
-        mode.add_listener(self.on_ringmode_change)
+        ringmode.add_listener(self.on_ringmode_change)
 
 
     def init(self):
@@ -472,9 +472,8 @@ class VefbServer(object):
             self.skewhw_old = np.ones(self.skew_quads.num)
             print 'skewhw_old', self.skewhw_old
 
-            matDir = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata/'
             rm_file = os.path.join(
-                matDir, ringmode, 'GoldenCouplingEmittance.mat')
+                mode.DATAROOT, ringmode, 'GoldenCouplingEmittance.mat')
             print 'vefb: loadMatrix', ringmode, rm_file
 
             RM_load=loadmat(rm_file)
@@ -489,7 +488,7 @@ class VefbServer(object):
 
         try:
             rm_file = os.path.join(
-                matDir, ringmode, 'GoldenSkewVector.mat')
+                mode.DATAROOT, ringmode, 'GoldenSkewVector.mat')
             print 'vefb: loadSkewVector', ringmode, rm_file
 
             RM_load=loadmat(rm_file)
