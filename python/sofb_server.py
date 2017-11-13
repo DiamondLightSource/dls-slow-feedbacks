@@ -5,28 +5,30 @@ from softioc import builder
 import cothread
 from cothread.catools import caget, ca_nothing
 from scipy.io import loadmat
+import numpy as np
+
 import sofb
+import mode
 
 
 class SofbServer(object):
 
-    def __init__(self, mode):
+    def __init__(self, ring_mode):
         self.sofb = sofb.Sofb()
         self.power = 0
         self.records()
-        self.dataroot = \
-            "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
-
-        mode.add_listener(self.set_datadir)
+        ring_mode.add_listener(self.set_datadir)
 
     def set_datadir(self, datadir):
         self.sofb.cache.clear()
-        path = os.path.join(self.dataroot, datadir)
+        path = os.path.join(mode.DATAROOT, datadir)
         try:
             bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             self.sofb.rmx = bpmresp["Rmat"][0,0]["Data"]
             self.sofb.rmy = bpmresp["Rmat"][1,1]["Data"]
+            if datadir in mode.DIAD_MODES:
+                self.sofb.rmx = np.insert(self.sofb.rmx, 77, 0, axis=1)
             print "SOFB loaded matrix %s" % datadir
             self.matrix_error.set(0)
         except:

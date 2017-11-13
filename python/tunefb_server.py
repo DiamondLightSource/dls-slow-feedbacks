@@ -6,6 +6,7 @@ import cothread
 from cothread.catools import caget, caput, ca_nothing, FORMAT_TIME
 from softioc import builder, alarm
 from tunefb_offsets import load_magnet_pvs, rename_pvs, all_forwarded
+import mode
 
 
 # Set up logging
@@ -55,8 +56,7 @@ TUNE_PVS = ['SR23C-DI-TMBF-01:TUNE:TUNE',
 CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 
 
-# Configuration directory
-DATADIR = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata'
+# Configuration file
 GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
 
 
@@ -139,7 +139,6 @@ class TunefbServer(object):
         # Load data from files (and on ringmode change)
         self.rm = None
         self.irm = None
-        self.dataroot = DATADIR
         if self.set_datadir not in mode.listeners:
             mode.add_listener(self.set_datadir)
 
@@ -172,7 +171,7 @@ class TunefbServer(object):
         tune_v = env['Y_tune_' + datadir] * 0.0001
 
         # Load data from file
-        mode_dir = os.path.join(self.dataroot, datadir)
+        mode_dir = os.path.join(mode.DATAROOT, datadir)
         self.rm = load_tune_rm(os.path.join(mode_dir, 'GoldenTuneResp.mat'))
 
         # Invert response matrix

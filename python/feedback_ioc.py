@@ -35,22 +35,22 @@ from softioc import pvlog
 
 # Used externally to select the operating ring mode, used to define appropriate
 # feedback parameters internally.
-mode = mode.RingMode()
+ring_mode = mode.RingMode()
 
 # Monitors magnet settings and creates aggregated waveforms.
 wavs = waveforms.WaveformsServer()
 
 # Adjusts RF frequency to minimise horizontal dispersion.
-rffb = rffb_server.RffbServer(mode)
+rffb = rffb_server.RffbServer(ring_mode)
 
 # Slow orbit feedback.
-sofb = sofb_server.SofbServer(mode)
+sofb = sofb_server.SofbServer(ring_mode)
 
 # Vertical emittance feedback.
-vefb = vefb_server.VefbServer(mode)
+vefb = vefb_server.VefbServer(ring_mode)
 
 # Tune feedback.
-tunefb = tunefb_server.TunefbServer(mode)
+tunefb = tunefb_server.TunefbServer(ring_mode)
 
 
 # Create mirror PV for FOFB status to reduce overall load on vxWorks IOCs.
@@ -71,7 +71,7 @@ softioc.iocInit()
 
 
 # Perform post ioc init initialisation for the various components
-mode.init()
+ring_mode.init()
 wavs.init()
 rffb.init()
 sofb.init()

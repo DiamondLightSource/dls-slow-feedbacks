@@ -11,26 +11,24 @@ import numpy
 
 import mml
 import rffb_calc
+import mode
 
 
 class RffbServer(object):
 
-    def __init__(self, mode):
+    def __init__(self, ring_mode):
         self.tick = 0
         self.power = 0
         self.rfstep = 0.1
         self.period = 10
         self.datadir = "SR"
-        self.dataroot = \
-            "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
-
         # use MML database
         self.rad_over_A = mml.ao["hcm"].hw2physics
         self.correctors = mml.ao["hcm"].readback
 
         self.records()
 
-        mode.add_listener(self.set_datadir)
+        ring_mode.add_listener(self.set_datadir)
 
     def init(self):
         cothread.Spawn(self.timer)
@@ -117,13 +115,18 @@ class RffbServer(object):
 
     def set_datadir(self, datadir):
         rffb_calc.cache.clear()
-        path = os.path.join(self.dataroot, datadir)
+        path = os.path.join(mode.DATAROOT, datadir)
         try:
-            self.bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
-            self.disp = loadmat(os.path.join(path, "GoldenDisp"))
-            assert(self.bpmresp["Rmat"][0,0]["Units"] == "Hardware")
-            assert(self.disp["BPMxDisp"]["Units"] == "Hardware")
+            raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
+            raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
+            self.bpmresp = raw_bpmresp["Rmat"][0,0]["Data"]
+            self.disp = raw_disp["BPMxDisp"]["Data"][0,0]
+            assert(raw_bpmresp["Rmat"][0,0]["Units"] == "Hardware")
+            assert(raw_disp["BPMxDisp"]["Units"] == "Hardware")
             self.matrix_error.set(0)
+            # insert missing corrector 11-5 into DIAD response matrices
+            if datadir in mode.DIAD_MODES:
+                self.bpmresp = numpy.insert(self.bpmresp, 77, 0, axis=1)
             print "RFFB loaded matrix %s" % datadir
         except:
             traceback.print_exc()
