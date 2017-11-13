@@ -295,7 +295,7 @@ class SkewQuadrupoles(object):
 class VefbServer(object):
 
     def __init__(self, ring_mode):
-        squad_pv_names = ring_mode.lattice.get_family_pvs('SQUAD', 'a1', pytac.SP)
+        squad_pv_names = ring_mode.lattice.get_pv_names('SQUAD', 'a1', pytac.SP)
         self.skew_quads = SkewQuadrupoles(squad_pv_names)
 
         self.enabled = False
@@ -459,7 +459,7 @@ class VefbServer(object):
         self.IRM_new = None
         self.skewhw_new = None
 
-        squad_pv_names = lattice.get_family_pvs('SQUAD', 'a1', pytac.SP)
+        squad_pv_names = lattice.get_pv_names('SQUAD', 'a1', pytac.SP)
         self.skew_quads.set_pv_names(squad_pv_names)
 
         try:

@@ -25,10 +25,8 @@ def load_magnet_pvs(lattice):
     '''
     quad_names = []
     for family in TUNE_QUAD_FAMILIES:
-        quad_elements = lattice.get_elements(family)
-        devices = [q.get_device('b1').name for q in quad_elements]
-        quad_names.extend(devices)
-
+        device_names = lattice.get_device_names(family, 'b1')
+        quad_names.extend(device_names)
     return quad_names
 
 
