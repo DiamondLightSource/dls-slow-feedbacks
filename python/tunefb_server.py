@@ -353,7 +353,10 @@ class TunefbServer(object):
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
         except Exception, e:
             log.warn('Unexpected exception: %s' % str(e))
-            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(
+                    Status.UNEXPECTED_ERROR,
+                    severity=alarm.MAJOR_ALARM
+                    )
 
     def step_tune(self, dummy):
         """ Apply raw correction without checking beam current.
@@ -383,7 +386,10 @@ class TunefbServer(object):
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
         except Exception, e:
             log.warn('Unexpected exception: %s' % str(e))
-            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(
+                    Status.UNEXPECTED_ERROR,
+                    severity=alarm.MAJOR_ALARM
+                    )
 
     def reset_error(self, dummy):
         """Reset the error pv."""
@@ -514,8 +520,9 @@ class TunefbServer(object):
                 on_update=self.set_max_current_range, PREC=4)
         self.max_i_pv = builder.aIn(
                 'OFFSETMAX', initial_value=0.0, PREC=4)
-        self.fwd_ok_pv = builder.mbbIn('FWDOK',
-                ('OK', 0), ('NOT FORWARDED', 1), ('IOC DOWN', 2), initial_value=0)
+        self.fwd_ok_pv = builder.mbbIn(
+                'FWDOK', ('OK', 0), ('NOT FORWARDED', 1),
+                ('IOC DOWN', 2), initial_value=0)
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
                 on_update=self.set_min_beam_current, PREC=4)
@@ -531,5 +538,9 @@ class TunefbServer(object):
 
         # Pass all values from the enum into the status PV
         num_statuses = len(Status.STRINGS)
-        status_args = ['STATUS'] + [(Status.STRINGS[code], code) for code in range(num_statuses)]
-        self.status_pv = builder.mbbIn(*status_args, initial_value=Status.FEEDBACK_OFF)
+        status_args = (['STATUS'] +
+                [(Status.STRINGS[code], code) for code in range(num_statuses)])
+        self.status_pv = builder.mbbIn(
+                *status_args,
+                initial_value=Status.FEEDBACK_OFF
+                )

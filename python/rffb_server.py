@@ -21,7 +21,9 @@ class RffbServer(object):
         self.power = 0
         self.rfstep = 0.1
         self.period = 10
-        self.correctors = numpy.array(ring_mode.lattice.get_pv_names('HSTR', 'b0', pytac.RB))
+        self.correctors = numpy.array(
+                ring_mode.lattice.get_pv_names('HSTR', 'b0', pytac.RB)
+                )
 
         self.records()
 
@@ -113,7 +115,9 @@ class RffbServer(object):
     def set_datadir(self, lattice):
         rffb_calc.cache.clear()
         path = os.path.join(mode.DATAROOT, lattice.name)
-        self.correctors = numpy.array(lattice.get_pv_names('HSTR', 'b0', pytac.RB))
+        self.correctors = numpy.array(
+                lattice.get_pv_names('HSTR', 'b0', pytac.RB)
+                )
         try:
             raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             raw_disp = loadmat(os.path.join(path, "GoldenDisp"))

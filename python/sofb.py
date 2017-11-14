@@ -112,12 +112,14 @@ class Sofb(object):
         if not irm[0].size == 0:
             hdelta = np.dot(irm[0], bpmx)
             hdelta = hdelta * self.scale(hdelta)
-            caput(lattice.get_pv_names('HSTR', 'b0', pytac.SP), hcm - hdelta * afrac)
+            hstr_pvs = lattice.get_pv_names('HSTR', 'b0', pytac.SP)
+            caput(hstr_pvs, hcm - hdelta * afrac)
 
         if not irm[1].size == 0:
             vdelta = np.dot(irm[1], bpmy)
             vdelta = vdelta * self.scale(vdelta)
-            caput(lattice.get_pv_names('VSTR', 'a0', pytac.SP), vcm - vdelta * afrac)
+            vstr_pvs = lattice.get_pv_names('VSTR', 'b0', pytac.SP)
+            caput(vstr_pvs, vcm - vdelta * afrac)
 
         caput("CS-CS-MSTAT-01:FBHEART", 10)
 
