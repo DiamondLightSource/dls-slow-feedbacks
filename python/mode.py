@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/home/hgs15624/code/python/pytac')
 from softioc import builder
 from pytac import load_csv
 
