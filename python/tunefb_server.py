@@ -158,7 +158,7 @@ class TunefbServer(object):
     def set_datadir(self, lattice):
         """Load required data from files in datadir."""
         # Load magnet PVs from Pytac
-        self.mag_pvs = load_magnet_pvs(ring_mode.lattice)
+        self.mag_pvs = load_magnet_pvs(lattice)
         self.local_pvs = rename_pvs(self.mag_pvs)
 
         # Load tune config file into environment
