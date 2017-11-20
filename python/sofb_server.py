@@ -29,6 +29,7 @@ class SofbServer(object):
             self.sofb.rmy = bpmresp["Rmat"][1,1]["Data"]
             if datadir in mode.DIAD_MODES:
                 self.sofb.rmx = np.insert(self.sofb.rmx, 77, 0, axis=1)
+                self.sofb.rmy = np.insert(self.sofb.rmy, 77, 0, axis=1)
             print "SOFB loaded matrix %s" % datadir
             self.matrix_error.set(0)
         except:
