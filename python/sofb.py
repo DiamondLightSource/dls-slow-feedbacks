@@ -3,6 +3,7 @@ import sys, os, traceback
 import numpy as np
 from numpy import linalg
 from cothread.catools import caput, caget
+import pytac
 
 
 # PSC Enum constants
@@ -77,12 +78,13 @@ class Sofb(object):
 
     def correction(self):
         afrac = caget("SR-CS-SOFB-01:AFRAC")
-        hen = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
-        ven = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
 
-        bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
-        hbpmen = np.logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
-        vbpmen = np.logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
+        bpmen = np.array(caget(self.lattice.get_pv_names('BPM', 'enabled', pytac.RB)))
+        hbpmen = np.logical_and(bpmen, np.array(caget(self.lattice.get_pv_names('BPM', 'x_slow_disabled', pytac.RB))) == 0)
+        vbpmen = np.logical_and(bpmen, np.array(caget(self.lattice.get_pv_names('BPM', 'y_slow_disabled', pytac.RB))) == 0)
+
+        hen = np.array(caget(self.lattice.get_pv_names('HSTR', 'h_slow_disabled', pytac.RB))) == 0
+        ven = np.array(caget(self.lattice.get_pv_names('VSTR', 'v_slow_disabled', pytac.RB))) == 0
 
         psc_errors = np.array(
                 caget(self.psc_error_names[np.concatenate((hen, ven))]))
@@ -103,22 +105,22 @@ class Sofb(object):
         # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
 
-        bpmx = caget(lattice.get_pv_names('BPM', 'x', pytac.RB))[hbpmen]
-        hcm = caget(lattice.get_pv_names('HSTR', 'b0'))[hen]
+        bpmx = np.array(caget(self.lattice.get_pv_names('BPM', 'x', pytac.RB)))[hbpmen]
+        hcm = np.array(caget(self.lattice.get_pv_names('HSTR', 'b0', pytac.RB)))[hen]
 
-        bpmx = caget(lattice.get_pv_names('BPM', 'y', pytac.RB))[vbpmen]
-        vcm = caget(lattice.get_pv_names('VSTR', 'a0', pytac.RB))[ven]
+        bpmy = np.array(caget(self.lattice.get_pv_names('BPM', 'y', pytac.RB)))[vbpmen]
+        vcm = np.array(caget(self.lattice.get_pv_names('VSTR', 'a0', pytac.RB)))[ven]
 
         if not irm[0].size == 0:
             hdelta = np.dot(irm[0], bpmx)
             hdelta = hdelta * self.scale(hdelta)
-            hstr_pvs = lattice.get_pv_names('HSTR', 'b0', pytac.SP)
+            hstr_pvs = self.lattice.get_pv_names('HSTR', 'b0', pytac.SP)
             caput(hstr_pvs, hcm - hdelta * afrac)
 
         if not irm[1].size == 0:
             vdelta = np.dot(irm[1], bpmy)
             vdelta = vdelta * self.scale(vdelta)
-            vstr_pvs = lattice.get_pv_names('VSTR', 'b0', pytac.SP)
+            vstr_pvs = self.lattice.get_pv_names('VSTR', 'b0', pytac.SP)
             caput(vstr_pvs, vcm - vdelta * afrac)
 
         caput("CS-CS-MSTAT-01:FBHEART", 10)

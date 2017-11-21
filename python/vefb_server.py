@@ -197,7 +197,7 @@ class SkewQuadrupoles(object):
     def drive_levels_ok(self):
         for a,b,c in zip(self.seti_drvls.values,
                        self.seti_drvhs.values,
-                       self.squad_pvs):
+                       self._pv_names):
             if a >= b:
                 if self.last_levels_ok_fail != c:
                     print "vefb: drive check", "DRVH <= DRVL", c
@@ -223,7 +223,7 @@ class SkewQuadrupoles(object):
         for i in range(self.num):
             if values[i] < self.drvls[i]:
                 if self.last_drvl_fail != i:
-                    print "vefb: DRVL check", self.squad_pvs[i], \
+                    print "vefb: DRVL check", self._pv_names[i], \
                         ": New SQUAD value", values[i], "< DRVL", drvls[i]
                     self.last_drvl_fail = i
                     self.last_drvh_fail = None
@@ -232,7 +232,7 @@ class SkewQuadrupoles(object):
         for i in range(self.num):
             if values[i] > self.drvhs[i]:
                 if self.last_drvh_fail != i:
-                    print "vefb: DRVH check", self.squad_pvs[i], \
+                    print "vefb: DRVH check", self._pv_names[i], \
                         ": New SQUAD value", values[i], "> DRVH", self.drvhs[i]
                     self.last_drvh_fail = i
                     self.last_drvl_fail = None
@@ -260,7 +260,7 @@ class SkewQuadrupoles(object):
         if not self.values_within_levels(new_sqvals):
             return False
 
-        results = caput(self.squad_pvs, new_sqvals, throw=False)
+        results = caput(self.self._pv_names, new_sqvals, throw=False)
         ok = np.all(map(bool, results))
         if not ok:
             print 'vefb: caput error'
