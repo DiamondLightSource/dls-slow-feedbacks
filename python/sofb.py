@@ -80,11 +80,11 @@ class Sofb(object):
         afrac = caget("SR-CS-SOFB-01:AFRAC")
 
         bpmen = self.lattice.get_values('BPM', 'enabled', pytac.RB, dtype=np.bool_)
-        hbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'x_slow_disabled', pytac.RB, dtype=np.bool_) == 0)
-        vbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'y_slow_disabled', pytac.RB, dtype=np.bool_) == 0)
+        hbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'x_sofb_disabled', pytac.RB, dtype=np.bool_) == 0)
+        vbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'y_sofb_disabled', pytac.RB, dtype=np.bool_) == 0)
 
-        hen = self.lattice.get_values('HSTR', 'h_slow_disabled', pytac.RB, dtype=np.bool_) == 0
-        ven = self.lattice.get_values('VSTR', 'v_slow_disabled', pytac.RB, dtype=np.bool_) == 0
+        hen = self.lattice.get_values('HSTR', 'h_sofb_disabled', pytac.RB, dtype=np.bool_) == 0
+        ven = self.lattice.get_values('VSTR', 'v_sofb_disabled', pytac.RB, dtype=np.bool_) == 0
 
         psc_errors = np.array(
                 caget(self.psc_error_names[np.concatenate((hen, ven))]))
