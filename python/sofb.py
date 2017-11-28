@@ -55,6 +55,13 @@ class Sofb(object):
         self.psc_error_names = np.array([d + ':ERCSUM' for d in device_names])
         self.psc_state_names = np.array([d + ':STATE' for d in device_names])
 
+    def set_lattice(self, lattice):
+        self.lattice = lattice
+
+    def set_rm(self, rmx, rmy):
+        self.rmx = rmx
+        self.rmy = rmy
+
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
 
