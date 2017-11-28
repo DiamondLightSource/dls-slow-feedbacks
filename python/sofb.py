@@ -79,12 +79,12 @@ class Sofb(object):
     def correction(self):
         afrac = caget("SR-CS-SOFB-01:AFRAC")
 
-        bpmen = np.array(caget(self.lattice.get_pv_names('BPM', 'enabled', pytac.RB)))
-        hbpmen = np.logical_and(bpmen, np.array(caget(self.lattice.get_pv_names('BPM', 'x_slow_disabled', pytac.RB))) == 0)
-        vbpmen = np.logical_and(bpmen, np.array(caget(self.lattice.get_pv_names('BPM', 'y_slow_disabled', pytac.RB))) == 0)
+        bpmen = self.lattice.get_values('BPM', 'enabled', pytac.RB, dtype=np.bool_)
+        hbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'x_slow_disabled', pytac.RB, dtype=np.bool_) == 0)
+        vbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'y_slow_disabled', pytac.RB, dtype=np.bool_) == 0)
 
-        hen = np.array(caget(self.lattice.get_pv_names('HSTR', 'h_slow_disabled', pytac.RB))) == 0
-        ven = np.array(caget(self.lattice.get_pv_names('VSTR', 'v_slow_disabled', pytac.RB))) == 0
+        hen = self.lattice.get_values('HSTR', 'h_slow_disabled', pytac.RB, dtype=np.bool_) == 0
+        ven = self.lattice.get_values('VSTR', 'v_slow_disabled', pytac.RB, dtype=np.bool_) == 0
 
         psc_errors = np.array(
                 caget(self.psc_error_names[np.concatenate((hen, ven))]))
@@ -105,11 +105,11 @@ class Sofb(object):
         # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
 
-        bpmx = np.array(caget(self.lattice.get_pv_names('BPM', 'x', pytac.RB)))[hbpmen]
-        hcm = np.array(caget(self.lattice.get_pv_names('HSTR', 'b0', pytac.RB)))[hen]
+        bpmx = self.lattice.get_values('BPM', 'x', pytac.RB, dtype=np.float64)[hbpmen]
+        hcm = self.lattice.get_values('HSTR', 'b0', pytac.RB, dtype=np.float64)[hen]
 
-        bpmy = np.array(caget(self.lattice.get_pv_names('BPM', 'y', pytac.RB)))[vbpmen]
-        vcm = np.array(caget(self.lattice.get_pv_names('VSTR', 'a0', pytac.RB)))[ven]
+        bpmy = self.lattice.get_values('BPM', 'y', pytac.RB, dtype=np.float64)[vbpmen]
+        vcm = self.lattice.get_values('VSTR', 'a0', pytac.RB, dtype=np.float64)[ven]
 
         if not irm[0].size == 0:
             hdelta = np.dot(irm[0], bpmx)
