@@ -22,11 +22,12 @@ import mml
 
 NCOR = 173
 NBPM = 173
+PSC_ON = 2
 
 
 @pytest.fixture
 def setup_sofb():
-    s = sofb.sofb()
+    s = sofb.Sofb()
     # Assume square matrix
     s.rmx = numpy.eye(NBPM, NCOR)
     s.rmy = numpy.eye(NBPM, NCOR)
@@ -40,6 +41,8 @@ def setup_sofb():
     default_params['bpmen'] = numpy.zeros(NBPM)
     default_params['hbpmen'] = numpy.zeros(NBPM)
     default_params['vbpmen'] = numpy.zeros(NBPM)
+    default_params['psc_errors'] = numpy.zeros(NCOR * 2)
+    default_params['psc_states'] = numpy.full(NCOR * 2, PSC_ON)
     default_params['bpmx'] = numpy.zeros(NBPM)
     default_params['h_current'] = numpy.zeros(NCOR)
     default_params['bpmy'] = numpy.zeros(NBPM)
