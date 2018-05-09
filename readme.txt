@@ -54,3 +54,12 @@ delta_quads = pinv(tune_response_matrix) * tune_error
 Tune feedback also contains code for attaching itself to the quadrupole PSC
 via a PV forwarding mechanism. It then writes into an offset field which
 adjusts the quadupole setpoint.
+
+6) VEFB
+-------
+
+Maintains the vertical emittance at a target value using the skew quadrupoles.
+
+The algorithm is:
+
+squad_delta = pinv(response_vector) * vertical_emittance_error
