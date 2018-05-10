@@ -21,7 +21,7 @@ import numpy
 import pytac
 
 
-RING_MODE = 'VMX'
+RING_MODE = 'DIAD'
 LATTICE = pytac.load_csv.load(RING_MODE)
 
 

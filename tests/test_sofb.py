@@ -20,7 +20,7 @@ import sofb
 import mml
 
 
-NCOR = 173
+NCOR = 172
 NBPM = 173
 PSC_ON = 2
 

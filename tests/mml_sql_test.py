@@ -13,7 +13,7 @@ import pytac
 
 @pytest.fixture
 def lattice():
-    return pytac.load_csv.load('VMX')
+    return pytac.load_csv.load('DIAD')
 
 
 def test_bpms_loaded(lattice):
