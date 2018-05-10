@@ -5,9 +5,7 @@ RING_MODES = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
               "SRLETHz", "SRI0913_MOGA", "SRI21", "VMX", "VMXSP", "VMXTHz",
               "DIAD", "DIADSP", "DIADTHz"]
 
-DIAD_MODES = ['DIAD', 'DIADSP', 'DIADTHz']
-
-DEFAULT_RING_MODE = 'VMX'
+DEFAULT_RING_MODE = 'DIAD'
 
 DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
 
