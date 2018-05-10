@@ -6,11 +6,9 @@
 
 from pkg_resources import require
 require('cothread')
-require('numpy')
-require('scipy')
 require('iocbuilder')
 require('mock')
-require('pml')
+require('pytac')
 
 
 from mock import MagicMock, patch
@@ -20,23 +18,23 @@ import time
 import tunefb_server
 from tunefb_server import TunefbServer, TunefbError, TunefbInvalid
 import numpy
+import pytac
 
-import pml
-import aphla
 
 RING_MODE = 'VMX'
-pml.initialise(RING_MODE)
+LATTICE = pytac.load_csv.load(RING_MODE)
+
 
 TFB_FAMILIES = ('Q1D', 'Q2D', 'Q3D', 'Q3B', 'Q2B', 'Q1B')
 DATADIR = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata'
 RESPONSE_MATRIX = os.path.join(DATADIR, RING_MODE, 'GoldenTuneResp.mat')
 
 
-def load_aphla_tfb_pvs():
+def load_pytac_tfb_pvs():
     tfb_elements = []
     for family in TFB_FAMILIES:
-        tfb_elements.extend(aphla.getElements(family))
-    tfb_pvs = [pml.prefix_from_element(element) for element in tfb_elements]
+        tfb_elements.extend(LATTICE.get_elements(family))
+    tfb_pvs = [element.get_device('b1').name for element in tfb_elements]
     return tfb_pvs
 
 
@@ -49,8 +47,8 @@ class TestTunefb(unittest.TestCase):
     @patch('tunefb_server.TunefbServer.records')
     def setUp(self, mock_records, mock_caget):
         mode = MagicMock(listeners=[])
-        self.aphla_tfb_pvs = load_aphla_tfb_pvs()
-        self.nquads = len(self.aphla_tfb_pvs)
+        self.pytac_tfb_pvs = load_pytac_tfb_pvs()
+        self.nquads = len(self.pytac_tfb_pvs)
         self.tfb = TunefbServer(mode)
         self.tfb.max_i_pv = MagicMock()
         self.tfb.rm = numpy.zeros((2, self.nquads))
@@ -62,8 +60,8 @@ class TestTunefb(unittest.TestCase):
         rm = tunefb_server.load_tune_rm(RESPONSE_MATRIX)
         self.assertEqual(rm.shape, (2, self.nquads))
 
-    def test_magnet_pvs_match_aphla(self):
-        self.assertListEqual(self.tfb.mag_pvs, self.aphla_tfb_pvs)
+    def test_magnet_pvs_match_pytac(self):
+        self.assertListEqual(self.tfb.mag_pvs, self.pytac_tfb_pvs)
 
     def test_check_current_does_nothing_if_current_valid(self):
         with patch('tunefb_server.caget') as mock_caget:
