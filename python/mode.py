@@ -6,9 +6,7 @@ RING_MODES = ["SR", "SRI13", "SRI0913", "SRLE3ps", "SRLEm3ps",
               "SRLETHz", "SRI0913_MOGA", "SRI21", "VMX", "VMXSP", "VMXTHz",
               "DIAD", "DIADSP", "DIADTHz"]
 
-DIAD_MODES = ['DIAD', 'DIADSP', 'DIADTHz']
-
-DEFAULT_RING_MODE = 'VMX'
+DEFAULT_RING_MODE = 'DIAD'
 
 DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
 
@@ -29,6 +27,7 @@ class RingMode(object):
     def records(self):
         builder.SetDeviceName('SR-CS-RING-01')
         self.mode = builder.mbbOut("MODE", on_update=self.set_mode,
+                                   always_update=True,
                                    *zip(RING_MODES, range(len(RING_MODES))))
 
     def init(self):
