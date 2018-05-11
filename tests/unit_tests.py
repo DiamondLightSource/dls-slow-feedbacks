@@ -8,6 +8,7 @@ pkg_resources.require('mock')
 pkg_resources.require('pytac')
 pkg_resources.require('iocbuilder')
 pkg_resources.require('epicsdbbuilder')
+pkg_resources.require('cothread')
 import pytest
 
 # Put the python directory on the path.

@@ -39,7 +39,7 @@ class TestTunefb(unittest.TestCase):
     @patch('tunefb_server.caget')
     @patch('tunefb_server.TunefbServer.records')
     def setUp(self, mock_records, mock_caget):
-        mode = MagicMock(listeners=[])
+        mode = MagicMock(listeners=[], lattice=LATTICE)
         self.pytac_tfb_pvs = load_pytac_tfb_pvs()
         self.nquads = len(self.pytac_tfb_pvs)
         self.tfb = TunefbServer(mode)
