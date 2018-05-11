@@ -27,8 +27,10 @@ class SofbServer(object):
             assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             rmx = bpmresp["Rmat"][0,0]["Data"]
             rmy = bpmresp["Rmat"][1,1]["Data"]
+            if datadir in mode.DIAD_MODES:
+                rmx = np.insert(self.sofb.rmx, 77, 0, axis=1)
+                rmy = np.insert(self.sofb.rmy, 77, 0, axis=1)
             self.sofb.set_rm(rmx, rmy)
-            print "SOFB loaded matrix %s" % lattice.name
             self.matrix_error.set(0)
         except:
             traceback.print_exc()
