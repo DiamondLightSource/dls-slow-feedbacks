@@ -1,10 +1,7 @@
 """ Test that the element data loaded from mml.sql agrees with what we expect
 from pytac.
-"""
-import pkg_resources
-pkg_resources.require('pytac')
-pkg_resources.require('cothread')
 
+"""
 import pytest
 import numpy
 import mml

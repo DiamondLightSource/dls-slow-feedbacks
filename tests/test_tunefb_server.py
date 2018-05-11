@@ -1,16 +1,9 @@
 #!/dls_sw/work/R3.14.12.3/support/pythonSoftIoc/pythonIoc
-# Need all the packages available for imports.
 
 # Note that these unit tests are using caget to fetch data from
 # EPICS.  If IOCs are not responding, the tests may fail.
 
-from pkg_resources import require
-require('cothread')
-require('iocbuilder')
-require('mock')
-require('pytac')
-
-
+import pytest
 from mock import MagicMock, patch
 import unittest
 import os
@@ -220,4 +213,4 @@ class ca_float(float):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    pytest.main()
