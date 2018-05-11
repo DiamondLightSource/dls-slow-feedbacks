@@ -2,10 +2,10 @@
 
 import os, sys
 from pkg_resources import require
-require('cothread==2.10')
+require('cothread==2.14')
 require('scipy==0.19.1')
-require('pytac==0.1')
-require('epicsdbbuilder==1.0')
+require('pytac==0.2.0')
+require('epicsdbbuilder==1.2')
 
 
 if sys.argv[1:]:
