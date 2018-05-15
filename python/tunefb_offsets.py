@@ -4,9 +4,6 @@ Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
 Each .INP is set to the local PV mirrored in our IOC.
 '''
-import sys
-import mode
-
 # Constants
 BEAM_DAMP_TIME = 0.001
 IOC = 'SR-CS-TFB-01'
@@ -51,11 +48,16 @@ def all_forwarded(local_pvs, mag_pvs):
 
 if __name__ == "__main__":
     from pkg_resources import require
-    require('cothread')
+    require('cothread==2.14')
+    require('scipy==0.19.1')
+    require('pytac==0.2.0')
     import cothread
-    from cothread.catools import caget, caput
+    from cothread.catools import caget, caput, DBR_STRING
+    import sys
+    import pytac
+    mode = caget('SR-CS-RING-01:MODE', datatype=DBR_STRING)
 
-    lattice = pytac.load_csv(mode.DEFAULT_RING_MODE)
+    lattice = pytac.load_csv.load(mode)
     mag_pvs = load_magnet_pvs(lattice)
     local_pvs = rename_pvs(mag_pvs)
 
