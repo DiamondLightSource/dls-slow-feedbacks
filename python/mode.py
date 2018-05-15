@@ -35,9 +35,9 @@ class RingMode(object):
 
     def set_mode(self, mode):
         self.name = RING_MODES[mode]
-        lattice = load_pml_lattice(self.name)
+        self.lattice = load_pml_lattice(self.name)
         for l in self.listeners:
-            l(lattice)
+            l(self.lattice)
 
     def add_listener(self, listener):
         self.listeners.append(listener)
