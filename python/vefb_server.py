@@ -260,7 +260,7 @@ class SkewQuadrupoles(object):
         if not self.values_within_levels(new_sqvals):
             return False
 
-        results = caput(self.self._pv_names, new_sqvals, throw=False)
+        results = caput(self._pv_names, new_sqvals, throw=False)
         ok = np.all(map(bool, results))
         if not ok:
             print 'vefb: caput error'
