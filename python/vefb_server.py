@@ -163,8 +163,8 @@ class WFMonitor(object):
 
 
 class SkewQuadrupoles(object):
-    def __init__(self, mask=[]):
-        self.monitors(mask)
+    def __init__(self):
+        self.monitors()
         self.sp = None
         self.sum_delta = np.zeros(self.num)
         self._use_setpoint = False
@@ -267,16 +267,14 @@ class SkewQuadrupoles(object):
         return ok
 
 
-    def monitors(self, mask):
+    def monitors(self):
         squad_pv_names = ['SR%02dA-PC-SQUAD-%02d' % (n,m)\
             for n in range(1,25) for m in range (1,5)]
         # Suitable only for post-DDBA configurations.
         squad_pv_names.insert(8, 'SR02A-PC-SQUAD-05')
         squad_pv_names.insert(9, 'SR02A-PC-SQUAD-06')
-
-        # Remove masked values
-        for m in mask:
-            del squad_pv_names[m]
+        # Suitable only for post DIAD configurations
+        del squad_pv_names[44]
 
         squad_pvs = ['%s:SETI' % name for name in squad_pv_names ]
         self.squad_pvs = squad_pvs
@@ -462,11 +460,7 @@ class VefbServer(object):
         self.IRM_new = None
         self.skewhw_new = None
 
-        # Remove skew quad 11-3 when we're using DIAD
-        if ringmode in mode.DIAD_MODES:
-            self.skew_quads = SkewQuadrupoles([44])
-        else:
-            self.skew_quads = SkewQuadrupoles()
+        self.skew_quads = SkewQuadrupoles()
 
         try:
             self.skewhw_old = np.ones(self.skew_quads.num)

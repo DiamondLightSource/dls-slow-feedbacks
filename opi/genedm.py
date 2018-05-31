@@ -295,6 +295,8 @@ def corrector_func(i, j, x, y):
         return ""
     if i in [1] and j in [3, 4, 9]:  # Skip correctors not in DDBA cell
         return ""
+    if i in [10] and j in [6]:  # Skip missing DIAD corrector
+        return ""
     if i in [1] and j in [7, 8]:
         devs = ["SR%02dA-PC-%sSCOR-%02d" % (i+1, 'HV'[p], j-6) for p in [0, 1]]
     if j in [12]:
