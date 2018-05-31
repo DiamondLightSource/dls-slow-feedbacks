@@ -2,9 +2,10 @@
 
 import os, sys
 from pkg_resources import require
-require('cothread==2.10')
-require('scipy==0.10.1')
-require('epicsdbbuilder==1.0')
+require('cothread==2.14')
+require('scipy==0.19.1')
+require('pytac==0.2.0')
+require('epicsdbbuilder==1.2')
 
 
 if sys.argv[1:]:
@@ -38,7 +39,7 @@ from softioc import pvlog
 ring_mode = mode.RingMode()
 
 # Monitors magnet settings and creates aggregated waveforms.
-wavs = waveforms.WaveformsServer()
+wavs = waveforms.WaveformsServer(ring_mode)
 
 # Adjusts RF frequency to minimise horizontal dispersion.
 rffb = rffb_server.RffbServer(ring_mode)

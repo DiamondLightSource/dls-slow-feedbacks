@@ -107,7 +107,7 @@ class TunefbServer(object):
         corrects tune towards a setpoint.
     """
 
-    def __init__(self, mode):
+    def __init__(self, ring_mode):
         """Fetch data from files and set up soft IOC."""
         # Initial values for PVs
         self.afrac = 0.2
@@ -126,10 +126,8 @@ class TunefbServer(object):
         # Count consecutive invalid exceptions to eventually trip
         self.invalid_counter = 0
 
-        # Load magnet PVs from file in this directory.
-        pydir = os.path.dirname(os.path.realpath(__file__))
-        pvs_file = os.path.join(pydir, 'TunePvs.txt')
-        self.mag_pvs = load_magnet_pvs(pvs_file)
+        # Load magnet PVs from Pytac
+        self.mag_pvs = load_magnet_pvs(ring_mode.lattice)
         self.local_pvs = rename_pvs(self.mag_pvs)
 
         # List of references to locally hosted mirror PVs, created
@@ -139,11 +137,8 @@ class TunefbServer(object):
         # Load data from files (and on ringmode change)
         self.rm = None
         self.irm = None
-        if self.set_datadir not in mode.listeners:
-            mode.add_listener(self.set_datadir)
-
-        # Magnet setpoint PVs
-        self.mag_ctrl_pvs = [pv + ':I' for pv in self.local_pvs]
+        if self.set_datadir not in ring_mode.listeners:
+            ring_mode.add_listener(self.set_datadir)
 
         # fetch values from the PVs we will be mirroring, before
         # starting up.
@@ -160,18 +155,22 @@ class TunefbServer(object):
         # Initalise EPICS records
         self.records()
 
-    def set_datadir(self, datadir):
+    def set_datadir(self, lattice):
         """Load required data from files in datadir."""
+        # Load magnet PVs from Pytac
+        self.mag_pvs = load_magnet_pvs(lattice)
+        self.local_pvs = rename_pvs(self.mag_pvs)
+
         # Load tune config file into environment
         env = {}
         execfile(GOLDEN_TUNE_CONFIG, env)
 
         # Select correct tune based on ringmode
-        tune_h = env['X_tune_' + datadir] * 0.0001
-        tune_v = env['Y_tune_' + datadir] * 0.0001
+        tune_h = env['X_tune_' + lattice.name] * 0.0001
+        tune_v = env['Y_tune_' + lattice.name] * 0.0001
 
         # Load data from file
-        mode_dir = os.path.join(mode.DATAROOT, datadir)
+        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
         self.rm = load_tune_rm(os.path.join(mode_dir, 'GoldenTuneResp.mat'))
 
         # Invert response matrix
@@ -354,7 +353,10 @@ class TunefbServer(object):
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
         except Exception, e:
             log.warn('Unexpected exception: %s' % str(e))
-            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(
+                    Status.UNEXPECTED_ERROR,
+                    severity=alarm.MAJOR_ALARM
+                    )
 
     def step_tune(self, dummy):
         """ Apply raw correction without checking beam current.
@@ -384,7 +386,10 @@ class TunefbServer(object):
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
         except Exception, e:
             log.warn('Unexpected exception: %s' % str(e))
-            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(
+                    Status.UNEXPECTED_ERROR,
+                    severity=alarm.MAJOR_ALARM
+                    )
 
     def reset_error(self, dummy):
         """Reset the error pv."""
@@ -515,8 +520,9 @@ class TunefbServer(object):
                 on_update=self.set_max_current_range, PREC=4)
         self.max_i_pv = builder.aIn(
                 'OFFSETMAX', initial_value=0.0, PREC=4)
-        self.fwd_ok_pv = builder.mbbIn('FWDOK',
-                ('OK', 0), ('NOT FORWARDED', 1), ('IOC DOWN', 2), initial_value=0)
+        self.fwd_ok_pv = builder.mbbIn(
+                'FWDOK', ('OK', 0), ('NOT FORWARDED', 1),
+                ('IOC DOWN', 2), initial_value=0)
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
                 on_update=self.set_min_beam_current, PREC=4)
@@ -532,5 +538,9 @@ class TunefbServer(object):
 
         # Pass all values from the enum into the status PV
         num_statuses = len(Status.STRINGS)
-        status_args = ['STATUS'] + [(Status.STRINGS[code], code) for code in range(num_statuses)]
-        self.status_pv = builder.mbbIn(*status_args, initial_value=Status.FEEDBACK_OFF)
+        status_args = (['STATUS'] +
+                [(Status.STRINGS[code], code) for code in range(num_statuses)])
+        self.status_pv = builder.mbbIn(
+                *status_args,
+                initial_value=Status.FEEDBACK_OFF
+                )

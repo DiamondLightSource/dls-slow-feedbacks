@@ -8,8 +8,8 @@ import traceback
 from softioc import builder
 from scipy.io import loadmat
 import numpy
+import pytac
 
-import mml
 import rffb_calc
 import mode
 
@@ -21,10 +21,9 @@ class RffbServer(object):
         self.power = 0
         self.rfstep = 0.1
         self.period = 10
-        self.datadir = "SR"
-        # use MML database
-        self.rad_over_A = mml.ao["hcm"].hw2physics
-        self.correctors = mml.ao["hcm"].readback
+        self.correctors = numpy.array(
+                ring_mode.lattice.get_pv_names('HSTR', 'b0', pytac.RB)
+                )
 
         self.records()
 
@@ -60,7 +59,7 @@ class RffbServer(object):
         # Check if either SOFB or FOFB is running
         fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
         # Use all correctors, enabled or not, in RFFB.
-        ncor = len(catools.caget("SR-PC-HSTR-01:FAST:ENABLED"))
+        ncor = len(self.correctors)
         enabled_cor = numpy.ones(ncor, dtype=numpy.bool)
         enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
@@ -70,7 +69,7 @@ class RffbServer(object):
 
         drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
                                   enabled_bpm, enabled_cor,
-                                  hcm, self.rad_over_A)
+                                  hcm)
         self.delta_pv.set(drf)
 
         def round10(x):
@@ -113,9 +112,12 @@ class RffbServer(object):
     def set_valid(self, valid):
         self.valid = valid
 
-    def set_datadir(self, datadir):
+    def set_datadir(self, lattice):
         rffb_calc.cache.clear()
-        path = os.path.join(mode.DATAROOT, datadir)
+        path = os.path.join(mode.DATAROOT, lattice.name)
+        self.correctors = numpy.array(
+                lattice.get_pv_names('HSTR', 'b0', pytac.RB)
+                )
         try:
             raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
@@ -124,7 +126,7 @@ class RffbServer(object):
             assert(raw_bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             assert(raw_disp["BPMxDisp"]["Units"] == "Hardware")
             self.matrix_error.set(0)
-            print "RFFB loaded matrix %s" % datadir
+            print "RFFB loaded matrix %s" % lattice.name
         except:
             traceback.print_exc()
             self.bpmresp = None

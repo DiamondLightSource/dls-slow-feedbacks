@@ -3,7 +3,7 @@ import sys, os, traceback
 import numpy as np
 from numpy import linalg
 from cothread.catools import caput, caget
-import mml
+import pytac
 
 
 # PSC Enum constants
@@ -43,15 +43,24 @@ class CalculationException(Exception):
 
 class Sofb(object):
 
-    def __init__(self):
+    def __init__(self, lattice):
+        self.set_lattice(lattice)
         self.step_limit = 0.1
         self.mu = 0.01
         self.svd = {'X':None, 'Y':None}
         self.cache = {}
+
+    def set_lattice(self, lattice):
+        self.lattice = lattice
         device_names = np.concatenate(
-                (mml.ao['hcm'].devices, mml.ao['vcm'].devices))
+                (lattice.get_device_names('HSTR', 'b0'),
+                 lattice.get_device_names('VSTR', 'a0')))
         self.psc_error_names = np.array([d + ':ERCSUM' for d in device_names])
         self.psc_state_names = np.array([d + ':STATE' for d in device_names])
+
+    def set_rm(self, rmx, rmy):
+        self.rmx = rmx
+        self.rmy = rmy
 
     def set_step_limit(self, step_limit):
         self.step_limit = step_limit
@@ -76,12 +85,13 @@ class Sofb(object):
 
     def correction(self):
         afrac = caget("SR-CS-SOFB-01:AFRAC")
-        hen = caget("SR-PC-HSTR-01:SLOW:ENABLED") == 0
-        ven = caget("SR-PC-VSTR-01:SLOW:ENABLED") == 0
 
-        bpmen = caget("SR-DI-EBPM-01:ENABLED") == 0
-        hbpmen = np.logical_and(bpmen, caget("SR-PC-HBPM-01:SLOW:ENABLED") == 0)
-        vbpmen = np.logical_and(bpmen, caget("SR-PC-VBPM-01:SLOW:ENABLED") == 0)
+        bpmen = self.lattice.get_values('BPM', 'enabled', pytac.RB, dtype=np.bool_)
+        hbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'x_sofb_disabled', pytac.RB, dtype=np.bool_) == 0)
+        vbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'y_sofb_disabled', pytac.RB, dtype=np.bool_) == 0)
+
+        hen = self.lattice.get_values('HSTR', 'h_sofb_disabled', pytac.RB, dtype=np.bool_) == 0
+        ven = self.lattice.get_values('VSTR', 'v_sofb_disabled', pytac.RB, dtype=np.bool_) == 0
 
         psc_errors = np.array(
                 caget(self.psc_error_names[np.concatenate((hen, ven))]))
@@ -102,21 +112,23 @@ class Sofb(object):
         # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
 
-        bpmx = caget(mml.ao["bpmx"].readback)[hbpmen]
-        hcm = caget(mml.ao["hcm"].setpoint[hen])
+        bpmx = self.lattice.get_values('BPM', 'x', pytac.RB, dtype=np.float64)[hbpmen]
+        hcm = self.lattice.get_values('HSTR', 'b0', pytac.RB, dtype=np.float64)[hen]
 
-        bpmy = caget(mml.ao["bpmy"].readback)[vbpmen]
-        vcm = caget(mml.ao["vcm"].setpoint[ven])
+        bpmy = self.lattice.get_values('BPM', 'y', pytac.RB, dtype=np.float64)[vbpmen]
+        vcm = self.lattice.get_values('VSTR', 'a0', pytac.RB, dtype=np.float64)[ven]
 
         if not irm[0].size == 0:
             hdelta = np.dot(irm[0], bpmx)
             hdelta = hdelta * self.scale(hdelta)
-            caput(mml.ao["hcm"].setpoint[hen], hcm - hdelta * afrac)
+            hstr_pvs = np.array(self.lattice.get_pv_names('HSTR', 'b0', pytac.SP))[hen]
+            caput(hstr_pvs, hcm - hdelta * afrac)
 
         if not irm[1].size == 0:
             vdelta = np.dot(irm[1], bpmy)
             vdelta = vdelta * self.scale(vdelta)
-            caput(mml.ao["vcm"].setpoint[ven], vcm - vdelta * afrac)
+            vstr_pvs = np.array(self.lattice.get_pv_names('VSTR', 'a0', pytac.SP))[ven]
+            caput(vstr_pvs, vcm - vdelta * afrac)
 
         caput("CS-CS-MSTAT-01:FBHEART", 10)
 

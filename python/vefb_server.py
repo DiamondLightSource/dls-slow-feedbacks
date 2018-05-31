@@ -6,6 +6,7 @@ from cothread.catools import camonitor, caput, FORMAT_TIME
 import numpy as np
 from scipy.io import loadmat
 import time
+import pytac
 
 import mode
 
@@ -125,7 +126,7 @@ class PVMonitor(object):
         self.ok = False
         self.value = None
         self.timestamp = 0
-        camonitor(name, self.on_update,
+        self._sub = camonitor(name, self.on_update,
             format = FORMAT_TIME, notify_disconnect = True)
 
     def on_update(self, value):
@@ -137,6 +138,9 @@ class PVMonitor(object):
             self.value = None
             self.timestamp = time.time()
 
+    def close(self):
+        self._sub.close()
+
 
 class WFMonitor(object):
     def __init__(self, names, dtype=np.double):
@@ -145,7 +149,7 @@ class WFMonitor(object):
         self.oks = np.zeros(len(names), dtype=np.bool)
         self.values = np.zeros(len(names), dtype=dtype)
         self.timestamps = np.zeros(len(names))
-        camonitor(names, self.on_update,
+        self._subs = camonitor(names, self.on_update,
             format = FORMAT_TIME, notify_disconnect = True)
 
     def on_update(self, value, index):
@@ -158,12 +162,17 @@ class WFMonitor(object):
             self.timestamps[index] = time.time()
         self.ok = all(self.oks)
 
+    def close(self):
+        for sub in self._subs:
+            sub.close()
+
 
 ################################# SKEW QUADS ###################################
 
 
 class SkewQuadrupoles(object):
-    def __init__(self):
+    def __init__(self, pv_names):
+        self._pv_names = pv_names
         self.monitors()
         self.sp = None
         self.sum_delta = np.zeros(self.num)
@@ -175,23 +184,20 @@ class SkewQuadrupoles(object):
 
     @property
     def num(self):
-        return len(self.squad_pvs)
-
+        return len(self._pv_names)
 
     def check_state(self):
         return self.ok and self.drive_levels_ok()
-
 
     @property
     def ok(self):
         pvs = [self.seti, self.seti_drvls, self.seti_drvls]
         return all([s.ok for s in pvs])
 
-
     def drive_levels_ok(self):
         for a,b,c in zip(self.seti_drvls.values,
                        self.seti_drvhs.values,
-                       self.squad_pvs):
+                       self._pv_names):
             if a >= b:
                 if self.last_levels_ok_fail != c:
                     print "vefb: drive check", "DRVH <= DRVL", c
@@ -200,18 +206,15 @@ class SkewQuadrupoles(object):
         self.last_levels_ok_fail = None
         return True
 
-
     def make_setpoint(self):
         if self.seti.ok:
             self.sp = +self.seti.values
             self.sum_delta = np.zeros(self.num)
 
-
     def use_setpoint(self, use):
         if use and (self.sp is None or not self._use_setpoint):
             self.make_setpoint()
         self._use_setpoint = use
-
 
     def values_within_levels(self, values):
         drvhs = self.seti_drvhs.values
@@ -220,7 +223,7 @@ class SkewQuadrupoles(object):
         for i in range(self.num):
             if values[i] < self.drvls[i]:
                 if self.last_drvl_fail != i:
-                    print "vefb: DRVL check", self.squad_pvs[i], \
+                    print "vefb: DRVL check", self._pv_names[i], \
                         ": New SQUAD value", values[i], "< DRVL", drvls[i]
                     self.last_drvl_fail = i
                     self.last_drvh_fail = None
@@ -229,7 +232,7 @@ class SkewQuadrupoles(object):
         for i in range(self.num):
             if values[i] > self.drvhs[i]:
                 if self.last_drvh_fail != i:
-                    print "vefb: DRVH check", self.squad_pvs[i], \
+                    print "vefb: DRVH check", self._pv_names[i], \
                         ": New SQUAD value", values[i], "> DRVH", self.drvhs[i]
                     self.last_drvh_fail = i
                     self.last_drvl_fail = None
@@ -239,7 +242,6 @@ class SkewQuadrupoles(object):
         self.last_drvh_fail = None
 
         return True
-
 
     def put_delta(self, delta):
         if self._use_setpoint:
@@ -258,7 +260,7 @@ class SkewQuadrupoles(object):
         if not self.values_within_levels(new_sqvals):
             return False
 
-        results = caput(self.squad_pvs, new_sqvals, throw=False)
+        results = caput(self._pv_names, new_sqvals, throw=False)
         ok = np.all(map(bool, results))
         if not ok:
             print 'vefb: caput error'
@@ -266,23 +268,11 @@ class SkewQuadrupoles(object):
                 print s
         return ok
 
-
     def monitors(self):
-        squad_pv_names = ['SR%02dA-PC-SQUAD-%02d' % (n,m)\
-            for n in range(1,25) for m in range (1,5)]
-        # Suitable only for post-DDBA configurations.
-        squad_pv_names.insert(8, 'SR02A-PC-SQUAD-05')
-        squad_pv_names.insert(9, 'SR02A-PC-SQUAD-06')
-        # Suitable only for post DIAD configurations
-        del squad_pv_names[44]
+        self.seti = WFMonitor(self._pv_names)
 
-        squad_pvs = ['%s:SETI' % name for name in squad_pv_names ]
-        self.squad_pvs = squad_pvs
-
-        self.seti = WFMonitor(squad_pvs)
-
-        squad_pv_drvhs = ['%s:SETI.DRVH' % name for name in squad_pv_names ]
-        squad_pv_drvls = ['%s:SETI.DRVL' % name for name in squad_pv_names ]
+        squad_pv_drvhs = ['{}.DRVH'.format(name) for name in self._pv_names ]
+        squad_pv_drvls = ['{}.DRVL'.format(name) for name in self._pv_names ]
 
         self.seti_drvhs = WFMonitor(squad_pv_drvhs)
         self.seti_drvls = WFMonitor(squad_pv_drvls)
@@ -290,14 +280,23 @@ class SkewQuadrupoles(object):
         self.drvhs = self.seti_drvhs.values
         self.drvls = self.seti_drvls.values
 
+    def set_pv_names(self, pv_names):
+        self._pv_names = pv_names
+
+        self.seti.close()
+        self.seti_drvhs.close()
+        self.seti_drvls.close()
+        self.monitors()
+
 
 ################################# VEMIT FB #####################################
 
 
 class VefbServer(object):
 
-    def __init__(self, ringmode):
-        self.skew_quads = SkewQuadrupoles()
+    def __init__(self, ring_mode):
+        squad_pv_names = ring_mode.lattice.get_pv_names('SQUAD', 'a1', pytac.SP)
+        self.skew_quads = SkewQuadrupoles(squad_pv_names)
 
         self.enabled = False
         self.enabled_first_time = False
@@ -327,7 +326,7 @@ class VefbServer(object):
         self.monitors()
         self.records()
 
-        ringmode.add_listener(self.on_ringmode_change)
+        ring_mode.add_listener(self.on_ringmode_change)
 
 
     def init(self):
@@ -452,7 +451,7 @@ class VefbServer(object):
 
         self.enabled_first_time = False
 
-    def on_ringmode_change(self, ringmode):
+    def on_ringmode_change(self, lattice):
         self.last = None
         self.IRM = None
         self.IRM_old = None
@@ -460,15 +459,16 @@ class VefbServer(object):
         self.IRM_new = None
         self.skewhw_new = None
 
-        self.skew_quads = SkewQuadrupoles()
+        squad_pv_names = lattice.get_pv_names('SQUAD', 'a1', pytac.SP)
+        self.skew_quads.set_pv_names(squad_pv_names)
 
         try:
             self.skewhw_old = np.ones(self.skew_quads.num)
             print 'skewhw_old', self.skewhw_old
 
             rm_file = os.path.join(
-                mode.DATAROOT, ringmode, 'GoldenCouplingEmittance.mat')
-            print 'vefb: loadMatrix', ringmode, rm_file
+                mode.DATAROOT, lattice.name, 'GoldenCouplingEmittance.mat')
+            print 'vefb: loadMatrix', lattice.name, rm_file
 
             RM_load=loadmat(rm_file)
             RM=RM_load['RM']
@@ -482,8 +482,8 @@ class VefbServer(object):
 
         try:
             rm_file = os.path.join(
-                mode.DATAROOT, ringmode, 'GoldenSkewVector.mat')
-            print 'vefb: loadSkewVector', ringmode, rm_file
+                mode.DATAROOT, lattice.name, 'GoldenSkewVector.mat')
+            print 'vefb: loadSkewVector', lattice.name, rm_file
 
             RM_load=loadmat(rm_file)
             RM=RM_load['RM']

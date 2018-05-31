@@ -4,14 +4,6 @@ Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
 Each .INP is set to the local PV mirrored in our IOC.
 '''
-
-from pkg_resources import require
-require('cothread')
-import cothread
-from cothread.catools import caget, caput
-import sys
-import os
-
 # Constants
 BEAM_DAMP_TIME = 0.001
 IOC = 'SR-CS-TFB-01'
@@ -20,16 +12,19 @@ OFFSET_INPUT = ':OFFSET1.INP'
 LOCAL_LINK =':LOFFSET1 CPP MS'
 
 
-def load_magnet_pvs(txt_file):
+TUNE_QUAD_FAMILIES = ('Q1D', 'Q2D', 'Q3D', 'Q3B', 'Q2B', 'Q1B')
+
+
+def load_magnet_pvs(lattice):
     '''
     Load corrector magnet PVs from the specific format
     in the file.
     '''
-    mag_pvs = []
-    with open(txt_file) as f:
-        for line in f:
-            mag_pvs.append(line.strip())
-    return mag_pvs
+    quad_names = []
+    for family in TUNE_QUAD_FAMILIES:
+        device_names = lattice.get_device_names(family, 'b1')
+        quad_names.extend(device_names)
+    return quad_names
 
 
 def rename_pvs(pvs):
@@ -42,18 +37,28 @@ def rename_pvs(pvs):
         new_pvs.append(new_pv)
     return new_pvs
 
+
 def all_forwarded(local_pvs, mag_pvs):
+    # import here to make sure that cothread has been loaded
+    from cothread.catools import caget
     inps = caget([pv + OFFSET_INPUT for pv in mag_pvs], timeout=1.)
     expected = [pv + CURRENT_LINK for pv in local_pvs]
     return inps == expected
 
 
 if __name__ == "__main__":
-    # load file from same directory as the script
-    PYDIR = os.path.dirname(os.path.realpath(__file__))
-    PVS_FILE = os.path.join(PYDIR, 'TunePvs.txt')
+    from pkg_resources import require
+    require('cothread==2.14')
+    require('scipy==0.19.1')
+    require('pytac==0.2.0')
+    import cothread
+    from cothread.catools import caget, caput, DBR_STRING
+    import sys
+    import pytac
+    mode = caget('SR-CS-RING-01:MODE', datatype=DBR_STRING)
 
-    mag_pvs = load_magnet_pvs(PVS_FILE)
+    lattice = pytac.load_csv.load(mode)
+    mag_pvs = load_magnet_pvs(lattice)
     local_pvs = rename_pvs(mag_pvs)
 
     if 'test' in sys.argv:
