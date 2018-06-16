@@ -97,7 +97,7 @@ class SofbServer(object):
         # Corrector magnet ID, in floating point format: cell.position_in_cell
         # This matches the format of SR-DI-EBPM-01:BPMID
         mag_ids = []
-        for mag in lattice.get_device_names('HCM', 'b0'):
+        for mag in lattice.get_device_names('HSTR', 'b0'):
             if mag[4] == 'S':
                 mag_ids.append(int(mag[2:4]) + 0.1*(int(mag[-2:]) - 2))
             elif mag[10:14] == 'SCOR':
