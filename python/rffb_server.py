@@ -46,9 +46,8 @@ class RffbServer(object):
                 self.feedback()
             except catools.ca_nothing, e:
                 # A caget or caput failed
-                print("Channel access exception from PV: {PV:s}, "
-                      "error: {ERROR:d}. RFFB will be stopped."
-                      .format(PV=e.name, ERROR=e.errorcode))
+                print("Channel access exception; RFFB will be stopped.")
+                print(e)
                 self.pv_error.set(e.name)
                 self.calc_error.set(1)
                 self.power_pv.set(0)
