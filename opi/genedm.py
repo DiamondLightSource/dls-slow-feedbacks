@@ -143,7 +143,7 @@ endObjectProperties
 
 class Layout(object):
 
-    """Create EDM GUIs consiting of a 2D grid with lables."""
+    """Create EDM GUIs consiting of a 2D grid with labels."""
 
     PADDING = 4
     TITLE_HEIGHT = 40
@@ -151,8 +151,8 @@ class Layout(object):
     def __init__(self, title, x_names, y_names, region, region_func):
         """
         Setup a grid of EDM widgets.
-            x_names     -- Array of strings for use as X lables
-            y_names     -- Array of strings for use as Y lables
+            x_names     -- Array of strings for use as X labels
+            y_names     -- Array of strings for use as Y labels
             region      -- Tuple of ints specifying the dimensions of
                            the region in which each element is shown
             region_func -- Callback function that draws in the region
@@ -163,7 +163,7 @@ class Layout(object):
         self.region = region
         self.region_func = region_func
         self.nodes = []
-        self._make_lables()
+        self._make_labels()
         self._make_regions()
         self._make_title()
 
@@ -175,7 +175,7 @@ class Layout(object):
             out.append(node)
         return ''.join(out)
 
-    def _make_lables(self):
+    def _make_labels(self):
         """Add the labels along the top and down the left of the GUI"""
         width = self.region[0]
         height = self.region[1]
