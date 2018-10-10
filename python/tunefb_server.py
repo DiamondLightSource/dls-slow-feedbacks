@@ -57,7 +57,7 @@ CURRENT_PV = 'SR-DI-DCCT-01:SIGNAL'
 
 
 # Configuration file
-GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/TMBF_tune.config'
+GOLDEN_TUNE_CONFIG = '/home/ops/diagnostics/config/MBF_tune.config'
 
 
 # Our IOC name
@@ -166,8 +166,8 @@ class TunefbServer(object):
         execfile(GOLDEN_TUNE_CONFIG, env)
 
         # Select correct tune based on ringmode
-        tune_h = env['X_tune_' + lattice.name] * 0.0001
-        tune_v = env['Y_tune_' + lattice.name] * 0.0001
+        tune_h = env['X_tune_' + lattice.name]
+        tune_v = env['Y_tune_' + lattice.name]
 
         # Load data from file
         mode_dir = os.path.join(mode.DATAROOT, lattice.name)
