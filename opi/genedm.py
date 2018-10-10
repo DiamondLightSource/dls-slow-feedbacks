@@ -257,6 +257,12 @@ def corrector_info():
     return label(360, 82, 240, 16, text, color=3)
 
 
+def disable_warning():
+    """Add label warning about disabling FOFB."""
+    text = 'It is NOT safe to enable or disable correctors while FOFB is running.'
+    return label(140, 400, 400, 16, text, color=3)
+
+
 def bpm_key():
     """Generate text representing the bpm key"""
     x = 558
@@ -349,7 +355,7 @@ if __name__ == '__main__':
     layout = Layout(**corrector_definition)
     with open('cors.edl', 'w') as f:
         f.write(layout.produce() + corrector_key() +
-                corrector_info())
+                corrector_info() + disable_warning())
     layout = Layout(**bpm_definition)
     with open('bpms.edl', 'w') as f:
         f.write(layout.produce() + bpm_key() + bpm_info())

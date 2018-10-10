@@ -2,8 +2,10 @@
 *.pyc
 
 # Generated files
-/opi/cors.edl
 /opi/bpms.edl
+/opi/cors.edl
+/opi/bpms.opi
+/opi/cors.opi
 /opi/runcss.sh
 /configure/VERSION
 
