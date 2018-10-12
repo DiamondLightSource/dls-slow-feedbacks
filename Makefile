@@ -2,3 +2,4 @@
 install:
 	make -C opi
 clean:
+	make -C opi clean
