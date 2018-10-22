@@ -69,6 +69,7 @@ class RffbServer(object):
 
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
+        present_rf_freq = catools.caget("LI-RF-MOSC-01:FREQ")
 
         drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
                                   enabled_bpm, enabled_cor,
@@ -88,11 +89,20 @@ class RffbServer(object):
 
         # turn off feedback loop with no orbit loop
         if fbstat == 0:
+            print("No orbit feedback is running. RFFB will be stopped.")
             self.power_pv.set(0)
             return
 
         # turn off feedback loop below 2mA
         if current <= 2:
+            print("Beam current <= 2mA. RFFB will be stopped.")
+            self.power_pv.set(0)
+            return
+
+        # HLA-349: Check for discrepancy between present RF frequency and setpoint;
+        # indicates problem with master oscillator
+        if not self.rf_near_setpoint(present_rf_freq, rf):
+            print("Discrepancy between RF frequency and setpoint. RFFB will be stopped.")
             self.power_pv.set(0)
             return
 
@@ -102,6 +112,13 @@ class RffbServer(object):
 
         self.calc_error.set(0)
         self.pv_error.set("OK")
+
+    @staticmethod
+    def rf_near_setpoint(present_rf_freq, rf_setpoint):
+        """Returns True if RF frequency and setpoint differ by less than a threshold"""
+        frequency_difference_Hz = abs(present_rf_freq - rf_setpoint)
+        max_difference_Hz = 100
+        return frequency_difference_Hz <= max_difference_Hz
 
     def set_power(self, power):
         self.power = power
