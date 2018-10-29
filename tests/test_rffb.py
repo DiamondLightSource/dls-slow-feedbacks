@@ -3,6 +3,7 @@ from pkg_resources import require
 
 require("mock")
 from mock import MagicMock, patch
+import copy
 
 require("cothread")
 import cothread
@@ -10,6 +11,7 @@ import unittest
 
 import rffb_server
 import constants
+import mode
 
 
 class MockPV(object):
@@ -33,9 +35,15 @@ class MockPV(object):
         return
 
 
+class MockRecord(object):
+    """Mock an iocbuilder record"""
+    def __init__(self, name, ):
+        pass
+
+
 # Default dummy values for cagets
-caget_value_list = [MockPV("LI-RF-MOSC-01:FREQ_SET", 499681023),
-                    MockPV("LI-RF-MOSC-01:FREQ", 499682023),
+caget_value_list = [MockPV("LI-RF-MOSC-01:FREQ_SET", 123456.7),
+                    MockPV("LI-RF-MOSC-01:FREQ", 123455.6),
                     MockPV("MOCK-PV-03", 5.432, severity=constants.SEVR_MAJOR),
                     MockPV("MOCK-PV-04", 5.432,
                            severity=constants.SEVR_INVALID),
@@ -160,6 +168,54 @@ class RffbTests(unittest.TestCase):
             present_rf_freq,
             rf_setpoint))
 
+
+class RffbServerFactory(object):
+    def __init__(self):
+        ring_mode = mode.RingMode()
+        self.rffb = rffb_server.RffbServer(ring_mode)
+
+    def get_object(self):
+        return copy.copy(self.rffb)
+
+rffb_server_factory = RffbServerFactory()
+
+class TestInitialState(unittest.TestCase):
+
+    @patch("cothread.catools.caget", side_effect=lookup_caget_value)
+    def setUp(self, mock_caget):
+        self.rffb = rffb_server_factory.get_object()
+
+    def tearDown(self):
+        self.rffb = None
+
+    def test_records_created(self):
+        self.assertIsInstance(self.rffb.rf_freq_set_pv, rffb_server.PVWithValidity)
+        self.assertIsNotNone(self.rffb.power_pv)
+
+class IntegrationTests(unittest.TestCase):
+
+    @patch("cothread.catools.caget", side_effect=lookup_caget_value)
+    def setUp(self, mock_caget):
+
+        self.rffb = rffb_server_factory.get_object()
+
+    def test_caget_of_nonexistent_pv_raises_exception(self):
+        #caget_value_dict["MOCK-PV-05"] = MockPV()
+        with self.assertRaises(cothread.catools.ca_nothing):
+            self.rffb.feedback()
+
+    def test_caget_of_nonexistent_pv_raises_exception_again(self):
+        # caget_value_dict["MOCK-PV-05"] = MockPV()
+        with self.assertRaises(cothread.catools.ca_nothing):
+            self.rffb.feedback()
+
+"""
+    def test_rf_frequency_and_setpoint_differ(self):
+        present_rf_freq = 499682023
+        rf_setpoint = 499681023
+        caget_value_dict["MOCK-PV-05"] = MockPV()
+
+"""
 
 if __name__ == "__main__":
     unittest.main()
