@@ -128,7 +128,9 @@ class RffbServer(object):
 
     @staticmethod
     def rf_near_setpoint(present_rf_freq, rf_setpoint):
-        """Returns True if RF frequency and setpoint differ by less than a threshold"""
+        """Returns True if RF frequency and setpoint differ by
+        less than a threshold
+        """
         frequency_difference_Hz = abs(present_rf_freq - rf_setpoint)
         return frequency_difference_Hz <= MAX_DIFFERENCE_Hz
 
@@ -205,29 +207,31 @@ class RffbServer(object):
                        initial_value = self.period,
                        on_update = self.set_period)
 
-class PVWithValidity:
+
+class PVWithValidity(object):
     """For a PV, maintain a history of cagets
-    in order to decide if current value is valid"""
+    in order to decide if current value is valid
+    """
 
     ALLOWED_INVALID_CAGETS = 10
 
     def __init__(self, pv_name):
         self.pv_name = pv_name
         self.consecutive_times_invalid = 0
-        self.value = None
         self.ok = False
         self.last_caget_time = None
         self.severity = constants.SEVR_INVALID
 
     def get(self):
         """Do a caget, store the value and severity
-        Returns the result of the caget"""
+        Returns the result of the caget.
+        Does not store it to prevent stale data"""
 
         # Do caget and store attributes
-        self.value = catools.caget(self.pv_name, format=catools.FORMAT_TIME)
-        self.severity = self.value.severity
-        self.ok = self.value.ok
-        self.last_caget_time = self.value.timestamp
+        value = catools.caget(self.pv_name, format=catools.FORMAT_TIME)
+        self.severity = value.severity
+        self.ok = value.ok
+        self.last_caget_time = value.timestamp
 
         # Check for INVALID severity and increment counter
         if self.severity == constants.SEVR_INVALID or not self.ok:
@@ -235,7 +239,7 @@ class PVWithValidity:
         elif self.consecutive_times_invalid != 0:
             self.consecutive_times_invalid = 0
 
-        return self.value
+        return value
 
     def healthy(self):
         """Return false if too many cagets have returned INVALID.severity"""
