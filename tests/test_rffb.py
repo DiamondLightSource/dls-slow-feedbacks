@@ -170,6 +170,12 @@ class RffbTests(unittest.TestCase):
 
 
 class RffbServerFactory(object):
+    """Class to hand out fresh copies of the RffbServer object
+    In an attempt to get around iocbuilder's restriction on
+    defining record names only once
+
+    Edit: not as clever as I thought, the copy contains references
+    """
     def __init__(self):
         ring_mode = mode.RingMode()
         self.rffb = rffb_server.RffbServer(ring_mode)
@@ -177,9 +183,20 @@ class RffbServerFactory(object):
     def get_object(self):
         return copy.copy(self.rffb)
 
+# Done at module level so is only instantiated once
 rffb_server_factory = RffbServerFactory()
 
-class TestInitialState(unittest.TestCase):
+class TestRffbServerFactory(unittest.TestCase):
+    @patch("cothread.catools.caget", side_effect=lookup_caget_value)
+    def test_modifying_one_copy_doesnt_modify_other(self, mock_caget):
+        rffb1 = rffb_server_factory.get_object()
+        rffb2 = rffb_server_factory.get_object()
+
+        rffb1.power_pv.set(1)
+        rffb2.power_pv.set(0)
+        self.assertNotEquals(rffb2.power_pv.get(), rffb1.power_pv.get())
+
+class IntegrationTests(unittest.TestCase):
 
     @patch("cothread.catools.caget", side_effect=lookup_caget_value)
     def setUp(self, mock_caget):
@@ -191,13 +208,6 @@ class TestInitialState(unittest.TestCase):
     def test_records_created(self):
         self.assertIsInstance(self.rffb.rf_freq_set_pv, rffb_server.PVWithValidity)
         self.assertIsNotNone(self.rffb.power_pv)
-
-class IntegrationTests(unittest.TestCase):
-
-    @patch("cothread.catools.caget", side_effect=lookup_caget_value)
-    def setUp(self, mock_caget):
-
-        self.rffb = rffb_server_factory.get_object()
 
     def test_caget_of_nonexistent_pv_raises_exception(self):
         #caget_value_dict["MOCK-PV-05"] = MockPV()
