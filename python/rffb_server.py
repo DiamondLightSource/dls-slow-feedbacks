@@ -136,8 +136,8 @@ class RffbServer(object):
 
     def rf_pvs_valid(self):
         """RF FREQ and FREQ_SET PVs have both not been invalid too many times"""
-        return self.rf_freq_rbv_pv.healthy() and \
-            self.rf_freq_set_pv.healthy()
+        return (self.rf_freq_rbv_pv.healthy()
+                and self.rf_freq_set_pv.healthy())
 
     def set_power(self, power):
         self.power = power
@@ -220,7 +220,7 @@ class PVWithValidity(object):
         self.consecutive_times_invalid = 0
         self.ok = False
         self.last_caget_time = None
-        self.severity = constants.SEVR_INVALID
+        self.severity = None
 
     def get(self):
         """Do a caget, store the value and severity
@@ -233,20 +233,21 @@ class PVWithValidity(object):
         self.ok = value.ok
         self.last_caget_time = value.timestamp
 
-        # Check for INVALID severity and increment counter
-        if self.severity == constants.SEVR_INVALID or not self.ok:
+        # Check alarm severity not OK and increment counter
+        if (self.severity != constants.SEVR_NO_ALARM
+                or not self.ok):
             self.consecutive_times_invalid += 1
-        elif self.consecutive_times_invalid != 0:
+        else:
             self.consecutive_times_invalid = 0
 
         return value
 
     def healthy(self):
-        """Return false if too many cagets have returned INVALID.severity"""
+        """Return False if too many cagets have returned alarm"""
         if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
             return True
         else:
-            logging.warning("{pv_name} was INVALID more than {count} times"
+            logging.warning("{pv_name} had alarm more than {count} times"
                             .format(pv_name = self.pv_name,
                                     count=self.ALLOWED_INVALID_CAGETS))
             return False

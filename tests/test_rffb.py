@@ -45,9 +45,14 @@ class MockRecord(object):
 caget_value_list = [MockPV("LI-RF-MOSC-01:FREQ_SET", 123456.7),
                     MockPV("LI-RF-MOSC-01:FREQ", 123455.6),
                     MockPV("MOCK-PV-03", 5.432, severity=constants.SEVR_MAJOR),
-                    MockPV("MOCK-PV-04", 5.432,
+                    MockPV("MOCK-PV-INVALID", 5.432,
                            severity=constants.SEVR_INVALID),
-                    MockPV("MOCK-PV-05", 6.54, severity=constants.SEVR_INVALID)]
+                    MockPV("MOCK-PV-05", 6.54, severity=constants.SEVR_INVALID),
+                    MockPV("MOCK-PV-MAJOR", 7.864,
+                           severity=constants.SEVR_MAJOR),
+                    MockPV("MOCK-PV-MINOR", 7.864,
+                           severity=constants.SEVR_MINOR),
+                    ]
 
 # Put these in a dict for ease of access
 caget_value_dict = {}
@@ -101,24 +106,27 @@ class PVWithValidityTests(unittest.TestCase):
 
     @patch("cothread.catools.caget", side_effect=lookup_caget_value)
     def test_invalid_cagets_over_threshold_return_not_healthy(self, mock_caget):
-        # Create a mock PV
-        pv = rffb_server.PVWithValidity("MOCK-PV-04")
-        value_should_be = caget_value_dict["MOCK-PV-04"].get()
 
-        # Check that we tolerate the right number of invalid gets and then
-        # complain
-        for i in xrange(pv.ALLOWED_INVALID_CAGETS + 1):
+        for pv_name in ["MOCK-PV-INVALID", "MOCK-PV-MAJOR", "MOCK-PV-MINOR"]:
+            # Create a mock PV
+            pv = rffb_server.PVWithValidity(pv_name)
+            value_should_be = caget_value_dict[pv_name].get()
 
-            self.assertEqual(pv.get(), value_should_be)
-            self.assertEqual(pv.severity, value_should_be.severity)
+            # Check that we tolerate the right number of invalid gets and then
+            # complain
+            for i in xrange(pv.ALLOWED_INVALID_CAGETS + 1):
 
-            print("%d: healthy = %s, consecutive_times_invalid = %d" % (
-            i, pv.healthy(), pv.consecutive_times_invalid))
+                self.assertEqual(pv.get(), value_should_be)
+                self.assertEqual(pv.severity, value_should_be.severity)
+                self.assertEqual(pv.consecutive_times_invalid, i + 1)
 
-            if i < pv.ALLOWED_INVALID_CAGETS:
-                self.assertTrue(pv.healthy())
-            else:
-                self.assertFalse(pv.healthy())
+                print("%d: healthy = %s, consecutive_times_invalid = %d" % (
+                i, pv.healthy(), pv.consecutive_times_invalid))
+
+                if i < pv.ALLOWED_INVALID_CAGETS:
+                    self.assertTrue(pv.healthy())
+                else:
+                    self.assertFalse(pv.healthy())
 
     @patch("cothread.catools.caget", side_effect=lookup_caget_value)
     def test_resetting_severity_makes_PV_healthy(self, mock_caget):
@@ -131,6 +139,7 @@ class PVWithValidityTests(unittest.TestCase):
             print i
             self.assertEqual(pv.get(), value_should_be)
             self.assertEqual(pv.severity, value_should_be.severity)
+            self.assertEqual(pv.consecutive_times_invalid, i + 1)
 
             self.assertTrue(pv.healthy())
 
@@ -144,6 +153,7 @@ class PVWithValidityTests(unittest.TestCase):
             print i
             self.assertEqual(pv.get(), value_should_be)
             self.assertEqual(pv.severity, value_should_be.severity)
+            self.assertEqual(pv.consecutive_times_invalid, 0)
 
             self.assertTrue(pv.healthy())
 
