@@ -9,10 +9,14 @@ from softioc import builder
 from scipy.io import loadmat
 import numpy
 import pytac
+import logging
 
 import rffb_calc
 import mode
+import constants
 
+# Constants
+MAX_DIFFERENCE_Hz = 100  # Allowable difference between RF setpoint and rbv
 
 class RffbServer(object):
 
@@ -26,6 +30,9 @@ class RffbServer(object):
                 )
 
         self.records()
+
+        self.rf_freq_set_pv = PVWithValidity("LI-RF-MOSC-01:FREQ_SET")
+        self.rf_freq_rbv_pv = PVWithValidity("LI-RF-MOSC-01:FREQ")
 
         ring_mode.add_listener(self.set_datadir)
 
@@ -68,7 +75,8 @@ class RffbServer(object):
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
-        rf = catools.caget("LI-RF-MOSC-01:FREQ_SET")
+        rf = self.rf_freq_set_pv.get()
+        present_rf_freq = self.rf_freq_rbv_pv.get()
 
         drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
                                   enabled_bpm, enabled_cor,
@@ -88,11 +96,26 @@ class RffbServer(object):
 
         # turn off feedback loop with no orbit loop
         if fbstat == 0:
+            logging.fatal("No orbit feedback is running. RFFB will be stopped.")
             self.power_pv.set(0)
             return
 
         # turn off feedback loop below 2mA
         if current <= 2:
+            logging.fatal("Beam current <= 2mA. RFFB will be stopped.")
+            self.power_pv.set(0)
+            return
+
+        # HLA-349: Check for discrepancy between present RF frequency and setpoint;
+        # indicates problem with master oscillator
+        if not self.rf_near_setpoint(present_rf_freq, rf):
+            logging.fatal("Discrepancy between RF frequency and setpoint. RFFB will be stopped.")
+            self.power_pv.set(0)
+            return
+
+        if not self.rf_pvs_valid():
+            logging.fatal("RF PV was invalid > {count} times. RFFB will be stopped."
+                          .format(count=PVWithValidity.ALLOWED_INVALID_CAGETS))
             self.power_pv.set(0)
             return
 
@@ -102,6 +125,19 @@ class RffbServer(object):
 
         self.calc_error.set(0)
         self.pv_error.set("OK")
+
+    @staticmethod
+    def rf_near_setpoint(present_rf_freq, rf_setpoint):
+        """Returns True if RF frequency and setpoint differ by
+        less than a threshold
+        """
+        frequency_difference_Hz = abs(present_rf_freq - rf_setpoint)
+        return frequency_difference_Hz <= MAX_DIFFERENCE_Hz
+
+    def rf_pvs_valid(self):
+        """RF FREQ and FREQ_SET PVs have both not been invalid too many times"""
+        return (self.rf_freq_rbv_pv.healthy()
+                and self.rf_freq_set_pv.healthy())
 
     def set_power(self, power):
         self.power = power
@@ -170,3 +206,50 @@ class RffbServer(object):
         builder.mbbOut('PERIOD', ("1 second", 1), ("10 seconds", 10),
                        initial_value = self.period,
                        on_update = self.set_period)
+
+
+class PVWithValidity(object):
+    """For a PV, maintain a history of cagets
+    in order to decide if current value is valid
+    """
+
+    ALLOWED_INVALID_CAGETS = 10
+
+    def __init__(self, pv_name):
+        self.pv_name = pv_name
+        self.consecutive_times_invalid = 0
+        self.ok = False
+        self.last_caget_time = None
+        self.severity = None
+
+    def get(self):
+        """Do a caget, store the value and severity
+        Returns the result of the caget.
+        Does not store it to prevent stale data"""
+
+        # Do caget and store attributes
+        value = catools.caget(self.pv_name, format=catools.FORMAT_TIME)
+        self.severity = value.severity
+        self.ok = value.ok
+        self.last_caget_time = value.timestamp
+
+        # Check alarm severity not OK and increment counter
+        if (self.severity != constants.SEVR_NO_ALARM
+                or not self.ok):
+            self.consecutive_times_invalid += 1
+        else:
+            self.consecutive_times_invalid = 0
+
+        return value
+
+    def healthy(self):
+        """Return False if too many cagets have returned alarm"""
+        if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
+            return True
+        else:
+            logging.warning("{pv_name} had alarm more than {count} times"
+                            .format(pv_name = self.pv_name,
+                                    count=self.ALLOWED_INVALID_CAGETS))
+            return False
+
+

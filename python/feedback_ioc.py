@@ -1,6 +1,7 @@
 # Slow feedback IOC startup.
 
 import os, sys
+import logging
 from pkg_resources import require
 require('cothread==2.14')
 require('scipy==0.19.1')
@@ -31,6 +32,8 @@ import tunefb_server
 # This import enables caput logging
 from softioc import pvlog
 
+# Configure logging
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 # Create the appropriate servers.
 
