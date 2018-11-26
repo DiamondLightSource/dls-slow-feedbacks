@@ -139,7 +139,6 @@ def test_random_correction(test_sofb, lattice, mock_caput, mock_caget, caget_res
     numpy.testing.assert_equal(v_expected, -vcm_call[0][1])
     assert heartbeat_call == mock.call('CS-CS-MSTAT-01:FBHEART', 10)
 
-
 def test_afrac_correction(test_sofb, lattice, mock_caget, mock_caput, caget_responses):
     caget_responses['bpmx'] = numpy.random.rand(NBPM)
     caget_responses['bpmy'] = numpy.random.rand(NBPM)
@@ -190,12 +189,25 @@ def test_scaled_correction(test_sofb, lattice, mock_caget, mock_caput, caget_res
     assert heartbeat_call == mock.call('CS-CS-MSTAT-01:FBHEART', 10)
 
 
+def test_psc_error_non_zero_multiple(test_sofb, mock_caget, mock_caput, caget_responses):
+    caget_responses['psc_errors'][112] = 8
+    caget_responses['psc_errors'][8] = 8
+    mock_caget.side_effect = caget_responses.values()
+    with pytest.raises(sofb.CalculationException):
+        test_sofb.correction()
+
 def test_psc_error_non_zero(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses['psc_errors'][112] = 8
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(sofb.CalculationException):
         test_sofb.correction()
 
+def test_psc_state_not_on_multiple(test_sofb, mock_caget, caget_responses):
+    caget_responses['psc_states'][112] = 0
+    caget_responses['psc_states'][8] = 8
+    mock_caget.side_effect = caget_responses.values()
+    with pytest.raises(sofb.CalculationException):
+        test_sofb.correction()
 
 def test_psc_state_not_on(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses['psc_states'][23] = 0
