@@ -75,21 +75,21 @@ class RffbServer(object):
         current = catools.caget("SR-DI-DCCT-01:SIGNAL")
 
         hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
-        rf = self.rf_freq_set_pv.get()
+        present_rf_demand = self.rf_freq_set_pv.get()
         present_rf_freq = self.rf_freq_rbv_pv.get()
 
-        drf = rffb_calc.calc_rffb(self.bpmresp, self.disp,
+        delta_rf_demand = rffb_calc.calc_rffb(self.bpmresp, self.disp,
                                   enabled_bpm, enabled_cor,
                                   hcm)
-        self.delta_pv.set(drf)
+        self.delta_pv.set(delta_rf_demand)
 
         def round10(x):
             return round(x * 10.0) / 10.0
 
-        target = round10(rf + drf)
-        if abs(drf) > self.rfstep:
-            drf = numpy.sign(drf) * self.rfstep
-        target_limit = round10(rf + drf)
+        target = round10(present_rf_demand + delta_rf_demand)
+        if abs(delta_rf_demand) > self.rfstep:
+            delta_rf_demand = numpy.sign(delta_rf_demand) * self.rfstep
+        target_limit = round10(present_rf_demand + delta_rf_demand)
 
         # update status
         self.target_pv.set(target)
@@ -111,7 +111,7 @@ class RffbServer(object):
 
             # HLA-349: Check for discrepancy between present RF frequency and setpoint;
             # indicates problem with master oscillator
-            if not self.rf_near_setpoint(present_rf_freq, rf):
+            if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
                 logging.fatal("Discrepancy between RF frequency and setpoint. RFFB will be stopped.")
                 self.power_pv.set(0)
                 return
