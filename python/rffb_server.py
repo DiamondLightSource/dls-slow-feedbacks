@@ -94,33 +94,35 @@ class RffbServer(object):
         # update status
         self.target_pv.set(target)
 
-        # turn off feedback loop with no orbit loop
-        if fbstat == 0:
-            logging.fatal("No orbit feedback is running. RFFB will be stopped.")
-            self.power_pv.set(0)
-            return
-
-        # turn off feedback loop below 2mA
-        if current <= 2:
-            logging.fatal("Beam current <= 2mA. RFFB will be stopped.")
-            self.power_pv.set(0)
-            return
-
-        # HLA-349: Check for discrepancy between present RF frequency and setpoint;
-        # indicates problem with master oscillator
-        if not self.rf_near_setpoint(present_rf_freq, rf):
-            logging.fatal("Discrepancy between RF frequency and setpoint. RFFB will be stopped.")
-            self.power_pv.set(0)
-            return
-
-        if not self.rf_pvs_valid():
-            logging.fatal("RF PV was invalid > {count} times. RFFB will be stopped."
-                          .format(count=PVWithValidity.ALLOWED_INVALID_CAGETS))
-            self.power_pv.set(0)
-            return
-
-        # channel access write
+        # Only do checks and caput if feedback loop is on
         if self.power:
+
+            # turn off feedback loop with no orbit loop
+            if fbstat == 0 and self.power:
+                logging.fatal("No orbit feedback is running. RFFB will be stopped.")
+                self.power_pv.set(0)
+                return
+
+            # turn off feedback loop below 2mA
+            if current <= 2 and self.power:
+                logging.fatal("Beam current <= 2mA. RFFB will be stopped.")
+                self.power_pv.set(0)
+                return
+
+            # HLA-349: Check for discrepancy between present RF frequency and setpoint;
+            # indicates problem with master oscillator
+            if not self.rf_near_setpoint(present_rf_freq, rf):
+                logging.fatal("Discrepancy between RF frequency and setpoint. RFFB will be stopped.")
+                self.power_pv.set(0)
+                return
+
+            if not self.rf_pvs_valid():
+                logging.fatal("RF PV was invalid > {count} times. RFFB will be stopped."
+                              .format(count=PVWithValidity.ALLOWED_INVALID_CAGETS))
+                self.power_pv.set(0)
+                return
+
+            # channel access write
             catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
 
         self.calc_error.set(0)
