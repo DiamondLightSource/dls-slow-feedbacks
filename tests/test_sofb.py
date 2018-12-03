@@ -16,6 +16,8 @@ except ImportError:
     sys.exit()
 
 import sofb
+import sofb_server
+import mode
 
 
 NCOR = 172
@@ -53,6 +55,18 @@ def test_sofb(lattice):
     s.set_rm(numpy.eye(NBPM, NCOR), numpy.eye(NBPM, NCOR))
     s.step_limit = 1e6  # Avoid hitting the limit by default
     s.mu = 0  # Do not use regularisation by default
+    return s
+
+@pytest.fixture
+def test_mode():
+    return mode.RingMode()
+
+@pytest.fixture
+def test_sofb_server(test_mode):
+    s = sofb_server.SofbServer(test_mode)
+    s.sofb.set_rm(numpy.eye(NBPM, NCOR), numpy.eye(NBPM, NCOR))
+    s.sofb.step_limit = 1e6  # Avoid hitting the limit by default
+    s.sofb.mu = 0  # Do not use regularisation by default
     return s
 
 
@@ -125,7 +139,6 @@ def test_random_correction(test_sofb, lattice, mock_caput, mock_caget, caget_res
     numpy.testing.assert_equal(v_expected, -vcm_call[0][1])
     assert heartbeat_call == mock.call('CS-CS-MSTAT-01:FBHEART', 10)
 
-
 def test_afrac_correction(test_sofb, lattice, mock_caget, mock_caput, caget_responses):
     caget_responses['bpmx'] = numpy.random.rand(NBPM)
     caget_responses['bpmy'] = numpy.random.rand(NBPM)
@@ -176,15 +189,41 @@ def test_scaled_correction(test_sofb, lattice, mock_caget, mock_caput, caget_res
     assert heartbeat_call == mock.call('CS-CS-MSTAT-01:FBHEART', 10)
 
 
+def test_psc_error_non_zero_multiple(test_sofb, mock_caget, mock_caput, caget_responses):
+    caget_responses['psc_errors'][112] = 8
+    caget_responses['psc_errors'][8] = 8
+    mock_caget.side_effect = caget_responses.values()
+    with pytest.raises(sofb.CalculationException):
+        test_sofb.correction()
+
 def test_psc_error_non_zero(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses['psc_errors'][112] = 8
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(sofb.CalculationException):
         test_sofb.correction()
 
+def test_psc_state_not_on_multiple(test_sofb, mock_caget, caget_responses):
+    caget_responses['psc_states'][112] = 0
+    caget_responses['psc_states'][8] = 8
+    mock_caget.side_effect = caget_responses.values()
+    with pytest.raises(sofb.CalculationException):
+        test_sofb.correction()
 
 def test_psc_state_not_on(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses['psc_states'][23] = 0
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(sofb.CalculationException):
         test_sofb.correction()
+
+def test_calc_error_reset_after_single(test_sofb_server, mock_caget, mock_caput, caget_responses):
+    # Previous error state
+    test_sofb_server.calc_error.set(1)
+    test_sofb_server.pv_error.set("Some error")
+
+    # Single correction
+    MEANINGLESS_VALUE = 0
+    test_sofb_server.single(MEANINGLESS_VALUE)
+
+    # Errors should have been cleared
+    assert test_sofb_server.calc_error.get() == 0
+    assert test_sofb_server.pv_error.get() == "OK"

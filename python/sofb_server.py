@@ -78,6 +78,8 @@ class SofbServer(object):
     def single(self, value):
         try:
             self.sofb.correction()
+            self.calc_error.set(0)
+            self.pv_error.set("OK")
         except Exception as e:
             self.handle_exception(e)
 
