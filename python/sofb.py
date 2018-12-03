@@ -119,7 +119,7 @@ class Sofb(object):
             print 'Correctors with state not on: ', error_pvs
 
             # Shorter message for error PV
-            if len(error_pvs) > 0:
+            if len(error_pvs) > 1:
                 exception_message = "Correctors in bad state: {}, ...".format(error_pvs[0])
             else:
                 exception_message = "Corrector in bad state: {}".format(error_pvs[0])
