@@ -98,13 +98,13 @@ class RffbServer(object):
         if self.power:
 
             # turn off feedback loop with no orbit loop
-            if fbstat == 0 and self.power:
+            if fbstat == 0:
                 logging.fatal("No orbit feedback is running. RFFB will be stopped.")
                 self.power_pv.set(0)
                 return
 
             # turn off feedback loop below 2mA
-            if current <= 2 and self.power:
+            if current <= 2:
                 logging.fatal("Beam current <= 2mA. RFFB will be stopped.")
                 self.power_pv.set(0)
                 return
