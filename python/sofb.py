@@ -83,48 +83,69 @@ class Sofb(object):
         self.cache[key] = irm
         return irm
 
+    def report_corrector_error(self,
+                               array_of_pv_names,
+                               error_indices,
+                               error_description):
+        error_pvs = array_of_pv_names[error_indices]
+        # Message to be printed to the console can contain the whole
+        # list and reason because no limited on space
+        print ('Correctors {}: {}'.format(error_description,
+                                          error_pvs))
+
+        # This message goes into the error PV so we keep it short
+        more_to_show=""
+        if len(error_pvs) > 1:
+            more_to_show=", ..."
+
+        exception_message = "{}{}".format(error_pvs[0], more_to_show)
+        raise CalculationException(exception_message)
+
     def correction(self):
+        # Correction is scaled by this fraction <= 1
         afrac = caget("SR-CS-SOFB-01:AFRAC")
 
-        bpmen = self.lattice.get_values('BPM', 'enabled', pytac.RB, dtype=np.bool_)
-        hbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'x_sofb_disabled', pytac.RB, dtype=np.bool_) == 0)
-        vbpmen = np.logical_and(bpmen, self.lattice.get_values('BPM', 'y_sofb_disabled', pytac.RB, dtype=np.bool_) == 0)
+        bpmen = self.lattice.get_values('BPM',
+                                        'enabled',
+                                        pytac.RB,
+                                        dtype=np.bool_)
+        hbpmen = np.logical_and(bpmen,
+                                self.lattice.get_values('BPM',
+                                                        'x_sofb_disabled',
+                                                        pytac.RB,
+                                                        dtype=np.bool_) == 0)
+        vbpmen = np.logical_and(bpmen,
+                                self.lattice.get_values('BPM',
+                                                        'y_sofb_disabled',
+                                                        pytac.RB,
+                                                        dtype=np.bool_) == 0)
 
-        hen = self.lattice.get_values('HSTR', 'h_sofb_disabled', pytac.RB, dtype=np.bool_) == 0
-        ven = self.lattice.get_values('VSTR', 'v_sofb_disabled', pytac.RB, dtype=np.bool_) == 0
+        hen = self.lattice.get_values('HSTR',
+                                      'h_sofb_disabled',
+                                      pytac.RB,
+                                      dtype=np.bool_) == 0
+        ven = self.lattice.get_values('VSTR',
+                                      'v_sofb_disabled',
+                                      pytac.RB,
+                                      dtype=np.bool_) == 0
 
         array_of_error_pv_names = self.psc_error_names[np.concatenate((hen, ven))]
         psc_errors = np.array(
                 caget(array_of_error_pv_names))
         if psc_errors.any():
             error_indices = np.nonzero(psc_errors)[0]
-            error_pvs = array_of_error_pv_names[error_indices]
-            # Print the whole list to the console because we are not limited on space
-            print 'Correctors with ERCSUM nonzero: ', error_pvs
-
-            # This message goes into the error PV so we keep it short
-            if len(error_pvs) > 1:
-                exception_message = 'Correctors in error: {}, ...'.format(error_pvs[0])
-            else:
-                exception_message = "Corrector in error: {}".format(error_pvs[0])
-            raise CalculationException(exception_message)
+            self.report_corrector_error(array_of_error_pv_names,
+                                        error_indices,
+                                        "with ERCSUM nonzero")
 
         array_of_psc_state_pv_names = self.psc_state_names[np.concatenate((hen, ven))]
         psc_states = np.array(
                 caget(array_of_psc_state_pv_names))
         if not (psc_states == PSC_STATE_ON).all():
             error_indices = np.nonzero(psc_states != PSC_STATE_ON)[0]
-            error_pvs = array_of_error_pv_names[error_indices]
-            # Print full list to console
-            print 'Correctors with state not on: ', error_pvs
-
-            # Shorter message for error PV
-            if len(error_pvs) > 1:
-                exception_message = "Correctors in bad state: {}, ...".format(error_pvs[0])
-            else:
-                exception_message = "Corrector in bad state: {}".format(error_pvs[0])
-
-            raise CalculationException(exception_message)
+            self.report_corrector_error(array_of_psc_state_pv_names,
+                                        error_indices,
+                                        "not ON")
 
         # calculate inverse response matrix on demand
         irm = self.get_irm(hen, ven, hbpmen, vbpmen, self.mu)
