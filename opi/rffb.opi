@@ -2312,7 +2312,7 @@ $(pv_value)</tooltip>
   <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
     <actions hook="false" hook_all="true">
       <action type="OPEN_WEBPAGE">
-        <hyperlink>http://confluence.diamond.ac.uk/display/CNTRLS/TopUp+Help</hyperlink>
+        <hyperlink>https://confluence.diamond.ac.uk/x/ZVhRBQ</hyperlink>
         <description>Launch Help</description>
       </action>
     </actions>
