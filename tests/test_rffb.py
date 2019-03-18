@@ -97,6 +97,11 @@ class TestMockPv(unittest.TestCase):
 
 
 class PVWithValidityTests(unittest.TestCase):
+    def test_get_name(self):
+        pv_name_set = "ANY-PV-NAME-01"
+        pv = rffb_server.PVWithValidity(pv_name_set)
+        self.assertEqual(pv.get_name(), pv_name_set)
+
     @patch("cothread.catools.caget", side_effect=lookup_caget_value)
     def test_creating_PVWithValidity(self, mock_caget):
         pv = rffb_server.PVWithValidity("MOCK-PV-03")
@@ -176,6 +181,7 @@ class RffbTests(unittest.TestCase):
         self.assertTrue(rffb_server.RffbServer.rf_near_setpoint(
             present_rf_freq,
             rf_setpoint))
+
 
 if __name__ == "__main__":
     unittest.main()

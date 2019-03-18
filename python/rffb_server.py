@@ -99,26 +99,33 @@ class RffbServer(object):
 
             # turn off feedback loop with no orbit loop
             if fbstat == 0:
-                logging.fatal("No orbit feedback is running. RFFB will be stopped.")
+                logging.fatal("No orbit feedback is running. "
+                              "RFFB will be stopped.")
                 self.power_pv.set(0)
+                self.pv_error.set("No orbit feedback")
                 return
 
             # turn off feedback loop below 2mA
             if current <= 2:
                 logging.fatal("Beam current <= 2mA. RFFB will be stopped.")
                 self.power_pv.set(0)
+                self.pv_error.set("Current too low")
                 return
 
-            # HLA-349: Check for discrepancy between present RF frequency and setpoint;
-            # indicates problem with master oscillator
+            # HLA-349: Check for discrepancy between present RF frequency and
+            # setpoint; indicates problem with master oscillator
             if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
-                logging.fatal("Discrepancy between RF frequency and setpoint. RFFB will be stopped.")
+                logging.fatal("Discrepancy between RF frequency and setpoint. "
+                              "RFFB will be stopped.")
                 self.power_pv.set(0)
+                self.pv_error.set(self.rf_freq_set_pv.get_name())
                 return
 
             if not self.rf_pvs_valid():
-                logging.fatal("RF PV was invalid > {count} times. RFFB will be stopped."
-                              .format(count=PVWithValidity.ALLOWED_INVALID_CAGETS))
+                logging.fatal("RF PV was invalid > {count} times. "
+                              "RFFB will be stopped."
+                              .format(
+                    count=PVWithValidity.ALLOWED_INVALID_CAGETS))
                 self.power_pv.set(0)
                 return
 
@@ -138,8 +145,20 @@ class RffbServer(object):
 
     def rf_pvs_valid(self):
         """RF FREQ and FREQ_SET PVs have both not been invalid too many times"""
-        return (self.rf_freq_rbv_pv.healthy()
-                and self.rf_freq_set_pv.healthy())
+
+        rf_pvs = [self.rf_freq_set_pv,
+                  self.rf_freq_rbv_pv]
+
+        # Check each PV
+        ok = True
+        for rf_pv in rf_pvs:
+            if not rf_pv.healthy():
+                ok = False
+                # Easiest to set the "Bad PV" from here
+                self.pv_error.set(rf_pv.get_name())
+                break
+
+        return ok
 
     def set_power(self, power):
         self.power = power
@@ -254,4 +273,6 @@ class PVWithValidity(object):
                                     count=self.ALLOWED_INVALID_CAGETS))
             return False
 
-
+    def get_name(self):
+        """Return PV name"""
+        return self.pv_name
