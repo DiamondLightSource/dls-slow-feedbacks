@@ -1,0 +1,6 @@
+rhel7_job:
+  tags:
+    - rhel7
+  script:
+    - ./tests/unit_tests.py
+

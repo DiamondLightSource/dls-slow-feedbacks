@@ -5,7 +5,7 @@ import sys
 import pkg_resources
 pkg_resources.require('pytest')
 pkg_resources.require('mock')
-pkg_resources.require('pytac')
+pkg_resources.require('pytac==0.2.0')
 pkg_resources.require('iocbuilder')
 pkg_resources.require('epicsdbbuilder')
 pkg_resources.require('cothread')
