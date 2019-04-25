@@ -844,7 +844,7 @@ class VefbServer(object):
     def monitors(self):
         self.vemit = PVMonitor('SR-DI-EMIT-01:VEMIT')
         self.vemit_mean = PVMonitor('SR-DI-EMIT-01:VEMIT_MEAN')
-        self.beam_current = PVMonitor('SR21C-DI-DCCT-01:SIGNAL')
+        self.beam_current = PVMonitor('SR-DI-DCCT-01:SIGNAL')
         self.emit_status =  PVMonitor('SR-DI-EMIT-01:STATUS')
 
 
