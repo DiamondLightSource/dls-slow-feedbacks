@@ -94,9 +94,7 @@ class Sofb(object):
                                           error_pvs))
 
         # This message goes into the error PV so we keep it short
-        more_to_show=""
-        if len(error_pvs) > 1:
-            more_to_show=", ..."
+        more_to_show = "" if len(error_pvs) > 1 else ", ..."
 
         exception_message = "{}{}".format(error_pvs[0], more_to_show)
         raise CalculationException(exception_message)
@@ -105,29 +103,42 @@ class Sofb(object):
         # Correction is scaled by this fraction <= 1
         afrac = caget("SR-CS-SOFB-01:AFRAC")
 
-        all_enabled_BPMs = self.lattice.get_values('BPM',
-                                        'enabled',
-                                        pytac.RB,
-                                        dtype=np.bool_)
-        BPMs_x_enabled = np.logical_and(all_enabled_BPMs,
-                                self.lattice.get_values('BPM',
-                                                        'x_sofb_disabled',
-                                                        pytac.RB,
-                                                        dtype=np.bool_) == 0)
-        BPMs_y_enabled = np.logical_and(all_enabled_BPMs,
-                                self.lattice.get_values('BPM',
-                                                        'y_sofb_disabled',
-                                                        pytac.RB,
-                                                        dtype=np.bool_) == 0)
-
-        correctors_x_enabled = self.lattice.get_values('HSTR',
-                                      'h_sofb_disabled',
-                                      pytac.RB,
-                                      dtype=np.bool_) == 0
-        correctors_y_enabled = self.lattice.get_values('VSTR',
-                                      'v_sofb_disabled',
-                                      pytac.RB,
-                                      dtype=np.bool_) == 0
+        all_enabled_bpms = self.lattice.get_values(
+            'BPM',
+            'enabled',
+            pytac.RB,
+            dtype=np.bool_
+        )
+        bpms_x_enabled = np.logical_and(
+            all_enabled_bpms,
+            self.lattice.get_values(
+                'BPM',
+                'x_sofb_disabled',
+                pytac.RB,
+                dtype=np.bool_
+            ) == 0
+        )
+        bpms_y_enabled = np.logical_and(
+            all_enabled_bpms,
+            self.lattice.get_values(
+                'BPM',
+                'y_sofb_disabled',
+                pytac.RB,
+                dtype=np.bool_
+            ) == 0
+        )
+        correctors_x_enabled = self.lattice.get_values(
+            'HSTR',
+            'h_sofb_disabled',
+            pytac.RB,
+            dtype=np.bool_
+        ) == 0
+        correctors_y_enabled = self.lattice.get_values(
+            'VSTR',
+            'v_sofb_disabled',
+            pytac.RB,
+            dtype=np.bool_
+        ) == 0
 
         # Check for any correctors with nonzero error count
         array_of_error_pv_names = self.psc_error_names[
@@ -149,35 +160,47 @@ class Sofb(object):
                 caget(array_of_psc_state_pv_names))
         if not (psc_states == PSC_STATE_ON).all():
             error_indices = np.nonzero(psc_states != PSC_STATE_ON)[0]
-            self.report_corrector_error(array_of_psc_state_pv_names,
-                                        error_indices,
-                                        "not ON")
+            self.report_corrector_error(
+                array_of_psc_state_pv_names,
+                error_indices,
+                "not ON"
+            )
 
         # calculate inverse response matrix on demand
-        irm = self.get_irm(correctors_x_enabled,
-                           correctors_y_enabled,
-                           BPMs_x_enabled,
-                           BPMs_y_enabled,
-                           self.mu)
+        irm = self.get_irm(
+            correctors_x_enabled,
+            correctors_y_enabled,
+            bpms_x_enabled,
+            bpms_y_enabled,
+            self.mu
+        )
 
         # Get the values required to calculate corrections
-        BPMs_x_values = self.lattice.get_values('BPM',
-                                       'x',
-                                       pytac.RB,
-                                       dtype=np.float64)[BPMs_x_enabled]
-        correctors_x_values = self.lattice.get_values('HSTR',
-                                      'b0',
-                                      pytac.RB,
-                                      dtype=np.float64)[correctors_x_enabled]
+        BPMs_x_values = self.lattice.get_values(
+            'BPM',
+            'x',
+            pytac.RB,
+            dtype=np.float64
+        )[bpms_x_enabled]
+        correctors_x_values = self.lattice.get_values(
+            'HSTR',
+            'b0',
+            pytac.RB,
+            dtype=np.float64
+        )[correctors_x_enabled]
 
-        BPMs_y_values = self.lattice.get_values('BPM',
-                                       'y',
-                                       pytac.RB,
-                                       dtype=np.float64)[BPMs_y_enabled]
-        correctors_y_values = self.lattice.get_values('VSTR',
-                                      'a0',
-                                      pytac.RB,
-                                      dtype=np.float64)[correctors_y_enabled]
+        BPMs_y_values = self.lattice.get_values(
+            'BPM',
+            'y',
+            pytac.RB,
+            dtype=np.float64
+        )[bpms_y_enabled]
+        correctors_y_values = self.lattice.get_values(
+            'VSTR',
+            'a0',
+            pytac.RB,
+            dtype=np.float64
+        )[correctors_y_enabled]
 
         # Calculate horizontal corrections
         if not irm[0].size == 0:
@@ -187,9 +210,12 @@ class Sofb(object):
             # Scale deltas so that largest < step_limit
             hdelta = hdelta * self.correction_scale_factor(hdelta)
             hstr_pvs = np.array(
-                self.lattice.get_pv_names('HSTR',
-                                          'b0',
-                                          pytac.SP))[correctors_x_enabled]
+                self.lattice.get_pv_names(
+                    'HSTR',
+                    'b0',
+                    pytac.SP
+                )
+            )[correctors_x_enabled]
             # Apply
             caput(hstr_pvs, correctors_x_values - hdelta * afrac)
 
@@ -201,9 +227,12 @@ class Sofb(object):
             # Scale deltas so that largest < step_limit
             vdelta = vdelta * self.correction_scale_factor(vdelta)
             vstr_pvs = np.array(
-                self.lattice.get_pv_names('VSTR',
-                                          'a0',
-                                          pytac.SP))[correctors_y_enabled]
+                self.lattice.get_pv_names(
+                    'VSTR',
+                    'a0',
+                    pytac.SP
+                )
+            )[correctors_y_enabled]
             # Apply
             caput(vstr_pvs, correctors_y_values - vdelta * afrac)
 
