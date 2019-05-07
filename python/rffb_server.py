@@ -132,8 +132,8 @@ class RffbServer(object):
             # channel access write
             catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
 
-        self.calc_error.set(0)
-        self.pv_error.set("OK")
+            self.calc_error.set(0)
+            self.pv_error.set("OK")
 
     @staticmethod
     def rf_near_setpoint(present_rf_freq, rf_setpoint):
