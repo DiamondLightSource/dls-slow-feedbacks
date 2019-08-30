@@ -89,14 +89,21 @@ class Sofb(object):
                                error_description):
         error_pvs = array_of_pv_names[error_indices]
         # Message to be printed to the console can contain the whole
-        # list and reason because no limited on space
+        # list and reason because not limited on space
         print ('Correctors {}: {}'.format(error_description,
                                           error_pvs))
 
-        # This message goes into the error PV so we keep it short
-        more_to_show = "" if len(error_pvs) > 1 else ", ..."
+        # If more than one PV in list, show how many more.
+        more_to_show = " +{}".format(
+            len(error_pvs) - 1
+        ) if len(error_pvs) > 1 else ""
 
-        exception_message = "{}{}".format(error_pvs[0], more_to_show)
+        # This message goes into the error PV so we keep it short
+        exception_message = "{}{} {}".format(
+            error_pvs[0],
+            more_to_show,
+            error_description,
+        )
         raise CalculationException(exception_message)
 
     def correction(self):
@@ -150,7 +157,7 @@ class Sofb(object):
             error_indices = np.nonzero(psc_errors)[0]
             self.report_corrector_error(array_of_error_pv_names,
                                         error_indices,
-                                        "with ERCSUM nonzero")
+                                        "with errors")
 
         # Check for any correctors with STATE not ON
         array_of_psc_state_pv_names = self.psc_state_names[
