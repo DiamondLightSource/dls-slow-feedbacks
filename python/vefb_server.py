@@ -866,6 +866,8 @@ class VefbServer(object):
 
         self.method_pv = builder.mbbOut(
                 "METHOD", ("OLD", 0), ("NEW", 1),
+                # Minor alarm when running in Old method
+                ZRSV = "MINOR", ONSV = "NO_ALARM",
                 on_update = self.on_method_change,
                 initial_value = 1)
 
