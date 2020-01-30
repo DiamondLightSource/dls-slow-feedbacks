@@ -10,7 +10,7 @@
   <background_color>
     <color name="Canvas" red="200" green="200" blue="200" />
   </background_color>
-  <boy_version>5.1.0.201703300946</boy_version>
+  <boy_version>5.1.0</boy_version>
   <foreground_color>
     <color name="Black" red="0" green="0" blue="0" />
   </foreground_color>
@@ -32,83 +32,6 @@
   <wuid>-7ec79ac:158f319c58c:-7f53</wuid>
   <x>1385</x>
   <y>97</y>
-  <widget typeId="org.csstudio.opibuilder.widgets.Rectangle" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <alarm_pulsing>false</alarm_pulsing>
-    <alpha>255</alpha>
-    <anti_alias>true</anti_alias>
-    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
-    <background_color>
-      <color name="Grey 65%" red="166" green="166" blue="166" />
-    </background_color>
-    <bg_gradient_color>
-      <color red="255" green="255" blue="255" />
-    </bg_gradient_color>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <fg_gradient_color>
-      <color red="255" green="255" blue="255" />
-    </fg_gradient_color>
-    <fill_level>0.0</fill_level>
-    <font>
-      <fontdata fontName="Liberation Sans" height="13" style="1" pixels="true" />
-    </font>
-    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
-    <foreground_color>
-      <color red="255" green="0" blue="0" />
-    </foreground_color>
-    <gradient>false</gradient>
-    <height>26</height>
-    <horizontal_fill>true</horizontal_fill>
-    <line_color>
-      <color name="Grey 50%" red="128" green="128" blue="128" />
-    </line_color>
-    <line_style>0</line_style>
-    <line_width>2</line_width>
-    <name>EDM Rectangle</name>
-    <pv_name></pv_name>
-    <pv_value />
-    <rules>
-      <rule name="backColorAlarmRule" prop_id="background_color" out_exp="false">
-        <exp bool_exp="pvSev0==-1">
-          <value>
-            <color name="Invalid" red="255" green="255" blue="255" />
-          </value>
-        </exp>
-        <exp bool_exp="pvSev0==1">
-          <value>
-            <color name="Major" red="255" green="0" blue="0" />
-          </value>
-        </exp>
-        <exp bool_exp="pvSev0==2">
-          <value>
-            <color name="Minor" red="255" green="241" blue="0" />
-          </value>
-        </exp>
-        <pv trig="true">SR-CS-TFB-01:FWDOK</pv>
-      </rule>
-    </rules>
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <tooltip>$(pv_name)
-$(pv_value)</tooltip>
-    <transparent>false</transparent>
-    <visible>true</visible>
-    <widget_type>Rectangle</widget_type>
-    <width>122</width>
-    <wuid>-7ec79ac:158f319c58c:-7f52</wuid>
-    <x>167</x>
-    <y>567</y>
-  </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.Rectangle" version="1.0.0">
     <actions hook="false" hook_all="false" />
     <alarm_pulsing>false</alarm_pulsing>
@@ -860,58 +783,6 @@ $(pv_value)</tooltip>
     <wuid>-7ec79ac:158f319c58c:-7f45</wuid>
     <x>170</x>
     <y>90</y>
-  </widget>
-  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
-    <actions hook="false" hook_all="false" />
-    <alarm_pulsing>false</alarm_pulsing>
-    <auto_size>false</auto_size>
-    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
-    <background_color>
-      <color name="Grey 65%" red="166" green="166" blue="166" />
-    </background_color>
-    <border_alarm_sensitive>false</border_alarm_sensitive>
-    <border_color>
-      <color red="0" green="128" blue="255" />
-    </border_color>
-    <border_style>0</border_style>
-    <border_width>1</border_width>
-    <enabled>true</enabled>
-    <font>
-      <fontdata fontName="Liberation Sans" height="13" style="1" pixels="true" />
-    </font>
-    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
-    <foreground_color>
-      <color name="Black" red="0" green="0" blue="0" />
-    </foreground_color>
-    <format_type>0</format_type>
-    <height>20</height>
-    <horizontal_alignment>1</horizontal_alignment>
-    <name>EDM TextInput</name>
-    <precision>0</precision>
-    <precision_from_pv>true</precision_from_pv>
-    <pv_name>SR-CS-TFB-01:FWDOK</pv_name>
-    <pv_value />
-    <rotation_angle>0.0</rotation_angle>
-    <rules />
-    <scale_options>
-      <width_scalable>true</width_scalable>
-      <height_scalable>true</height_scalable>
-      <keep_wh_ratio>false</keep_wh_ratio>
-    </scale_options>
-    <scripts />
-    <show_units>false</show_units>
-    <text>######</text>
-    <tooltip>$(pv_name)
-$(pv_value)</tooltip>
-    <transparent>false</transparent>
-    <vertical_alignment>1</vertical_alignment>
-    <visible>true</visible>
-    <widget_type>Text Update</widget_type>
-    <width>116</width>
-    <wrap_words>false</wrap_words>
-    <wuid>-7ec79ac:158f319c58c:-7f44</wuid>
-    <x>170</x>
-    <y>570</y>
   </widget>
   <widget typeId="org.csstudio.opibuilder.widgets.TextInput" version="2.0.0">
     <actions hook="false" hook_all="false" />
@@ -3006,5 +2877,57 @@ $(pv_value)</tooltip>
     <wuid>-7ec79ac:158f319c58c:-7f1b</wuid>
     <x>256</x>
     <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <auto_size>false</auto_size>
+    <backcolor_alarm_sensitive>true</backcolor_alarm_sensitive>
+    <background_color>
+      <color name="Grey 65%" red="166" green="166" blue="166" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color name="Grey 50%" red="128" green="128" blue="128" />
+    </border_color>
+    <border_style>1</border_style>
+    <border_width>2</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Liberation Sans" height="13" style="1" pixels="true" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color name="Text: FG" red="0" green="0" blue="0" />
+    </foreground_color>
+    <format_type>0</format_type>
+    <height>26</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>Text Update</name>
+    <precision>1</precision>
+    <precision_from_pv>true</precision_from_pv>
+    <pv_name>SR-CS-TFB-01:FWDOK</pv_name>
+    <pv_value />
+    <rotation_angle>0.0</rotation_angle>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_units>true</show_units>
+    <text>######</text>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Text Update</widget_type>
+    <width>122</width>
+    <wrap_words>false</wrap_words>
+    <wuid>-642a9472:16ff68f2b6b:-7f7f</wuid>
+    <x>167</x>
+    <y>567</y>
   </widget>
 </display>
