@@ -11,9 +11,9 @@ pkg_resources.require('epicsdbbuilder')
 pkg_resources.require('cothread')
 import pytest
 
-# Put the python directory on the path.
+# Put the dls_slow_feedbacks directory on the path.
 PYTHON_DIR = os.path.join(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))), 'python')
+    os.path.abspath(__file__))), 'dls_slow_feedbacks')
 sys.path.append(PYTHON_DIR)
 
 

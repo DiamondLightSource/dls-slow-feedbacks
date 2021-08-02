@@ -3,7 +3,7 @@
 "Test Database for SOFB"
 
 import os, sys
-sys.path.append("../python")
+sys.path.append("../dls_slow_feedbacks")
 from pkg_resources import require
 require('cothread==2.0')
 require('iocbuilder==3.23')

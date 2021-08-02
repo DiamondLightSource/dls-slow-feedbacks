@@ -6,5 +6,5 @@ PYIOC=/dls_sw/prod/R3.14.12.7/support/pythonIoc/$PYIOC_VERSION/pythonIoc
 # If run with argument assume debug mode
 [ -n "$1" ]  &&  export EPICS_CAS_SERVER_PORT=6064
 
-cd "$(dirname "$0")/python"
+cd "$(dirname "$0")/dls_slow_feedbacks"
 exec $PYIOC feedback_ioc.py "$@"

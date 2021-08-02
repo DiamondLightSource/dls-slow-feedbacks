@@ -39,7 +39,7 @@ ytune = builder.aIn('TUNE:TUNE', initial_value=0.365, PREC=4)
 builder.SetDeviceName('SR-DI-DCCT-01')
 builder.aIn('SIGNAL', initial_value=299.9)
 
-mag_pvs = load_magnet_pvs('../python/TunePvs.txt')
+mag_pvs = load_magnet_pvs('../dls_slow_feedbacks/TunePvs.txt')
 
 # Magnet current offset PVs, changed by tune feedback
 for mpv in mag_pvs:
