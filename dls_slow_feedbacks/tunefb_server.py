@@ -201,7 +201,7 @@ class TunefbServer(object):
                 self.loop_correction()
             except Exception as e:
                 # stop feedback and print stack trace
-                log.warn('Unexpected exception: %s' % str(e))
+                log.warning('Unexpected exception: %s' % str(e))
                 traceback.print_exc()
                 self.power_pv.set(False)
                 self.status_pv.set(Status.UNEXPECTED_ERROR,
@@ -257,7 +257,7 @@ class TunefbServer(object):
         if any([tune.timestamp < last_check for tune in tunes]):
             raise TunefbInvalid(Status.TUNE_UPDATE)
         if numpy.isnan(tune_array).any():
-            log.warn('Tune value NaN but PV not invalid.')
+            log.warning('Tune value NaN but PV not invalid.')
             raise TunefbInvalid(Status.TUNE_VALIDITY)
         log.info('Tune delta before last correction %s' % self.tune_deltas)
         log.info(
@@ -299,11 +299,11 @@ class TunefbServer(object):
         # Refresh integrated currents so they match their PVs.
         fetched_current = numpy.array([pv.get() for pv in self.mirror_pvs])
         if any(fetched_current - self.integrated_current):
-            log.warn(OFFSET_CURRENT_CHANGED)
+            log.warning(OFFSET_CURRENT_CHANGED)
 
         self.integrated_current = fetched_current + deltas
         if numpy.isnan(self.integrated_current).any():
-            log.warn('Unexpected NaN in calculated current correction.')
+            log.warning('Unexpected NaN in calculated current correction.')
             raise TunefbError(Status.UNEXPECTED_ERROR)
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
@@ -347,13 +347,13 @@ class TunefbServer(object):
             else:
                 self.status_pv.set(Status.SINGLE_CORR)
         except TunefbInvalid as e:
-            log.warn(str(e))
+            log.warning(str(e))
             self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
         except TunefbError as e:
             log.error(str(e))
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
         except Exception as e:
-            log.warn('Unexpected exception: %s' % str(e))
+            log.warning('Unexpected exception: %s' % str(e))
             self.status_pv.set(
                     Status.UNEXPECTED_ERROR,
                     severity=alarm.MAJOR_ALARM
@@ -380,13 +380,13 @@ class TunefbServer(object):
             cothread.Sleep(0.2)
             self.status_pv.set(Status.TUNE_STEP)
         except TunefbInvalid as e:
-            log.warn(str(e))
+            log.warning(str(e))
             self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
         except TunefbError as e:
             log.error(str(e))
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
         except Exception as e:
-            log.warn('Unexpected exception: %s', str(e))
+            log.warning('Unexpected exception: %s', str(e))
             self.status_pv.set(
                     Status.UNEXPECTED_ERROR,
                     severity=alarm.MAJOR_ALARM
@@ -413,7 +413,7 @@ class TunefbServer(object):
             for pv in self.mirror_pvs:
                 pv.set(0)
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
-            log.warn('Reset all integrated currents to zero')
+            log.warning('Reset all integrated currents to zero')
             self._reset_state()
 
     def aggregate_setpoints(self, value):
@@ -426,7 +426,7 @@ class TunefbServer(object):
                 caput(pv, caget(pv) + self.integrated_current[i])
                 self.mirror_pvs[i].set(0)
                 cothread.Sleep(BEAM_DAMP_TIME * 10.)
-            log.warn('Aggregated offsets into setpoints')
+            log.warning('Aggregated offsets into setpoints')
             self._reset_state()
 
     def update_max_i_pv(self):
