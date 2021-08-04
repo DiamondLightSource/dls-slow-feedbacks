@@ -842,7 +842,7 @@ class VefbServer(object):
         builder.SetDeviceName("SR-CS-VEFB-01")
 
         self.enable_pv = builder.mbbOut(
-                "LOOP", ("OFF", "MINOR"), ("ON", None),
+                "LOOP", ("OFF", "MINOR"), ("ON", "NO_ALARM"),
                 initial_value = 0, on_update = self.set_enabled)
 
         self.single_pv = builder.aOut("SINGLE", initial_value = 0,
@@ -960,8 +960,8 @@ class VefbServer(object):
                 PREC = 4, EGU = "A")
 
         self.status_pv = builder.mbbIn("STATUS",
-             ("Ok", None),
-             ("Injecting", None),
+             ("Ok", "NO_ALARM"),
+             ("Injecting", "NO_ALARM"),
              ("Bad emittance status", "MINOR"),
              ("Unknown error", "MAJOR"),
              ("No stored beam", "MAJOR"),
@@ -980,8 +980,8 @@ class VefbServer(object):
 
 
         self.calc_status_pv = builder.mbbIn("CALC_STATUS",
-             ("Ok", None),
-             ("Injecting", None),
+             ("Ok", "NO_ALARM"),
+             ("Injecting", "NO_ALARM"),
              ("Bad emittance status", "MINOR"),
              ("Unknown error", "MINOR"),
              ("No stored beam", "MINOR"),
