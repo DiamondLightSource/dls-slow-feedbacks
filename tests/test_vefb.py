@@ -2,8 +2,8 @@ import mock
 import pytest
 import pytac
 import time
-import vefb_server
-from vefb_server import VefbServer, VefbStatus
+from dls_slow_feedbacks import vefb_server
+from dls_slow_feedbacks.vefb_server import VefbServer, VefbStatus
 
 
 def setup_module():
@@ -109,4 +109,3 @@ def test_apply_delta_returns_MAGNET_ERROR_if_put_delta_not_ok(vefb):
 def test_apply_delta_applies_correct_dimensions(vefb, nsquads):
     vefb.apply_delta(2)
     assert vefb.skew_quads.put_delta.call_args[0][0].size == nsquads
-

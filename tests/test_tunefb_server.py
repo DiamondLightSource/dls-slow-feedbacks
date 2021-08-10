@@ -8,8 +8,8 @@ from mock import MagicMock, patch
 import unittest
 import os
 import time
-import tunefb_server
-from tunefb_server import TunefbServer, TunefbError, TunefbInvalid
+from dls_slow_feedbacks import tunefb_server
+from dls_slow_feedbacks.tunefb_server import TunefbServer, TunefbError, TunefbInvalid
 import numpy
 import pytac
 
@@ -36,8 +36,8 @@ class TestTunefb(unittest.TestCase):
     def __init__(self, caller):
         unittest.TestCase.__init__(self, caller)
 
-    @patch('tunefb_server.caget')
-    @patch('tunefb_server.TunefbServer.records')
+    @patch('dls_slow_feedbacks.tunefb_server.caget')
+    @patch('dls_slow_feedbacks.tunefb_server.TunefbServer.records')
     def setUp(self, mock_records, mock_caget):
         mode = MagicMock(listeners=[], lattice=LATTICE)
         self.pytac_tfb_pvs = load_pytac_tfb_pvs()
@@ -57,7 +57,7 @@ class TestTunefb(unittest.TestCase):
         self.assertListEqual(self.tfb.mag_pvs, self.pytac_tfb_pvs)
 
     def test_check_current_does_nothing_if_current_valid(self):
-        with patch('tunefb_server.caget') as mock_caget:
+        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
             mock_caget.return_value = 2
             try:
                 self.tfb.check_current()
@@ -65,12 +65,12 @@ class TestTunefb(unittest.TestCase):
                 self.fail('Should not throw an exception.')
 
     def test_check_current_throws_exception_if_current_invalid(self):
-        with patch('tunefb_server.caget') as mock_caget:
+        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
             mock_caget.return_value = 0.5
             self.assertRaises(TunefbError, self.tfb.check_current)
 
     def test_refresh_tune_deltas_completes_when_tune_severity_minor(self):
-        with patch('tunefb_server.caget') as mock_caget:
+        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
             val1 = ca_float(1.0)
             val1.timestamp = time.time()
             val1.severity = 1
@@ -96,7 +96,7 @@ class TestTunefb(unittest.TestCase):
             self.fail('self.tfb.power_pv.set object never called')
 
     def test_refresh_tune_deltas_throws_exception_if_nan_received(self):
-        with patch('tunefb_server.caget') as mock_caget:
+        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
             val1 = ca_float(1.0)
             val1.timestamp = time.time()
             val2 = ca_float(numpy.nan)
@@ -105,7 +105,7 @@ class TestTunefb(unittest.TestCase):
             self.assertRaises(TunefbInvalid, self.tfb.refresh_tune_deltas)
 
     def test_refresh_tune_deltas_throws_exception_if_timestamp_old(self):
-        with patch('tunefb_server.caget') as mock_caget:
+        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
             val1 = ca_float(1.0)
             val1.timestamp = time.time() - 2  # Allowed lag 1.0s.
             val2 = ca_float(numpy.nan)
@@ -170,8 +170,8 @@ class TestTunefb(unittest.TestCase):
         except TunefbInvalid:
             self.fail('Should not throw an exception.')
 
-    @patch('tunefb_server.caput')
-    @patch('tunefb_server.caget')
+    @patch('dls_slow_feedbacks.tunefb_server.caput')
+    @patch('dls_slow_feedbacks.tunefb_server.caget')
     def test_aggregate_setpoints_moves_values_to_setpoints(self, mock_caget, mock_caput):
         self.tfb.aggregate_pv = MagicMock()
         self.tfb.reset_integrated_current_pv = MagicMock()
@@ -210,7 +210,3 @@ class TestTunefb(unittest.TestCase):
 class ca_float(float):
     severity = 0
     timestamp = None
-
-
-if __name__ == "__main__":
-    pytest.main()

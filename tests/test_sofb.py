@@ -6,18 +6,10 @@ import pytest
 import mock
 import collections
 import pytac
-from pytac import epics
+from pytac import cothread_cs
 from cothread import catools
 
-try:
-    import pytest
-except ImportError:
-    print('Usage: py.test {}'.format(sys.argv[0]))
-    sys.exit()
-
-import sofb
-import sofb_server
-import mode
+from dls_slow_feedbacks import sofb, sofb_server, mode
 
 
 NCOR = 172
@@ -30,7 +22,7 @@ def mock_caget():
     mock_caget = mock.MagicMock()
     catools.caget = mock_caget
     sofb.caget = mock_caget
-    epics.caget = mock_caget
+    cothread_cs.caget = mock_caget
     return mock_caget
 
 
@@ -39,7 +31,7 @@ def mock_caput():
     mock_caput = mock.MagicMock()
     catools.caput = mock.MagicMock()
     sofb.caput = mock_caput
-    epics.caput = mock_caput
+    cothread_cs.caput = mock_caput
     return mock_caput
 
 
@@ -97,12 +89,12 @@ def test_zero_correction(test_sofb, lattice, mock_caput, mock_caget, caget_respo
     hcm_call, vcm_call, heartbeat_call = mock_caput.call_args_list
 
     numpy.testing.assert_equal(
-            lattice.get_pv_names('HSTR', 'b0', pytac.SP),
+            lattice.get_element_pv_names('HSTR', 'x_kick', pytac.SP),
             hcm_call[0][0]
     )
     numpy.testing.assert_equal(h_expected, hcm_call[0][1])
     numpy.testing.assert_equal(
-            lattice.get_pv_names('HSTR', 'a0', pytac.SP),
+            lattice.get_element_pv_names('VSTR', 'y_kick', pytac.SP),
             vcm_call[0][0]
     )
     numpy.testing.assert_equal(v_expected, vcm_call[0][1])
@@ -128,12 +120,12 @@ def test_random_correction(test_sofb, lattice, mock_caput, mock_caget, caget_res
     hcm_call, vcm_call, heartbeat_call = mock_caput.call_args_list
 
     numpy.testing.assert_equal(
-            lattice.get_pv_names('HSTR', 'b0', pytac.SP),
+            lattice.get_element_pv_names('HSTR', 'x_kick', pytac.SP),
             hcm_call[0][0]
     )
     numpy.testing.assert_equal(h_expected, -hcm_call[0][1])
     numpy.testing.assert_equal(
-            lattice.get_pv_names('VSTR', 'a0', pytac.SP),
+            lattice.get_element_pv_names('VSTR', 'y_kick', pytac.SP),
             vcm_call[0][0]
     )
     numpy.testing.assert_equal(v_expected, -vcm_call[0][1])
@@ -151,12 +143,12 @@ def test_afrac_correction(test_sofb, lattice, mock_caget, mock_caput, caget_resp
     hcm_call, vcm_call, heartbeat_call = mock_caput.call_args_list
 
     numpy.testing.assert_equal(
-            lattice.get_pv_names('HSTR', 'b0', pytac.SP),
+            lattice.get_element_pv_names('HSTR', 'x_kick', pytac.SP),
             hcm_call[0][0]
     )
     numpy.testing.assert_equal(h_expected, -hcm_call[0][1])
     numpy.testing.assert_equal(
-            lattice.get_pv_names('VSTR', 'a0', pytac.SP),
+            lattice.get_element_pv_names('VSTR', 'y_kick', pytac.SP),
             vcm_call[0][0]
     )
     numpy.testing.assert_equal(v_expected, -vcm_call[0][1])
@@ -177,12 +169,12 @@ def test_scaled_correction(test_sofb, lattice, mock_caget, mock_caput, caget_res
     hcm_call, vcm_call, heartbeat_call = mock_caput.call_args_list
 
     numpy.testing.assert_equal(
-            lattice.get_pv_names('HSTR', 'b0', pytac.SP),
+            lattice.get_element_pv_names('HSTR', 'x_kick', pytac.SP),
             hcm_call[0][0]
     )
     numpy.testing.assert_equal(h_expected, -hcm_call[0][1])
     numpy.testing.assert_equal(
-            lattice.get_pv_names('HSTR', 'a0', pytac.SP),
+            lattice.get_element_pv_names('VSTR', 'y_kick', pytac.SP),
             vcm_call[0][0]
     )
     numpy.testing.assert_equal(v_expected, -vcm_call[0][1])

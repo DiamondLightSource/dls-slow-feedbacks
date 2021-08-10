@@ -1,17 +1,11 @@
 #!/bin/env dls-python
-from pkg_resources import require
-
-require("mock")
 from mock import MagicMock, patch
 import copy
 
-require("cothread")
 import cothread
 import unittest
 
-import rffb_server
-import constants
-import mode
+from dls_slow_feedbacks import rffb_server, constants, mode
 
 
 class MockPV(object):
@@ -119,7 +113,7 @@ class PVWithValidityTests(unittest.TestCase):
 
             # Check that we tolerate the right number of invalid gets and then
             # complain
-            for i in xrange(pv.ALLOWED_INVALID_CAGETS + 1):
+            for i in range(pv.ALLOWED_INVALID_CAGETS + 1):
 
                 self.assertEqual(pv.get(), value_should_be)
                 self.assertEqual(pv.severity, value_should_be.severity)
@@ -140,8 +134,8 @@ class PVWithValidityTests(unittest.TestCase):
         value_should_be = caget_value_dict["MOCK-PV-05"].get()
 
         # Do cagets up to the threshold and it should not fail
-        for i in xrange(pv.ALLOWED_INVALID_CAGETS):
-            print i
+        for i in range(pv.ALLOWED_INVALID_CAGETS):
+            print(i)
             self.assertEqual(pv.get(), value_should_be)
             self.assertEqual(pv.severity, value_should_be.severity)
             self.assertEqual(pv.consecutive_times_invalid, i + 1)
@@ -154,8 +148,8 @@ class PVWithValidityTests(unittest.TestCase):
 
         # Now go up to the threshold and past it
         # and healthy() should stay True
-        for i in xrange(pv.ALLOWED_INVALID_CAGETS + 5):
-            print i
+        for i in range(pv.ALLOWED_INVALID_CAGETS + 5):
+            print(i)
             self.assertEqual(pv.get(), value_should_be)
             self.assertEqual(pv.severity, value_should_be.severity)
             self.assertEqual(pv.consecutive_times_invalid, 0)
@@ -181,7 +175,3 @@ class RffbTests(unittest.TestCase):
         self.assertTrue(rffb_server.RffbServer.rf_near_setpoint(
             present_rf_freq,
             rf_setpoint))
-
-
-if __name__ == "__main__":
-    unittest.main()
