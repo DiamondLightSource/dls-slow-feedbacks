@@ -3,41 +3,40 @@
 # Note that these unit tests are using caget to fetch data from
 # EPICS.  If IOCs are not responding, the tests may fail.
 
-import pytest
-from mock import MagicMock, patch
-import unittest
 import os
 import time
-from dls_slow_feedbacks import tunefb_server
-from dls_slow_feedbacks.tunefb_server import TunefbServer, TunefbError, TunefbInvalid
+import unittest
+
 import numpy
 import pytac
+from mock import MagicMock, patch
 
+from dls_slow_feedbacks import tunefb_server
+from dls_slow_feedbacks.tunefb_server import TunefbError, TunefbInvalid, TunefbServer
 
-RING_MODE = 'DIAD'
+RING_MODE = "DIAD"
 LATTICE = pytac.load_csv.load(RING_MODE)
 
 
-TFB_FAMILIES = ('Q1D', 'Q2D', 'Q3D', 'Q3B', 'Q2B', 'Q1B')
-DATADIR = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata'
-RESPONSE_MATRIX = os.path.join(DATADIR, RING_MODE, 'GoldenTuneResp.mat')
+TFB_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
+DATADIR = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
+RESPONSE_MATRIX = os.path.join(DATADIR, RING_MODE, "GoldenTuneResp.mat")
 
 
 def load_pytac_tfb_pvs():
     tfb_elements = []
     for family in TFB_FAMILIES:
         tfb_elements.extend(LATTICE.get_elements(family))
-    tfb_pvs = [element.get_device('b1').name for element in tfb_elements]
+    tfb_pvs = [element.get_device("b1").name for element in tfb_elements]
     return tfb_pvs
 
 
 class TestTunefb(unittest.TestCase):
-
     def __init__(self, caller):
         unittest.TestCase.__init__(self, caller)
 
-    @patch('dls_slow_feedbacks.tunefb_server.caget')
-    @patch('dls_slow_feedbacks.tunefb_server.TunefbServer.records')
+    @patch("dls_slow_feedbacks.tunefb_server.caget")
+    @patch("dls_slow_feedbacks.tunefb_server.TunefbServer.records")
     def setUp(self, mock_records, mock_caget):
         mode = MagicMock(listeners=[], lattice=LATTICE)
         self.pytac_tfb_pvs = load_pytac_tfb_pvs()
@@ -57,20 +56,20 @@ class TestTunefb(unittest.TestCase):
         self.assertListEqual(self.tfb.mag_pvs, self.pytac_tfb_pvs)
 
     def test_check_current_does_nothing_if_current_valid(self):
-        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
+        with patch("dls_slow_feedbacks.tunefb_server.caget") as mock_caget:
             mock_caget.return_value = 2
             try:
                 self.tfb.check_current()
             except TunefbError:
-                self.fail('Should not throw an exception.')
+                self.fail("Should not throw an exception.")
 
     def test_check_current_throws_exception_if_current_invalid(self):
-        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
+        with patch("dls_slow_feedbacks.tunefb_server.caget") as mock_caget:
             mock_caget.return_value = 0.5
             self.assertRaises(TunefbError, self.tfb.check_current)
 
     def test_refresh_tune_deltas_completes_when_tune_severity_minor(self):
-        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
+        with patch("dls_slow_feedbacks.tunefb_server.caget") as mock_caget:
             val1 = ca_float(1.0)
             val1.timestamp = time.time()
             val1.severity = 1
@@ -80,7 +79,7 @@ class TestTunefb(unittest.TestCase):
             try:
                 self.tfb.refresh_tune_deltas()
             except TunefbInvalid:
-                self.fail('Should not thrown an exception')
+                self.fail("Should not thrown an exception")
 
     def test_loop_correction_throws_error_on_mutiple_invalids(self):
         self.tfb.update_fwd_ok_pv = MagicMock()
@@ -93,10 +92,10 @@ class TestTunefb(unittest.TestCase):
         try:
             self.assertFalse(self.tfb.power_pv.set.call_args[0][0])
         except TypeError:
-            self.fail('self.tfb.power_pv.set object never called')
+            self.fail("self.tfb.power_pv.set object never called")
 
     def test_refresh_tune_deltas_throws_exception_if_nan_received(self):
-        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
+        with patch("dls_slow_feedbacks.tunefb_server.caget") as mock_caget:
             val1 = ca_float(1.0)
             val1.timestamp = time.time()
             val2 = ca_float(numpy.nan)
@@ -105,7 +104,7 @@ class TestTunefb(unittest.TestCase):
             self.assertRaises(TunefbInvalid, self.tfb.refresh_tune_deltas)
 
     def test_refresh_tune_deltas_throws_exception_if_timestamp_old(self):
-        with patch('dls_slow_feedbacks.tunefb_server.caget') as mock_caget:
+        with patch("dls_slow_feedbacks.tunefb_server.caget") as mock_caget:
             val1 = ca_float(1.0)
             val1.timestamp = time.time() - 2  # Allowed lag 1.0s.
             val2 = ca_float(numpy.nan)
@@ -118,16 +117,16 @@ class TestTunefb(unittest.TestCase):
         deltas = numpy.array([1, 2, 3, 4], dtype=numpy.float64)
         scaled_deltas = self.tfb.scale_deltas(deltas)
         if not all(deltas == scaled_deltas):
-            self.fail('Deltas should not be scaled.')
+            self.fail("Deltas should not be scaled.")
 
     def test_scale_deltas_scales_deltas_if_larger_than_max(self):
         self.tfb.mag_delta_max = 1
         deltas = numpy.array([1, 2, 3, 4], dtype=numpy.float64)
         correctly_scaled = numpy.array([0.25, 0.5, 0.75, 1.0])
         scaled_deltas = self.tfb.scale_deltas(deltas)
-        print('The scaled deltas are {}'.format(scaled_deltas))
+        print("The scaled deltas are {}".format(scaled_deltas))
         if not all(correctly_scaled == scaled_deltas):
-            self.fail('Deltas should have been scaled.')
+            self.fail("Deltas should have been scaled.")
 
     def test_check_mag_limits_raises_exception_if_i_too_large(self):
         self.tfb.max_current_range = 1.0
@@ -141,7 +140,7 @@ class TestTunefb(unittest.TestCase):
         deltas = numpy.zeros(self.nquads)
         deltas[56] = numpy.nan
         # Awkward patch to control value of fetched_current
-        with patch('numpy.array') as na:
+        with patch("numpy.array") as na:
             z = numpy.zeros(self.nquads)
             na.return_value = z
             self.assertRaises(TunefbError, self.tfb.apply_correction, deltas)
@@ -149,7 +148,7 @@ class TestTunefb(unittest.TestCase):
     def test_apply_correction_does_not_apply_nans_from_pv(self):
         deltas = numpy.zeros(self.nquads)
         # Awkward patch to control value of fetched_current
-        with patch('numpy.array') as na:
+        with patch("numpy.array") as na:
             z = numpy.zeros(self.nquads)
             z[33] = numpy.nan
             na.return_value = z
@@ -168,14 +167,16 @@ class TestTunefb(unittest.TestCase):
         try:
             self.tfb.check_tune_alarms()
         except TunefbInvalid:
-            self.fail('Should not throw an exception.')
+            self.fail("Should not throw an exception.")
 
-    @patch('dls_slow_feedbacks.tunefb_server.caput')
-    @patch('dls_slow_feedbacks.tunefb_server.caget')
-    def test_aggregate_setpoints_moves_values_to_setpoints(self, mock_caget, mock_caput):
+    @patch("dls_slow_feedbacks.tunefb_server.caput")
+    @patch("dls_slow_feedbacks.tunefb_server.caget")
+    def test_aggregate_setpoints_moves_values_to_setpoints(
+        self, mock_caget, mock_caput
+    ):
         self.tfb.aggregate_pv = MagicMock()
         self.tfb.reset_integrated_current_pv = MagicMock()
-        self.tfb.integrated_tunes = numpy.array([1,2])
+        self.tfb.integrated_tunes = numpy.array([1, 2])
         rnd_integrated = numpy.random.rand(self.nquads)
         rnd_setpoint = numpy.random.rand(self.nquads)
         self.tfb.integrated_current = numpy.copy(rnd_integrated)
@@ -185,8 +186,9 @@ class TestTunefb(unittest.TestCase):
         # Actually call the function
         self.tfb.aggregate_setpoints(1)
 
-        numpy.testing.assert_array_equal(self.tfb.integrated_current,
-                                       numpy.zeros(self.nquads))
+        numpy.testing.assert_array_equal(
+            self.tfb.integrated_current, numpy.zeros(self.nquads)
+        )
         calls = numpy.array([call[0][1] for call in mock_caput.call_args_list])
         numpy.testing.assert_array_equal(rnd_integrated + rnd_setpoint, calls)
         numpy.testing.assert_array_equal(self.tfb.integrated_tunes, numpy.zeros(2))
@@ -194,7 +196,7 @@ class TestTunefb(unittest.TestCase):
     def test_reset_integrated_current_sets_everything_to_zero(self):
         self.tfb.aggregate_pv = MagicMock()
         self.tfb.reset_integrated_current_pv = MagicMock()
-        self.tfb.integrated_tunes = numpy.array([1,2])
+        self.tfb.integrated_tunes = numpy.array([1, 2])
         rnd_integrated = numpy.random.rand(self.nquads)
         self.tfb.integrated_current = numpy.copy(rnd_integrated)
         (self.tfb.mirror_pvs.append(MagicMock()) for q in range(self.nquads))
@@ -202,8 +204,9 @@ class TestTunefb(unittest.TestCase):
         # Actually call the function
         self.tfb.reset_integrated_current(1)
 
-        numpy.testing.assert_array_equal(self.tfb.integrated_current,
-                                       numpy.zeros(self.nquads))
+        numpy.testing.assert_array_equal(
+            self.tfb.integrated_current, numpy.zeros(self.nquads)
+        )
         numpy.testing.assert_array_equal(self.tfb.integrated_tunes, numpy.zeros(2))
 
 

@@ -1,31 +1,31 @@
-"IOC for RF Feedback"
-
+import logging
 import os
+import traceback
 
 import cothread
-from cothread import catools
-import traceback
-from softioc import builder
-from scipy.io import loadmat
 import numpy
 import pytac
-import logging
+from cothread import catools
+from scipy.io import loadmat
+from softioc import builder
 
-from . import constants, mode, rffb_calc
+from dls_slow_feedbacks import constants, mode, rffb_calc
+
+"IOC for RF Feedback"
 
 # Constants
 MAX_DIFFERENCE_Hz = 100  # Allowable difference between RF setpoint and rbv
 
-class RffbServer(object):
 
+class RffbServer(object):
     def __init__(self, ring_mode):
         self.tick = 0
         self.power = 0
         self.rfstep = 0.1
         self.period = 10
         self.correctors = numpy.array(
-                ring_mode.lattice.get_element_pv_names('HSTR', 'x_kick', pytac.RB)
-                )
+            ring_mode.lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
+        )
 
         self.records()
 
@@ -56,11 +56,10 @@ class RffbServer(object):
                 self.pv_error.set(e.name)
                 self.calc_error.set(1)
                 self.power_pv.set(0)
-            except:
+            except BaseException:
                 traceback.print_exc()
                 self.calc_error.set(1)
                 self.power_pv.set(0)
-
 
     def feedback(self):
 
@@ -76,9 +75,9 @@ class RffbServer(object):
         present_rf_demand = self.rf_freq_set_pv.get()
         present_rf_freq = self.rf_freq_rbv_pv.get()
 
-        delta_rf_demand = rffb_calc.calc_rffb(self.bpmresp, self.disp,
-                                  enabled_bpm, enabled_cor,
-                                  hcm)
+        delta_rf_demand = rffb_calc.calc_rffb(
+            self.bpmresp, self.disp, enabled_bpm, enabled_cor, hcm
+        )
         self.delta_pv.set(delta_rf_demand)
 
         def round10(x):
@@ -97,8 +96,7 @@ class RffbServer(object):
 
             # turn off feedback loop with no orbit loop
             if fbstat == 0:
-                logging.fatal("No orbit feedback is running. "
-                              "RFFB will be stopped.")
+                logging.fatal("No orbit feedback is running. " "RFFB will be stopped.")
                 self.power_pv.set(0)
                 self.pv_error.set("No orbit feedback")
                 return
@@ -113,17 +111,21 @@ class RffbServer(object):
             # HLA-349: Check for discrepancy between present RF frequency and
             # setpoint; indicates problem with master oscillator
             if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
-                logging.fatal("Discrepancy between RF frequency and setpoint. "
-                              "RFFB will be stopped.")
+                logging.fatal(
+                    "Discrepancy between RF frequency and setpoint. "
+                    "RFFB will be stopped."
+                )
                 self.power_pv.set(0)
                 self.pv_error.set(self.rf_freq_set_pv.get_name())
                 return
 
             if not self.rf_pvs_valid():
-                logging.fatal("RF PV was invalid > {count} times. "
-                              "RFFB will be stopped."
-                              .format(
-                    count=PVWithValidity.ALLOWED_INVALID_CAGETS))
+                logging.fatal(
+                    "RF PV was invalid > {count} times. "
+                    "RFFB will be stopped.".format(
+                        count=PVWithValidity.ALLOWED_INVALID_CAGETS
+                    )
+                )
                 self.power_pv.set(0)
                 return
 
@@ -144,8 +146,7 @@ class RffbServer(object):
     def rf_pvs_valid(self):
         """RF FREQ and FREQ_SET PVs have both not been invalid too many times"""
 
-        rf_pvs = [self.rf_freq_set_pv,
-                  self.rf_freq_rbv_pv]
+        rf_pvs = [self.rf_freq_set_pv, self.rf_freq_rbv_pv]
 
         # Check each PV
         ok = True
@@ -174,18 +175,18 @@ class RffbServer(object):
         rffb_calc.cache.clear()
         path = os.path.join(mode.DATAROOT, lattice.name)
         self.correctors = numpy.array(
-                lattice.get_element_pv_names('HSTR', 'x_kick', pytac.RB)
-                )
+            lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
+        )
         try:
             raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
             raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
-            self.bpmresp = raw_bpmresp["Rmat"][0,0]["Data"]
-            self.disp = raw_disp["BPMxDisp"]["Data"][0,0]
-            assert(raw_bpmresp["Rmat"][0,0]["Units"] == "Hardware")
-            assert(raw_disp["BPMxDisp"]["Units"] == "Hardware")
+            self.bpmresp = raw_bpmresp["Rmat"][0, 0]["Data"]
+            self.disp = raw_disp["BPMxDisp"]["Data"][0, 0]
+            assert raw_bpmresp["Rmat"][0, 0]["Units"] == "Hardware"
+            assert raw_disp["BPMxDisp"]["Units"] == "Hardware"
             self.matrix_error.set(0)
             print(f"RFFB loaded matrix {lattice.name}")
-        except:
+        except BaseException:
             traceback.print_exc()
             self.bpmresp = None
             self.disp = None
@@ -196,35 +197,48 @@ class RffbServer(object):
         builder.SetDeviceName("SR-CS-RFFB-01")
 
         self.matrix_error = builder.boolIn(
-            "EMATRIX", DESC = "Matrix Error",
-            initial_value = 1, ZNAM = "OK",
-            ONAM = "RFFB MATRIX")
+            "EMATRIX",
+            DESC="Matrix Error",
+            initial_value=1,
+            ZNAM="OK",
+            ONAM="RFFB MATRIX",
+        )
 
         self.calc_error = builder.boolIn(
-            "ECALC", DESC = "Calculation Error",
-            initial_value = 0, ZNAM = "OK",
-            ONAM = "RFFB CALC")
+            "ECALC",
+            DESC="Calculation Error",
+            initial_value=0,
+            ZNAM="OK",
+            ONAM="RFFB CALC",
+        )
 
-        self.pv_error = builder.stringIn(
-            "EPV", DESC = "PV Error", initial_value = "OK")
+        self.pv_error = builder.stringIn("EPV", DESC="PV Error", initial_value="OK")
 
-        self.power_pv = builder.mbbOut('ONOFF', "OFF", "ON",
-                                  initial_value = self.power,
-                                  on_update = self.set_power)
+        self.power_pv = builder.mbbOut(
+            "ONOFF", "OFF", "ON", initial_value=self.power, on_update=self.set_power
+        )
 
-        self.delta_pv = builder.aIn("DELTARF", initial_value = 0,
-                                    PREC = 1, EGU = "Hz")
+        self.delta_pv = builder.aIn("DELTARF", initial_value=0, PREC=1, EGU="Hz")
 
-        self.target_pv = builder.aIn("TARGET", initial_value = 0,
-                                PREC = 1, EGU = "Hz")
+        self.target_pv = builder.aIn("TARGET", initial_value=0, PREC=1, EGU="Hz")
 
-        builder.aOut("RFSTEP", initial_value = self.rfstep,
-                     on_update = self.set_rfstep,
-                     DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "Hz")
+        builder.aOut(
+            "RFSTEP",
+            initial_value=self.rfstep,
+            on_update=self.set_rfstep,
+            DRVH=100,
+            DRVL=0.1,
+            PREC=1,
+            EGU="Hz",
+        )
 
-        builder.mbbOut('PERIOD', "1 second", "10 seconds",
-                       initial_value = self.period,
-                       on_update = self.set_period)
+        builder.mbbOut(
+            "PERIOD",
+            "1 second",
+            "10 seconds",
+            initial_value=self.period,
+            on_update=self.set_period,
+        )
 
 
 class PVWithValidity(object):
@@ -253,8 +267,7 @@ class PVWithValidity(object):
         self.last_caget_time = value.timestamp
 
         # Check alarm severity not OK and increment counter
-        if (self.severity != constants.SEVR_NO_ALARM
-                or not self.ok):
+        if self.severity != constants.SEVR_NO_ALARM or not self.ok:
             self.consecutive_times_invalid += 1
         else:
             self.consecutive_times_invalid = 0
@@ -266,9 +279,11 @@ class PVWithValidity(object):
         if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
             return True
         else:
-            logging.warning("{pv_name} had alarm more than {count} times"
-                            .format(pv_name = self.pv_name,
-                                    count=self.ALLOWED_INVALID_CAGETS))
+            logging.warning(
+                "{pv_name} had alarm more than {count} times".format(
+                    pv_name=self.pv_name, count=self.ALLOWED_INVALID_CAGETS
+                )
+            )
             return False
 
     def get_name(self):

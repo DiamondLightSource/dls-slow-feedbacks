@@ -1,9 +1,8 @@
-import sys, os
-
 import numpy as np
-from numpy.linalg import svd, pinv
+from numpy.linalg import pinv
 
-cache = {}
+cache: dict = {}
+
 
 def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp):
     "get the dispersion corrector vector and cache"
@@ -26,11 +25,12 @@ def get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp):
 
     return dispcor
 
+
 def calc_rffb(bpmresp, disp, enabled_bpm, enabled_cor, hcm):
     "calculate the RF change"
     dispcor = get_dispcor(enabled_bpm, enabled_cor, bpmresp, disp)
     # the "inverse" of a vector v is: v / |v|^2
     # same as you get from the svd pinv:
     # pinv([v])[0] = v / sum(v**2)
-    drf = np.dot(hcm, dispcor / sum(dispcor**2))
+    drf = np.dot(hcm, dispcor / sum(dispcor ** 2))
     return drf

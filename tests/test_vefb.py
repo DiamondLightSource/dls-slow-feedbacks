@@ -1,7 +1,9 @@
-import mock
-import pytest
-import pytac
 import time
+
+import mock
+import pytac
+import pytest
+
 from dls_slow_feedbacks import vefb_server
 from dls_slow_feedbacks.vefb_server import VefbServer, VefbStatus
 
@@ -19,18 +21,18 @@ def teardown_module():
 
 @pytest.fixture
 def ring():
-    return pytac.load_csv.load('DIAD')
+    return pytac.load_csv.load("DIAD")
 
 
 @pytest.fixture
 def nsquads(ring):
-    return len(ring.get_elements('SQUAD'))
+    return len(ring.get_elements("SQUAD"))
 
 
 @pytest.fixture
 def ring_mode(ring):
     ring_mode = mock.MagicMock(lattice=ring)
-    ring_mode.DATAROOT = '/dls_sw/work/common/matlab/mml/machine/diamondopsdata'
+    ring_mode.DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
     return ring_mode
 
 
@@ -43,7 +45,7 @@ def soft_ioc_pv(return_value):
 @pytest.fixture
 def vefb(ring_mode, nsquads):
     """Mock all the necessary attributes of VefbServer."""
-    with mock.patch.object(VefbServer, 'records'):
+    with mock.patch.object(VefbServer, "records"):
         v = vefb_server.VefbServer(ring_mode)
         v.error_check = mock.MagicMock(return_value=VefbStatus.OK)
         v.vemit = mock.MagicMock(value=1.5, timestamp=1000)
@@ -75,9 +77,11 @@ def test_VefbServer_do_calc_fails_if_vemit_timestamp_older_than_1_sec(vefb):
     assert vefb.do_calc(False) == VefbStatus.NO_EMITTANCE_VALUE
 
 
-@pytest.mark.parametrize('apply', (True, False))
-@pytest.mark.parametrize('check_limits', (True, False))
-def test_VefbServer_do_calc_succeeds_if_calc_parameters_ok_returns_true(vefb, apply, check_limits):
+@pytest.mark.parametrize("apply", (True, False))
+@pytest.mark.parametrize("check_limits", (True, False))
+def test_VefbServer_do_calc_succeeds_if_calc_parameters_ok_returns_true(
+    vefb, apply, check_limits
+):
     # Set up variables for the calculation
     vefb.afrac_pv = soft_ioc_pv(0.5)
     vefb.IRM = 2
@@ -85,10 +89,10 @@ def test_VefbServer_do_calc_succeeds_if_calc_parameters_ok_returns_true(vefb, ap
     vefb.vemit_target_pv = soft_ioc_pv(4)
     # Expect -0.5 * 2 * (4 - 3) = 1
     expected_delta = 1
-    with mock.patch.object(vefb, 'apply_delta') as mock_apply:
-        mock_apply.return_value = 'dummy'
+    with mock.patch.object(vefb, "apply_delta") as mock_apply:
+        mock_apply.return_value = "dummy"
         # Check that the return value of apply_delta is returned
-        assert vefb.do_calc(apply, check_limits=check_limits) == 'dummy'
+        assert vefb.do_calc(apply, check_limits=check_limits) == "dummy"
         # Check the calculated delta
         assert mock_apply.call_args[0][0] == expected_delta
         # Check that apply_calc and check_limits were passed through
@@ -96,7 +100,9 @@ def test_VefbServer_do_calc_succeeds_if_calc_parameters_ok_returns_true(vefb, ap
         assert mock_apply.call_args[0][2] == check_limits
 
 
-def test_apply_delta_returns_MAGNET_DELTA_ERROR_if_delta_gt_delta_max_and_check_limits(vefb):
+def test_apply_delta_returns_MAGNET_DELTA_ERROR_if_delta_gt_delta_max_and_check_limits(
+    vefb,
+):
     vefb.squad_delta_max_pv = soft_ioc_pv(2)
     assert vefb.apply_delta(3, check_limits=True) == VefbStatus.MAGNET_DELTA_ERROR
 

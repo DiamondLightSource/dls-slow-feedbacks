@@ -1,22 +1,30 @@
-# Slow feedback IOC startup.
-import os, sys
 import logging
 
+# Slow feedback IOC startup.
+import os
+import sys
+
+from epicsdbbuilder import records
+from softioc import builder, softioc
+
+from dls_slow_feedbacks import (
+    mode,
+    rffb_server,
+    sofb_server,
+    tunefb_server,
+    vefb_server,
+    waveforms,
+)
 
 if sys.argv[1:]:
     # If running in testing mode log instead of executing caput.  We do this by
     # "monkey patching" catools!
     import cothread.catools
+
     def caput(pvs, values, **kargs):
-        print('caput', pvs, values, kargs)
+        print("caput", pvs, values, kargs)
+
     cothread.catools.caput = caput
-
-
-from softioc import builder, pvlog, softioc
-from epicsdbbuilder import records
-
-from . import mode, rffb_server, sofb_server, tunefb_server, vefb_server, waveforms
-
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
@@ -44,15 +52,14 @@ tunefb = tunefb_server.TunefbServer(ring_mode)
 
 
 # Create mirror PV for FOFB status to reduce overall load on vxWorks IOCs.
-builder.SetDeviceName('SR-CS-FOFB-01')
-run = records.ai('RUN', PINI = 'YES', VAL = 0,
-    INP = 'SR01A-CS-FOFB-01:RUN CP MS')
+builder.SetDeviceName("SR-CS-FOFB-01")
+run = records.ai("RUN", PINI="YES", VAL=0, INP="SR01A-CS-FOFB-01:RUN CP MS")
 
 
 # Create the identification PVs
-builder.SetDeviceName('CS-DI-IOC-09')
-builder.stringIn('WHOAMI', VAL = 'Machine Feedback Services')
-builder.stringIn('HOSTNAME', VAL = os.uname()[1])
+builder.SetDeviceName("CS-DI-IOC-09")
+builder.stringIn("WHOAMI", VAL="Machine Feedback Services")
+builder.stringIn("HOSTNAME", VAL=os.uname()[1])
 
 
 # All records created, can now fire up the IOC.

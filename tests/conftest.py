@@ -1,8 +1,6 @@
 """Test fixtures."""
 import os
 
-import pytest
-
 
 def pytest_sessionstart():
     """Set EPICS environment variables for Python code.

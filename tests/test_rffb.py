@@ -1,11 +1,9 @@
-#!/bin/env dls-python
-from mock import MagicMock, patch
-import copy
-
-import cothread
 import unittest
 
-from dls_slow_feedbacks import rffb_server, constants, mode
+import cothread
+from mock import patch
+
+from dls_slow_feedbacks import constants, rffb_server
 
 
 class MockPV(object):
@@ -13,8 +11,7 @@ class MockPV(object):
     rffb_server.PvWithValidity but without channel access
     """
 
-    def __init__(self, pv_name, value, severity=constants.SEVR_NO_ALARM,
-                 ok=True):
+    def __init__(self, pv_name, value, severity=constants.SEVR_NO_ALARM, ok=True):
         self.pv_name = pv_name
         self.value = cothread.dbr.ca_float(value)
         self.value.severity = severity
@@ -31,22 +28,24 @@ class MockPV(object):
 
 class MockRecord(object):
     """Mock an iocbuilder record"""
-    def __init__(self, name, ):
+
+    def __init__(
+        self,
+        name,
+    ):
         pass
 
 
 # Default dummy values for cagets
-caget_value_list = [MockPV("LI-RF-MOSC-01:FREQ_SET", 123456.7),
-                    MockPV("LI-RF-MOSC-01:FREQ", 123455.6),
-                    MockPV("MOCK-PV-03", 5.432, severity=constants.SEVR_MAJOR),
-                    MockPV("MOCK-PV-INVALID", 5.432,
-                           severity=constants.SEVR_INVALID),
-                    MockPV("MOCK-PV-05", 6.54, severity=constants.SEVR_INVALID),
-                    MockPV("MOCK-PV-MAJOR", 7.864,
-                           severity=constants.SEVR_MAJOR),
-                    MockPV("MOCK-PV-MINOR", 7.864,
-                           severity=constants.SEVR_MINOR),
-                    ]
+caget_value_list = [
+    MockPV("LI-RF-MOSC-01:FREQ_SET", 123456.7),
+    MockPV("LI-RF-MOSC-01:FREQ", 123455.6),
+    MockPV("MOCK-PV-03", 5.432, severity=constants.SEVR_MAJOR),
+    MockPV("MOCK-PV-INVALID", 5.432, severity=constants.SEVR_INVALID),
+    MockPV("MOCK-PV-05", 6.54, severity=constants.SEVR_INVALID),
+    MockPV("MOCK-PV-MAJOR", 7.864, severity=constants.SEVR_MAJOR),
+    MockPV("MOCK-PV-MINOR", 7.864, severity=constants.SEVR_MINOR),
+]
 
 # Put these in a dict for ease of access
 caget_value_dict = {}
@@ -60,7 +59,7 @@ def lookup_caget_value(pv_name, *args, **kwargs):
     @patch("cothread.catools.caget", side_effect = lookup_caget_value)"""
     try:
         return_value = caget_value_dict[pv_name].get()
-    except:
+    except BaseException:
         return_value = -1
 
     return return_value
@@ -119,8 +118,10 @@ class PVWithValidityTests(unittest.TestCase):
                 self.assertEqual(pv.severity, value_should_be.severity)
                 self.assertEqual(pv.consecutive_times_invalid, i + 1)
 
-                print("%d: healthy = %s, consecutive_times_invalid = %d" % (
-                i, pv.healthy(), pv.consecutive_times_invalid))
+                print(
+                    "%d: healthy = %s, consecutive_times_invalid = %d"
+                    % (i, pv.healthy(), pv.consecutive_times_invalid)
+                )
 
                 if i < pv.ALLOWED_INVALID_CAGETS:
                     self.assertTrue(pv.healthy())
@@ -143,8 +144,7 @@ class PVWithValidityTests(unittest.TestCase):
             self.assertTrue(pv.healthy())
 
         # Reset the severity
-        caget_value_dict["MOCK-PV-05"].value.severity = \
-            constants.SEVR_NO_ALARM
+        caget_value_dict["MOCK-PV-05"].value.severity = constants.SEVR_NO_ALARM
 
         # Now go up to the threshold and past it
         # and healthy() should stay True
@@ -158,20 +158,18 @@ class PVWithValidityTests(unittest.TestCase):
 
 
 class RffbTests(unittest.TestCase):
-
     def test_rf_near_setpoint_with_bad_values_returns_false(self):
         """Frequency difference > 100 Hz"""
         present_rf_freq = 499682023
         rf_setpoint = 499681023
         self.assertFalse(
-            rffb_server.RffbServer.rf_near_setpoint(
-                present_rf_freq,
-                rf_setpoint))
+            rffb_server.RffbServer.rf_near_setpoint(present_rf_freq, rf_setpoint)
+        )
 
     def test_rf_near_setpoint_with_good_values_returns_true(self):
         """Frequencey difference < 100 Hz"""
         present_rf_freq = 499682023
         rf_setpoint = 499682023
-        self.assertTrue(rffb_server.RffbServer.rf_near_setpoint(
-            present_rf_freq,
-            rf_setpoint))
+        self.assertTrue(
+            rffb_server.RffbServer.rf_near_setpoint(present_rf_freq, rf_setpoint)
+        )
