@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+mock = "*"
+flake8 = "*"
+black = "==21.5b2"
+
+[packages]
+# All production requirements from setup.cfg.
+dls_slow_feedbacks = {editable = true, path = "."}

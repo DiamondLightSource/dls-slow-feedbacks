@@ -1,4 +1,4 @@
-# Compiled python
+# compiled python
 *.pyc
 
 # Generated files
@@ -9,13 +9,24 @@
 /opi/runcss.sh
 /configure/VERSION
 
-# Testing cache
-.cache/
-.pytest_cache/
+# pytest and coverage
+.pytest_cache
+.cache
+.coverage
+/htmlcov/
+cov.xml
 
-# Vim
+# sphinx build
+docs/_build/
+
+# ide files
 *.swp
 *.swo
+*.idea
+.vscode
 
-# Pycharm
-/.idea
+# setup.py files
+build/
+dist/
+*.egg-info/
+.eggs/
