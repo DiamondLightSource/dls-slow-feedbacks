@@ -12,7 +12,7 @@ class WaveformsServer(object):
 
     PLANES = [0, 1]
     FAMILIES = {
-            'cor': [('HSTR', 'b0'), ('VSTR', 'a0')],
+            'cor': [('HSTR', 'x_kick'), ('VSTR', 'y_kick')],
             'bpm': [('BPM', 'x'), ('BPM', 'y')]
             }
     SPEEDS = ['slow', 'fast']
@@ -37,8 +37,8 @@ class WaveformsServer(object):
             try:
                 cothread.Sleep(1.0)
                 self.tick()
-            except ca_nothing, pv_error:
-                print 'PV error', pv_error
+            except ca_nothing as pv_error:
+                print(f'PV error {pv_error}')
             except:
                 traceback.print_exc()
 
@@ -51,7 +51,7 @@ class WaveformsServer(object):
 
         # get corrector readbacks
         for p in self.PLANES:
-            pvs = self.lattice.get_pv_names(fam[p][0], fam[p][1], pytac.RB)
+            pvs = self.lattice.get_element_pv_names(fam[p][0], fam[p][1], pytac.RB)
             hv[p] = caget(pvs, format=FORMAT_CTRL)
             # convert to relative magnitude
             mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
@@ -59,7 +59,7 @@ class WaveformsServer(object):
             # update max value and name
             i = np.argmax(abs(np.array(rhv[p])))
             self.maxval[p].set(rhv[p][i])
-            self.maxname[p].set(pvs[i])
+            self.maxname[p].set(pvs[i].encode())
 
             w = self.wf['current'][p].get()
             w = hv[p]
@@ -137,7 +137,7 @@ class WaveformsServer(object):
                         initial_value=np.zeros(
                             len(self.lattice.get_elements(fam))))
                 ## Create individual control PVs
-                for n, c in enumerate(self.lattice.get_device_names(fam, field)):
+                for n, c in enumerate(self.lattice.get_element_device_names(fam, field)):
                     # Replace bpm names with plane-dependent names
                     c = c.replace('DI-EBPM', 'PC-%sBPM' % 'HV'[p])
                     builder.SetDeviceName(c)
@@ -145,7 +145,7 @@ class WaveformsServer(object):
                         self.records[fam_type][speed][p].append(
                             builder.mbbOut(
                                 '%s:DISABLED' % speed.upper(),
-                                ("Enabled", 0), ("Disabled", 1),
+                                "Enabled", "Disabled",
                                 on_update =
                                     lambda x, n=n, p=p, s=speed, f=fam_type:
                                         self.update((p, n), x, s, f)))

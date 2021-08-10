@@ -11,9 +11,7 @@ import numpy
 import pytac
 import logging
 
-import rffb_calc
-import mode
-import constants
+from . import constants, mode, rffb_calc
 
 # Constants
 MAX_DIFFERENCE_Hz = 100  # Allowable difference between RF setpoint and rbv
@@ -26,7 +24,7 @@ class RffbServer(object):
         self.rfstep = 0.1
         self.period = 10
         self.correctors = numpy.array(
-                ring_mode.lattice.get_pv_names('HSTR', 'b0', pytac.RB)
+                ring_mode.lattice.get_element_pv_names('HSTR', 'x_kick', pytac.RB)
                 )
 
         self.records()
@@ -51,7 +49,7 @@ class RffbServer(object):
 
             try:
                 self.feedback()
-            except catools.ca_nothing, e:
+            except catools.ca_nothing as e:
                 # A caget or caput failed
                 print("Channel access exception; RFFB will be stopped.")
                 print(e)
@@ -84,7 +82,7 @@ class RffbServer(object):
         self.delta_pv.set(delta_rf_demand)
 
         def round10(x):
-            return round(x * 10.0) / 10.0
+            return numpy.around(x * 10.0) / 10.0
 
         target = round10(present_rf_demand + delta_rf_demand)
         if abs(delta_rf_demand) > self.rfstep:
@@ -176,7 +174,7 @@ class RffbServer(object):
         rffb_calc.cache.clear()
         path = os.path.join(mode.DATAROOT, lattice.name)
         self.correctors = numpy.array(
-                lattice.get_pv_names('HSTR', 'b0', pytac.RB)
+                lattice.get_element_pv_names('HSTR', 'x_kick', pytac.RB)
                 )
         try:
             raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
@@ -186,7 +184,7 @@ class RffbServer(object):
             assert(raw_bpmresp["Rmat"][0,0]["Units"] == "Hardware")
             assert(raw_disp["BPMxDisp"]["Units"] == "Hardware")
             self.matrix_error.set(0)
-            print "RFFB loaded matrix %s" % lattice.name
+            print(f"RFFB loaded matrix {lattice.name}")
         except:
             traceback.print_exc()
             self.bpmresp = None
@@ -210,7 +208,7 @@ class RffbServer(object):
         self.pv_error = builder.stringIn(
             "EPV", DESC = "PV Error", initial_value = "OK")
 
-        self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
+        self.power_pv = builder.mbbOut('ONOFF', "OFF", "ON",
                                   initial_value = self.power,
                                   on_update = self.set_power)
 
@@ -224,7 +222,7 @@ class RffbServer(object):
                      on_update = self.set_rfstep,
                      DRVH = 100, DRVL = 0.1, PREC = 1, EGU = "Hz")
 
-        builder.mbbOut('PERIOD', ("1 second", 1), ("10 seconds", 10),
+        builder.mbbOut('PERIOD', "1 second", "10 seconds",
                        initial_value = self.period,
                        on_update = self.set_period)
 

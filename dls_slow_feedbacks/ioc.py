@@ -1,12 +1,6 @@
 # Slow feedback IOC startup.
-
 import os, sys
 import logging
-from pkg_resources import require
-require('cothread==2.14')
-require('scipy==0.19.1')
-require('pytac==0.2.0')
-require('epicsdbbuilder==1.2')
 
 
 if sys.argv[1:]:
@@ -14,23 +8,15 @@ if sys.argv[1:]:
     # "monkey patching" catools!
     import cothread.catools
     def caput(pvs, values, **kargs):
-        print 'caput', pvs, values, kargs
+        print('caput', pvs, values, kargs)
     cothread.catools.caput = caput
 
 
-from softioc import builder, softioc
+from softioc import builder, pvlog, softioc
 from epicsdbbuilder import records
 
-import mode
-import rffb_server
-import waveforms
-import sofb_server
-import vefb_server
-import tunefb_server
+from . import mode, rffb_server, sofb_server, tunefb_server, vefb_server, waveforms
 
-
-# This import enables caput logging
-from softioc import pvlog
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")

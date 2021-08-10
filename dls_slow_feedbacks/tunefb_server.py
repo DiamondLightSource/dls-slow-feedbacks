@@ -5,8 +5,8 @@ import numpy, scipy, scipy.io
 import cothread
 from cothread.catools import caget, caput, ca_nothing, FORMAT_TIME
 from softioc import builder, alarm
-from tunefb_offsets import load_magnet_pvs, rename_pvs, all_forwarded
-import mode
+from .tunefb_offsets import load_magnet_pvs, rename_pvs, all_forwarded
+from . import mode
 
 
 # Set up logging
@@ -146,7 +146,7 @@ class TunefbServer(object):
             caget([pv + ':OFFSET1' for pv in self.mag_pvs], throw=False)
         for i in range(len(self.startup_currents)):
             if not self.startup_currents[i].ok:
-                print 'Unable to read', self.startup_currents[i].name
+                print(f'Unable to read {self.startup_currents[i].name}')
                 self.startup_currents[i] = 0
 
         self.integrated_current = numpy.array(self.startup_currents)
@@ -163,7 +163,8 @@ class TunefbServer(object):
 
         # Load tune config file into environment
         env = {}
-        execfile(GOLDEN_TUNE_CONFIG, env)
+        with open(GOLDEN_TUNE_CONFIG) as f:
+            exec(f.read(), env)
 
         # Select correct tune based on ringmode
         tune_h = env['X_tune_' + lattice.name]
@@ -198,7 +199,7 @@ class TunefbServer(object):
             cothread.Sleep(self.period)
             try:
                 self.loop_correction()
-            except Exception, e:
+            except Exception as e:
                 # stop feedback and print stack trace
                 log.warn('Unexpected exception: %s' % str(e))
                 traceback.print_exc()
@@ -221,7 +222,7 @@ class TunefbServer(object):
                 if self.status_pv.get() in (Status.FEEDBACK_ON,
                                             Status.FEEDBACK_SCALING):
                     self.status_pv.set(Status.FEEDBACK_OFF)
-        except TunefbInvalid, e:
+        except TunefbInvalid as e:
             # skip corrections for a while before tripping off
             self.invalid_counter += 1
             if self.invalid_counter >= MAX_CONSECUTIVE_INVALIDS:
@@ -229,7 +230,7 @@ class TunefbServer(object):
             if self.status_pv.get() != e.code:
                 self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
                 log.info('Tune feedback paused: %s' % str(e))
-        except TunefbError, e:
+        except TunefbError as e:
             self.trip_feedback(e)
 
     def trip_feedback(self, exception):
@@ -345,13 +346,13 @@ class TunefbServer(object):
                 self.status_pv.set(Status.SINGLE_SCALED)
             else:
                 self.status_pv.set(Status.SINGLE_CORR)
-        except TunefbInvalid, e:
-            log.warn('%s' % str(e))
+        except TunefbInvalid as e:
+            log.warn(str(e))
             self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
-        except TunefbError, e:
-            log.error('%s' % str(e))
+        except TunefbError as e:
+            log.error(str(e))
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
-        except Exception, e:
+        except Exception as e:
             log.warn('Unexpected exception: %s' % str(e))
             self.status_pv.set(
                     Status.UNEXPECTED_ERROR,
@@ -378,14 +379,14 @@ class TunefbServer(object):
             # in the GUI
             cothread.Sleep(0.2)
             self.status_pv.set(Status.TUNE_STEP)
-        except TunefbInvalid, e:
-            log.warn('%s' % str(e))
+        except TunefbInvalid as e:
+            log.warn(str(e))
             self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
-        except TunefbError, e:
-            log.error('%s' % str(e))
+        except TunefbError as e:
+            log.error(str(e))
             self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
-        except Exception, e:
-            log.warn('Unexpected exception: %s' % str(e))
+        except Exception as e:
+            log.warn('Unexpected exception: %s', str(e))
             self.status_pv.set(
                     Status.UNEXPECTED_ERROR,
                     severity=alarm.MAJOR_ALARM
@@ -521,8 +522,7 @@ class TunefbServer(object):
         self.max_i_pv = builder.aIn(
                 'OFFSETMAX', initial_value=0.0, PREC=4)
         self.fwd_ok_pv = builder.mbbIn(
-                'FWDOK', ('OK', 0), ('NOT FORWARDED', 1),
-                ('IOC DOWN', 2), initial_value=0)
+                'FWDOK', 'OK', 'NOT FORWARDED', 'IOC DOWN', initial_value=0)
         builder.aOut(
                 'BEAMMIN', initial_value=self.min_beam_current,
                 on_update=self.set_min_beam_current, PREC=4)
@@ -539,7 +539,7 @@ class TunefbServer(object):
         # Pass all values from the enum into the status PV
         num_statuses = len(Status.STRINGS)
         status_args = (['STATUS'] +
-                [(Status.STRINGS[code], code) for code in range(num_statuses)])
+                [Status.STRINGS[code] for code in range(num_statuses)])
         self.status_pv = builder.mbbIn(
                 *status_args,
                 initial_value=Status.FEEDBACK_OFF

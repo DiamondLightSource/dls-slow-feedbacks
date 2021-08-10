@@ -1,9 +1,15 @@
-#!/dls_sw/work/R3.14.12.3/support/pythonSoftIoc/pythonIoc
 '''
 Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
 Each .INP is set to the local PV mirrored in our IOC.
 '''
+import sys
+
+import cothread
+import pytac
+from cothread.catools import caget, caput, DBR_STRING
+
+
 # Constants
 BEAM_DAMP_TIME = 0.001
 IOC = 'SR-CS-TFB-01'
@@ -22,7 +28,7 @@ def load_magnet_pvs(lattice):
     '''
     quad_names = []
     for family in TUNE_QUAD_FAMILIES:
-        device_names = lattice.get_device_names(family, 'b1')
+        device_names = lattice.get_element_device_names(family, 'b1')
         quad_names.extend(device_names)
     return quad_names
 
@@ -39,22 +45,12 @@ def rename_pvs(pvs):
 
 
 def all_forwarded(local_pvs, mag_pvs):
-    # import here to make sure that cothread has been loaded
-    from cothread.catools import caget
     inps = caget([pv + OFFSET_INPUT for pv in mag_pvs], timeout=1.)
     expected = [pv + CURRENT_LINK for pv in local_pvs]
     return inps == expected
 
 
-if __name__ == "__main__":
-    from pkg_resources import require
-    require('cothread==2.14')
-    require('scipy==0.19.1')
-    require('pytac==0.2.0')
-    import cothread
-    from cothread.catools import caget, caput, DBR_STRING
-    import sys
-    import pytac
+def main():
     mode = caget('SR-CS-RING-01:MODE', datatype=DBR_STRING)
 
     lattice = pytac.load_csv.load(mode)
@@ -63,7 +59,7 @@ if __name__ == "__main__":
 
     if 'test' in sys.argv:
         def caput(pv, value):
-            print '%s   %s' % (pv, value)
+            print(f'{pv}   {value}')
     if 'redirect' in sys.argv:
         # set INP to our PVs
         links = [pv + CURRENT_LINK for pv in local_pvs]
@@ -71,11 +67,11 @@ if __name__ == "__main__":
         # set INP to the remote PVs
         links = [pv + LOCAL_LINK for pv in mag_pvs]
     elif 'forwarded' in sys.argv:
-        print all_forwarded(local_pvs, mag_pvs)
+        print(all_forwarded(local_pvs, mag_pvs))
         sys.exit()
     else:
-        print 'usage: '
-        print '    %s redirect|reset [test]' % sys.argv[0]
+        print('usage: ')
+        print(f'    {sys.argv[0]} redirect|reset [test]')
         sys.exit()
 
     inps = [pv + ':OFFSET1.INP' for pv in mag_pvs]

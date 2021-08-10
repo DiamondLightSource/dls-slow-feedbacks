@@ -6,8 +6,7 @@ from cothread.catools import caget, ca_nothing
 from scipy.io import loadmat
 import numpy as np
 
-import sofb
-import mode
+from . import mode, sofb
 
 
 class SofbServer(object):
@@ -86,7 +85,7 @@ class SofbServer(object):
     def records(self, lattice):
         builder.SetDeviceName("SR-CS-SOFB-01")
 
-        self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
+        self.power_pv = builder.mbbOut('ONOFF', "OFF", "ON",
                                        initial_value = self.power,
                                        on_update = self.set_power)
 
@@ -99,7 +98,7 @@ class SofbServer(object):
         # Corrector magnet ID, in floating point format: cell.position_in_cell
         # This matches the format of SR-DI-EBPM-01:BPMID
         mag_ids = []
-        for mag in lattice.get_device_names('HSTR', 'b0'):
+        for mag in lattice.get_element_device_names('HSTR', 'x_kick'):
             if mag[4] == 'S':
                 mag_ids.append(int(mag[2:4]) + 0.1*(int(mag[-2:]) - 2))
             elif mag[10:14] == 'SCOR':
