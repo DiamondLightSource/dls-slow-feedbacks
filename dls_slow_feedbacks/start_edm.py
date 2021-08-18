@@ -16,3 +16,7 @@ def run_edm_gui(edl_file):
 
 def sofb_gui():
     run_edm_gui("rffb.edl")
+
+
+def vefb_gui():
+    run_edm_gui("vefb.edl")
