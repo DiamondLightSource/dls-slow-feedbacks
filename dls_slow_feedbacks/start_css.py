@@ -14,8 +14,8 @@ def get_opi_dir():
 
 
 def get_bin_dir():
-    bin_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
-    return bin_folder
+    bin_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    return bin_dir
 
 
 def get_version():
@@ -97,7 +97,7 @@ def main():
     validate_opi_file(opi_dir / opi_file)
 
     bin_dir = get_bin_dir()
-    os.environ["PATH"] = bin_dir + os.pathsep + os.environ["PATH"]
+    macros = ",".join(filter(None, [parsed_args.macros, f"bin_dir={bin_dir}"]))
 
     os.chdir(opi_dir)
-    run_css_gui(launch_opi, links, parsed_args.macros, unparsed_args)
+    run_css_gui(launch_opi, links, macros, unparsed_args)
