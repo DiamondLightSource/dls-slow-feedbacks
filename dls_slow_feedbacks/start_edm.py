@@ -26,6 +26,6 @@ def vefb_gui():
 
 
 def tunefb_gui():
-    bin_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
-    macros = f'"bin_path={bin_folder}"'
+    bin_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    macros = f'"bin_dir={bin_dir}"'
     run_edm_gui("tfb.edl", macros)
