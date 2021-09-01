@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,17 @@ def get_opi_dir():
 def get_bin_dir():
     bin_folder = os.path.dirname(os.path.realpath(sys.argv[0]))
     return bin_folder
+
+
+def get_version():
+    # If the module has not been released, the version will be similar to:
+    # 2.9+27.g4c7d2fd.dirty
+    # The following regex is designed to identify the hash plus optional '.dirty'
+    pattern = re.compile(r"\.g[0-9a-f]{7}(.dirty)?$")
+    if pattern.search(__version__) is not None:
+        return "dev"
+    else:
+        return __version__
 
 
 def get_css():
@@ -74,7 +86,9 @@ def main():
     opi_file = parsed_args.opi_file
 
     module = "dls_slow_feedbacks"
-    project = f"{module}_{__version__}"
+    version = get_version()
+
+    project = f"{module}_{version}"
     launch_opi = f"/{project}/{module}/{opi_file}"
 
     opi_dir = get_opi_dir()
