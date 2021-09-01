@@ -796,8 +796,8 @@ commandLabel {
   3 "Zero Offsets"
 }
 command {
-  0 "$(here)/../dls_slow_feedbacks/tunefb_offsets.py redirect"
-  1 "$(here)/../dls_slow_feedbacks/tunefb_offsets.py reset"
+  0 "$(bin_folder)/tune-feedback-offsets redirect"
+  1 "$(bin_folder)/tune-feedback-offsets reset"
   2 "caput SR-CS-TFB-01:AGGREGATE 1"
   3 "caput SR-CS-TFB-01:RESETCORR 1"
 }
