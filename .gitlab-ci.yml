@@ -1,6 +1,7 @@
-rhel7_job:
-  tags:
-    - rhel7
-  script:
-    - ./tests/unit_tests.py
+include:
+  - project: 'controls/reports/ci_templates'
+    ref: master
+    file: 'python3/dls_py3_template.yml'
 
+variables:
+    SKIP_DOCS: 1

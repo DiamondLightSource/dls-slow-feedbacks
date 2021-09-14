@@ -3,7 +3,8 @@
 
 def header(w, h):
     """Generate text that must appear at the start of an EDM file"""
-    return """
+    return (
+        """
 4 0 1
 beginScreenProperties
 major 4
@@ -26,12 +27,15 @@ ctlBgColor2 index 14
 topShadowColor index 0
 botShadowColor index 14
 endScreenProperties
-""" % locals()
+"""
+        % locals()
+    )
 
 
 def title(x, y, w, h, value):
     """Generate text representing an EDM diagnostics title bar"""
-    return """
+    return (
+        """
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -50,7 +54,9 @@ value {
   "%(value)s"
 }
 endObjectProperties
-""" % locals()
+"""
+        % locals()
+    )
 
 
 def label(x, y, w, h, value, color=8, border_width=0):
@@ -105,15 +111,16 @@ fillColor index %(color)d
         text = text + "alarmPv %(pv)s\n"
     if vis_pv:
         text = text + "visPv %(vis_pv)s\n"
-        text = text + "visMin \"0\"\n"
-        text = text + "visMax \"1\"\n"
+        text = text + 'visMin "0"\n'
+        text = text + 'visMax "1"\n'
     text = text + "endObjectProperties\n"
     return text % locals()
 
 
-def related(x, y, w, h, deviceh, devicev, display='enable.edl'):
+def related(x, y, w, h, deviceh, devicev, display="enable.edl"):
     """Generate text representing an EDM related display widget"""
-    return """# (Related Display)
+    return (
+        """# (Related Display)
 object relatedDisplayClass
 beginObjectProperties
 major 4
@@ -138,7 +145,9 @@ symbols {
   0 "deviceh=%(deviceh)s,devicev=%(devicev)s"
 }
 endObjectProperties
-""" % locals()
+"""
+        % locals()
+    )
 
 
 class Layout(object):
@@ -173,7 +182,7 @@ class Layout(object):
         out.append(header(*self._calculate_boundaries()))
         for node in self.nodes:
             out.append(node)
-        return ''.join(out)
+        return "".join(out)
 
     def _make_labels(self):
         """Add the labels along the top and down the left of the GUI"""
@@ -200,42 +209,54 @@ class Layout(object):
         y0 = 3 * self.PADDING + height + self.TITLE_HEIGHT
         for i, __ in enumerate(self.x_names):
             for j, __ in enumerate(self.y_names):
-                x = x0 + i*(self.PADDING + width)
-                y = y0 + j*(self.PADDING + height)
+                x = x0 + i * (self.PADDING + width)
+                y = y0 + j * (self.PADDING + height)
                 self.nodes.append(self.region_func(i, j, x, y))
 
     def _make_title(self):
         """Insert a title widget at the top of the GUI"""
         (w, __) = self._calculate_boundaries()
-        self.nodes.append(title(self.PADDING, self.PADDING,
-            w - 2*self.PADDING, self.TITLE_HEIGHT, self.title))
+        self.nodes.append(
+            title(
+                self.PADDING,
+                self.PADDING,
+                w - 2 * self.PADDING,
+                self.TITLE_HEIGHT,
+                self.title,
+            )
+        )
 
     def _calculate_boundaries(self):
         """Determine size of the GUI based on number of rows and columns"""
-        width = (self.PADDING +
-                (len(self.x_names) + 1) * (self.PADDING + self.region[0]))
-        height = (2 * self.PADDING + self.TITLE_HEIGHT +
-                (len(self.y_names) + 1) * (self.PADDING + self.region[1]))
+        width = self.PADDING + (len(self.x_names) + 1) * (self.PADDING + self.region[0])
+        height = (
+            2 * self.PADDING
+            + self.TITLE_HEIGHT
+            + (len(self.y_names) + 1) * (self.PADDING + self.region[1])
+        )
         return (width, height)
 
 
 def generate_quad(x, y, region, pvs, devs):
     """Generate four rectangles that can be toggeled depending on PVs"""
-    quart_region = [region[0]/2, region[1]/2]
+    quart_region = [region[0] / 2, region[1] / 2]
     return (
-        rectangle(x, y, *quart_region, color=19) +
-        rectangle(x, y, *quart_region, color=15, vis_pv=pvs[0]) +
-        rectangle(x+quart_region[0], y, *quart_region, color=19) +
-        rectangle(x+quart_region[0], y, *quart_region, color=15,
-            vis_pv=pvs[1]) +
-        rectangle(x, y+quart_region[1], *quart_region, color=19) +
-        rectangle(x, y+quart_region[1], *quart_region, color=15,
-            vis_pv=pvs[2]) +
-        rectangle(x+quart_region[0], y+quart_region[1],
-            *quart_region, color=19) +
-        rectangle(x+quart_region[0], y+quart_region[1],
-            *quart_region, color=15, vis_pv=pvs[3]) +
-        related(x, y, *(region + devs), display='enable.edl'))
+        rectangle(x, y, *quart_region, color=19)
+        + rectangle(x, y, *quart_region, color=15, vis_pv=pvs[0])
+        + rectangle(x + quart_region[0], y, *quart_region, color=19)
+        + rectangle(x + quart_region[0], y, *quart_region, color=15, vis_pv=pvs[1])
+        + rectangle(x, y + quart_region[1], *quart_region, color=19)
+        + rectangle(x, y + quart_region[1], *quart_region, color=15, vis_pv=pvs[2])
+        + rectangle(x + quart_region[0], y + quart_region[1], *quart_region, color=19)
+        + rectangle(
+            x + quart_region[0],
+            y + quart_region[1],
+            *quart_region,
+            color=15,
+            vis_pv=pvs[3]
+        )
+        + related(x, y, *(region + devs), display="enable.edl")
+    )
 
 
 def corrector_key():
@@ -245,21 +266,22 @@ def corrector_key():
     h = 17
     w = 20
     return (
-        label(x,   y,   w+1, h+1, 'SH', color=3, border_width=1) +
-        label(x+w, y,   w,   h+1, 'SV', color=3, border_width=1) +
-        label(x,   y+h, w+1, h,   'FH', color=3, border_width=1) +
-        label(x+w, y+h, w,   h,   'FV', color=3, border_width=1))
+        label(x, y, w + 1, h + 1, "SH", color=3, border_width=1)
+        + label(x + w, y, w, h + 1, "SV", color=3, border_width=1)
+        + label(x, y + h, w + 1, h, "FH", color=3, border_width=1)
+        + label(x + w, y + h, w, h, "FV", color=3, border_width=1)
+    )
 
 
 def corrector_info():
     """Add label giving info about the corrector GUI"""
-    text = 'RF feedback always uses all correctors'
+    text = "RF feedback always uses all correctors"
     return label(360, 82, 240, 16, text, color=3)
 
 
 def disable_warning():
     """Add label warning about disabling FOFB."""
-    text = 'It is NOT safe to enable or disable correctors while FOFB is running.'
+    text = "It is NOT safe to enable or disable correctors while FOFB is running."
     return label(140, 400, 400, 16, text, color=3)
 
 
@@ -270,33 +292,35 @@ def bpm_key():
     h = 17
     w = 20
     return (
-        label(x,   y,     w*2, h+1, 'master', color=3, border_width=1) +
-        label(x,   y+h,   w+1, h+1, 'SH', color=3, border_width=1) +
-        label(x+w, y+h,   w,   h+1, 'SV', color=3, border_width=1) +
-        label(x,   y+2*h, w+1, h, 'FH', color=3, border_width=1) +
-        label(x+w, y+2*h, w,   h, 'FV', color=3, border_width=1))
+        label(x, y, w * 2, h + 1, "master", color=3, border_width=1)
+        + label(x, y + h, w + 1, h + 1, "SH", color=3, border_width=1)
+        + label(x + w, y + h, w, h + 1, "SV", color=3, border_width=1)
+        + label(x, y + 2 * h, w + 1, h, "FH", color=3, border_width=1)
+        + label(x + w, y + 2 * h, w, h, "FV", color=3, border_width=1)
+    )
 
 
 def bpm_info():
     """Add label giving info about the BPM GUI"""
     # Use spaces as a crude padding due to centered text on widget
-    text = 'All globally enabled BPMs\nare used by RF feedback  '
+    text = "All globally enabled BPMs\nare used by RF feedback  "
     return label(354, 80, 164, 32, text, color=3)
 
 
 CORRECTOR_REGION = [20, 24]
-RATES = ['SLOW', 'FAST']
+RATES = ["SLOW", "FAST"]
+
+
 def corrector_func(i, j, x, y):
     """Callback function to generate cells on the corrector GUI"""
-    quart_region = [CORRECTOR_REGION[0]/2, CORRECTOR_REGION[1]/2]
-    if j < 7:  ## Align numbered rows with labels
-        devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
+    if j < 7:  # Align numbered rows with labels
+        devs = ["SR%02dA-PC-%sSTR-%02d" % (i + 1, "HV"[p], j - 1) for p in [0, 1]]
     else:
-        devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-3) for p in [0, 1]]
+        devs = ["SR%02dA-PC-%sSTR-%02d" % (i + 1, "HV"[p], j - 3) for p in [0, 1]]
     if j in [0, 1]:
-        if i not in [8, 12]:  ## Skip cells without mini beta correctors
+        if i not in [8, 12]:  # Skip cells without mini beta correctors
             return ""
-        devs = ["SR%02dS-PC-%sSTR-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
+        devs = ["SR%02dS-PC-%sSTR-%02d" % (i + 1, "HV"[p], j + 1) for p in [0, 1]]
     if j in [7, 8, 11, 12] and i not in [1]:  # Skip non DDBA correctors
         return ""
     if i in [1] and j in [3, 4, 9]:  # Skip correctors not in DDBA cell
@@ -304,59 +328,75 @@ def corrector_func(i, j, x, y):
     if i in [10] and j in [6]:  # Skip missing DIAD corrector
         return ""
     if i in [1] and j in [7, 8]:
-        devs = ["SR%02dA-PC-%sSCOR-%02d" % (i+1, 'HV'[p], j-6) for p in [0, 1]]
+        devs = ["SR%02dA-PC-%sSCOR-%02d" % (i + 1, "HV"[p], j - 6) for p in [0, 1]]
     if j in [12]:
-        devs = ["SR%02dA-PC-%sSTR-%02d" % (i+1, 'HV'[p], j-2) for p in [0, 1]]
-    pvs = [d + ':%s:DISABLED' % r for r in RATES for d in devs]
+        devs = ["SR%02dA-PC-%sSTR-%02d" % (i + 1, "HV"[p], j - 2) for p in [0, 1]]
+    pvs = [d + ":%s:DISABLED" % r for r in RATES for d in devs]
     return generate_quad(x, y, CORRECTOR_REGION, pvs, devs)
 
+
 corrector_definition = {
-        'title': "SOFB and FOFB Corrector Enable",
-        'x_names': ['%02d' % x for x in range(1, 25)],
-        'y_names': ['S1', 'S2', '01', '02', '03', '04', '05',
-            'C1', 'C2', '06', '07', '08', '10'],
-        'region': CORRECTOR_REGION,
-        'region_func': corrector_func,
-        }
+    "title": "SOFB and FOFB Corrector Enable",
+    "x_names": ["%02d" % x for x in range(1, 25)],
+    "y_names": [
+        "S1",
+        "S2",
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "C1",
+        "C2",
+        "06",
+        "07",
+        "08",
+        "10",
+    ],
+    "region": CORRECTOR_REGION,
+    "region_func": corrector_func,
+}
 
 
 BPM_REGION = [20, 25]
 BPM_HEADER = 5
+
+
 def bpm_func(i, j, x, y):
     """Callback function to generate cells on the BPM GUI"""
-    quart_region = [BPM_REGION[0]/2, (BPM_REGION[1] - BPM_HEADER) / 2]
-    bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j-1)
-    devs = ["SR%02dC-PC-%sBPM-%02d" % (i+1, 'HV'[p], j-1) for p in [0, 1]]
-    if j in [0, 1]:  ## Skip cells without mini beta correctors
+    bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i + 1, j - 1)
+    devs = ["SR%02dC-PC-%sBPM-%02d" % (i + 1, "HV"[p], j - 1) for p in [0, 1]]
+    if j in [0, 1]:  # Skip cells without mini beta correctors
         if i not in [8, 12]:
             return ""
-        devs = ["SR%02dS-PC-%sBPM-%02d" % (i+1, 'HV'[p], j+1) for p in [0, 1]]
-        bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i+1, j+1)
+        devs = ["SR%02dS-PC-%sBPM-%02d" % (i + 1, "HV"[p], j + 1) for p in [0, 1]]
+        bpm_dev = "SR%02dC-DI-EBPM-%02d:CF:ENABLED_S" % (i + 1, j + 1)
     if j in [9] and i not in [1]:  # Add 8th BPM to cell 2 only
         return ""
-    pvs = [d + ':%s:DISABLED' % r for r in RATES for d in devs]
-    return (
-        rectangle(x, y, BPM_REGION[0], BPM_HEADER, color=15, alarm=True,
-            pv=bpm_dev) +
-        generate_quad(x, y+BPM_HEADER,
-            [BPM_REGION[0], BPM_REGION[1] - BPM_HEADER], pvs, devs))
+    pvs = [d + ":%s:DISABLED" % r for r in RATES for d in devs]
+    return rectangle(
+        x, y, BPM_REGION[0], BPM_HEADER, color=15, alarm=True, pv=bpm_dev
+    ) + generate_quad(
+        x, y + BPM_HEADER, [BPM_REGION[0], BPM_REGION[1] - BPM_HEADER], pvs, devs
+    )
+
 
 bpm_definition = {
-        'title': "SOFB and FOFB BPM Mask",
-        'x_names': ['%02d' % x for x in range(1, 25)],
-        'y_names': ['S1', 'S2'] + ['%02d' % x for x in range(1, 9)],
-        'region': BPM_REGION,
-        'region_func': bpm_func,
-        }
+    "title": "SOFB and FOFB BPM Mask",
+    "x_names": ["%02d" % x for x in range(1, 25)],
+    "y_names": ["S1", "S2"] + ["%02d" % x for x in range(1, 9)],
+    "region": BPM_REGION,
+    "region_func": bpm_func,
+}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # instantiate layout objects, add extra labels, and write to file
     layout = Layout(**corrector_definition)
-    with open('cors.edl', 'w') as f:
-        f.write(layout.produce() + corrector_key() +
-                corrector_info() + disable_warning())
+    with open("cors.edl", "w") as f:
+        f.write(
+            layout.produce() + corrector_key() + corrector_info() + disable_warning()
+        )
     layout = Layout(**bpm_definition)
-    with open('bpms.edl', 'w') as f:
+    with open("bpms.edl", "w") as f:
         f.write(layout.produce() + bpm_key() + bpm_info())
-

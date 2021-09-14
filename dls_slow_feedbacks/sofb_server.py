@@ -1,17 +1,15 @@
 import os
 import traceback
-from softioc import builder
-import cothread
-from cothread.catools import caget, ca_nothing
-from scipy.io import loadmat
-import numpy as np
 
-import sofb
-import mode
+import cothread
+from cothread.catools import ca_nothing, caget
+from scipy.io import loadmat
+from softioc import builder
+
+from dls_slow_feedbacks import mode, sofb
 
 
 class SofbServer(object):
-
     def __init__(self, ring_mode):
         self.sofb = sofb.Sofb(ring_mode.lattice)
         self.power = 0
@@ -24,12 +22,12 @@ class SofbServer(object):
         self.sofb.set_lattice(lattice)
         try:
             bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
-            assert(bpmresp["Rmat"][0,0]["Units"] == "Hardware")
-            rmx = bpmresp["Rmat"][0,0]["Data"]
-            rmy = bpmresp["Rmat"][1,1]["Data"]
+            assert bpmresp["Rmat"][0, 0]["Units"] == "Hardware"
+            rmx = bpmresp["Rmat"][0, 0]["Data"]
+            rmy = bpmresp["Rmat"][1, 1]["Data"]
             self.sofb.set_rm(rmx, rmy)
             self.matrix_error.set(0)
-        except:
+        except BaseException:
             traceback.print_exc()
             self.sofb.rmx = None
             self.sofb.rmy = None
@@ -86,63 +84,77 @@ class SofbServer(object):
     def records(self, lattice):
         builder.SetDeviceName("SR-CS-SOFB-01")
 
-        self.power_pv = builder.mbbOut('ONOFF', ("OFF", 0), ("ON", 1),
-                                       initial_value = self.power,
-                                       on_update = self.set_power)
+        self.power_pv = builder.mbbOut(
+            "ONOFF", "OFF", "ON", initial_value=self.power, on_update=self.set_power
+        )
 
-        builder.aOut("AFRAC", initial_value = 0.2,
-                     DRVH = 1, DRVL = 0, PREC = 4, EGU = "1")
+        builder.aOut("AFRAC", initial_value=0.2, DRVH=1, DRVL=0, PREC=4, EGU="1")
 
-        builder.aOut("MU", 0, initial_value = self.sofb.mu,
-            on_update = self.sofb.set_mu, PREC = 3)
+        builder.aOut(
+            "MU", 0, initial_value=self.sofb.mu, on_update=self.sofb.set_mu, PREC=3
+        )
 
         # Corrector magnet ID, in floating point format: cell.position_in_cell
         # This matches the format of SR-DI-EBPM-01:BPMID
         mag_ids = []
-        for mag in lattice.get_device_names('HSTR', 'b0'):
-            if mag[4] == 'S':
-                mag_ids.append(int(mag[2:4]) + 0.1*(int(mag[-2:]) - 2))
-            elif mag[10:14] == 'SCOR':
-                mag_ids.append(int(mag[2:4]) + 0.5 + (2./30)*(int(mag[-2:])))
+        for mag in lattice.get_element_device_names("HSTR", "x_kick"):
+            if mag[4] == "S":
+                mag_ids.append(int(mag[2:4]) + 0.1 * (int(mag[-2:]) - 2))
+            elif mag[10:14] == "SCOR":
+                mag_ids.append(int(mag[2:4]) + 0.5 + (2.0 / 30) * (int(mag[-2:])))
             else:
-                mag_ids.append(int(mag[2:4]) + 0.1*int(mag[-2:]))
-        builder.WaveformIn("CMID", initial_value = mag_ids)
+                mag_ids.append(int(mag[2:4]) + 0.1 * int(mag[-2:]))
+        builder.WaveformIn("CMID", initial_value=mag_ids)
 
         # PVs for demonstrating SVD effect
-        bpms = lattice.get_elements('BPM')
+        bpms = lattice.get_elements("BPM")
         svd_length = len(bpms)
-        for plane in ['X', 'Y']:
+        for plane in ["X", "Y"]:
             sv_pvs = sofb.SingularValuePVs()
             sv_pvs.length = builder.aIn(
-                'SVD:%s:LENGTH' % plane, initial_value = svd_length)
+                "SVD:%s:LENGTH" % plane, initial_value=svd_length
+            )
 
             sv_pvs.s = builder.WaveformIn(
-                'SVD:%s:S' % plane, initial_value = [0.0]*svd_length)
+                "SVD:%s:S" % plane, initial_value=[0.0] * svd_length
+            )
 
             sv_pvs.s_inv = builder.WaveformIn(
-                'SVD:%s:S_INV' % plane, initial_value = [0.0]*svd_length)
+                "SVD:%s:S_INV" % plane, initial_value=[0.0] * svd_length
+            )
 
             sv_pvs.s_inv_cut = builder.WaveformIn(
-                'SVD:%s:S_INV_CUT' % plane,
-                initial_value = [0.0]*svd_length)
+                "SVD:%s:S_INV_CUT" % plane, initial_value=[0.0] * svd_length
+            )
             self.sofb.svd[plane] = sv_pvs
 
-        builder.aOut("CORRECT", initial_value = 0,
-                     on_update = self.single, always_update = True)
+        builder.aOut(
+            "CORRECT", initial_value=0, on_update=self.single, always_update=True
+        )
 
-        builder.aOut("LIMIT", initial_value = self.sofb.step_limit,
-                     DRVH = 0.5, DRVL = 1e-3,
-                     on_update = self.set_limit, PREC = 3)
+        builder.aOut(
+            "LIMIT",
+            initial_value=self.sofb.step_limit,
+            DRVH=0.5,
+            DRVL=1e-3,
+            on_update=self.set_limit,
+            PREC=3,
+        )
 
         self.matrix_error = builder.boolIn(
-            "EMATRIX", DESC = "Matrix Error",
-            initial_value = 1, ZNAM = "OK",
-            ONAM = "SOFB MATRIX")
+            "EMATRIX",
+            DESC="Matrix Error",
+            initial_value=1,
+            ZNAM="OK",
+            ONAM="SOFB MATRIX",
+        )
 
         self.calc_error = builder.boolIn(
-            "ECALC", DESC = "Calculation Error",
-            initial_value = 0, ZNAM = "OK",
-            ONAM = "SOFB CALC")
+            "ECALC",
+            DESC="Calculation Error",
+            initial_value=0,
+            ZNAM="OK",
+            ONAM="SOFB CALC",
+        )
 
-        self.pv_error = builder.stringIn(
-            "EPV", DESC = "PV Error", initial_value = "OK")
+        self.pv_error = builder.stringIn("EPV", DESC="PV Error", initial_value="OK")
