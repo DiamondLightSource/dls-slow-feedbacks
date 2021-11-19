@@ -240,7 +240,7 @@ class SkewQuadrupoles(object):
                 if self.last_drvh_fail != i:
                     print(
                         f"vefb: DRVH check {self._pv_names[i]}: "
-                        f"New SQUAD value {values[i]} < DRVL {drvhs[i]}"
+                        f"New SQUAD value {values[i]} > DRVH {drvhs[i]}"
                     )
                     self.last_drvh_fail = i
                     self.last_drvl_fail = None
