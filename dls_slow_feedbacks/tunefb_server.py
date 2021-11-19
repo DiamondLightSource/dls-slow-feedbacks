@@ -528,7 +528,7 @@ class TunefbServer(object):
             PREC=4,
         )
         self.max_i_pv = builder.aIn("OFFSETMAX", initial_value=0.0, PREC=4)
-        self.fwd_ok_pv = builder.mbbIn(
+        self.fwd_ok_pv = builder.mbbOut(
             "FWDOK", "OK", "NOT FORWARDED", "IOC DOWN", initial_value=0
         )
         builder.aOut(
@@ -556,4 +556,4 @@ class TunefbServer(object):
         status_args = ["STATUS"] + [
             Status.STRINGS[code] for code in range(num_statuses)
         ]
-        self.status_pv = builder.mbbIn(*status_args, initial_value=Status.FEEDBACK_OFF)
+        self.status_pv = builder.mbbOut(*status_args, initial_value=Status.FEEDBACK_OFF)

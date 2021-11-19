@@ -1035,7 +1035,7 @@ class VefbServer(object):
             EGU="A",
         )
 
-        self.status_pv = builder.mbbIn(
+        self.status_pv = builder.mbbOut(
             "STATUS",
             ("Ok", "NO_ALARM"),
             ("Injecting", "NO_ALARM"),
@@ -1056,7 +1056,7 @@ class VefbServer(object):
             initial_value=VefbStatus.OK,
         )
 
-        self.calc_status_pv = builder.mbbIn(
+        self.calc_status_pv = builder.mbbOut(
             "CALC_STATUS",
             ("Ok", "NO_ALARM"),
             ("Injecting", "NO_ALARM"),
