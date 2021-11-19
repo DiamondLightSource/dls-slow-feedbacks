@@ -7,7 +7,7 @@ import sys
 
 import cothread
 import pytac
-from cothread.catools import DBR_STRING, caget
+from cothread.catools import DBR_STRING, caget, caput  # noqa
 
 # Constants
 BEAM_DAMP_TIME = 0.001
