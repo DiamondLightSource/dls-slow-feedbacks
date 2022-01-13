@@ -1,4 +1,4 @@
-from pytac import load_csv
+from pytac import cothread_cs, load_csv
 from softioc import builder
 
 RING_MODES = [
@@ -24,7 +24,10 @@ DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
 
 
 def load_pml_lattice(ringmode):
-    lattice = load_csv.load(ringmode)
+    # Increase CA timeouts to improve reliability
+    cs = cothread_cs.CothreadControlSystem(timeout=5.0)
+
+    lattice = load_csv.load(ringmode, control_system=cs)
     return lattice
 
 

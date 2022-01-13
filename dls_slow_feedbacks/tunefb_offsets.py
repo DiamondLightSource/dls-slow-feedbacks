@@ -6,8 +6,8 @@ Each .INP is set to the local PV mirrored in our IOC.
 import sys
 
 import cothread
-import pytac
-from cothread.catools import DBR_STRING, caget
+from pytac import cothread_cs, load_csv
+from cothread.catools import DBR_STRING, caget, caput  # noqa
 
 # Constants
 BEAM_DAMP_TIME = 0.001
@@ -52,7 +52,10 @@ def all_forwarded(local_pvs, mag_pvs):
 def main():
     mode = caget("SR-CS-RING-01:MODE", datatype=DBR_STRING)
 
-    lattice = pytac.load_csv.load(mode)
+    # Increase CA timeouts to improve reliability
+    cs = cothread_cs.CothreadControlSystem(timeout=5.0)
+
+    lattice = load_csv.load(mode, control_system=cs)
     mag_pvs = load_magnet_pvs(lattice)
     local_pvs = rename_pvs(mag_pvs)
 

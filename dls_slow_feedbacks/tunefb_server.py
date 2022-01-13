@@ -40,18 +40,18 @@ class Status(object):
     UNEXPECTED_ERROR = 11
 
     STRINGS = {
-        FEEDBACK_OFF: "Feedback off",
-        FEEDBACK_ON: "Feedback running",
-        FEEDBACK_SCALING: "Feedback running: scaled",
-        SINGLE_CORR: "Single correction applied",
-        SINGLE_SCALED: "Single correction: scaled",
-        MAGNET_CURRENT: "Magnet current error",
-        TUNE_RANGE: "Tunes outside valid range",
-        TUNE_VALIDITY: "Tune measurement invalid",
-        TUNE_UPDATE: "Tune PV not updated",
-        LOW_CURRENT: "Beam current is too low",
-        TUNE_STEP: "Tune step applied",
-        UNEXPECTED_ERROR: "Unexpected error",
+        FEEDBACK_OFF: ("Feedback off", "NO_ALARM"),
+        FEEDBACK_ON: ("Feedback running", "NO_ALARM"),
+        FEEDBACK_SCALING: ("Feedback running: scaled", "NO_ALARM"),
+        SINGLE_CORR: ("Single correction applied", "NO_ALARM"),
+        SINGLE_SCALED: ("Single correction: scaled", "NO_ALARM"),
+        MAGNET_CURRENT: ("Magnet current error", "MAJOR"),
+        TUNE_RANGE: ("Tunes outside valid range", "MINOR"),
+        TUNE_VALIDITY: ("Tune measurement invalid", "MINOR"),
+        TUNE_UPDATE: ("Tune PV not updated", "MINOR"),
+        LOW_CURRENT: ("Beam current is too low", "MAJOR"),
+        TUNE_STEP: ("Tune step applied", "NO_ALARM"),
+        UNEXPECTED_ERROR: ("Unexpected error", "MAJOR"),
     }
 
 
@@ -211,7 +211,7 @@ class TunefbServer(object):
                 log.warning("Unexpected exception: %s" % str(e))
                 traceback.print_exc()
                 self.power_pv.set(False)
-                self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+                self.status_pv.set(Status.UNEXPECTED_ERROR)
 
     def loop_correction(self):
         self.update_max_i_pv()
@@ -236,14 +236,14 @@ class TunefbServer(object):
             if self.invalid_counter >= MAX_CONSECUTIVE_INVALIDS:
                 self.trip_feedback(e)
             if self.status_pv.get() != e.code:
-                self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
+                self.status_pv.set(e.code)
                 log.info("Tune feedback paused: %s" % str(e))
         except TunefbError as e:
             self.trip_feedback(e)
 
     def trip_feedback(self, exception):
         self.power_pv.set(False)
-        self.status_pv.set(exception.code, severity=alarm.MAJOR_ALARM)
+        self.status_pv.set(exception.code)
         log.error("%s" % str(exception))
 
     def check_current(self):
@@ -354,13 +354,13 @@ class TunefbServer(object):
                 self.status_pv.set(Status.SINGLE_CORR)
         except TunefbInvalid as e:
             log.warning(str(e))
-            self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
+            self.status_pv.set(e.code)
         except TunefbError as e:
             log.error(str(e))
-            self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(e.code)
         except Exception as e:
             log.warning("Unexpected exception: %s" % str(e))
-            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(Status.UNEXPECTED_ERROR)
 
     def step_tune(self, dummy):
         """Apply raw correction without checking beam current.
@@ -384,13 +384,13 @@ class TunefbServer(object):
             self.status_pv.set(Status.TUNE_STEP)
         except TunefbInvalid as e:
             log.warning(str(e))
-            self.status_pv.set(e.code, severity=alarm.MINOR_ALARM)
+            self.status_pv.set(e.code)
         except TunefbError as e:
             log.error(str(e))
-            self.status_pv.set(e.code, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(e.code)
         except Exception as e:
             log.warning("Unexpected exception: %s", str(e))
-            self.status_pv.set(Status.UNEXPECTED_ERROR, severity=alarm.MAJOR_ALARM)
+            self.status_pv.set(Status.UNEXPECTED_ERROR)
 
     def reset_error(self, dummy):
         """Reset the error pv."""
@@ -444,11 +444,11 @@ class TunefbServer(object):
         """Update value and severity of FWDOK PV."""
         try:
             if not all_forwarded(self.local_pvs, self.mag_pvs):
-                self.fwd_ok_pv.set(1, severity=alarm.MINOR_ALARM)
+                self.fwd_ok_pv.set(1)
             else:
-                self.fwd_ok_pv.set(0, severity=alarm.NO_ALARM)
+                self.fwd_ok_pv.set(0)
         except ca_nothing:
-            self.fwd_ok_pv.set(2, severity=alarm.MAJOR_ALARM)
+            self.fwd_ok_pv.set(2)
 
     def set_afrac(self, value):
         self.afrac = value
@@ -528,8 +528,12 @@ class TunefbServer(object):
             PREC=4,
         )
         self.max_i_pv = builder.aIn("OFFSETMAX", initial_value=0.0, PREC=4)
-        self.fwd_ok_pv = builder.mbbIn(
-            "FWDOK", "OK", "NOT FORWARDED", "IOC DOWN", initial_value=0
+        self.fwd_ok_pv = builder.mbbOut(
+            "FWDOK",
+            ("OK", "NO_ALARM"),
+            ("NOT FORWARDED", "MINOR"),
+            ("IOC DOWN", "MAJOR"),
+            initial_value=0,
         )
         builder.aOut(
             "BEAMMIN",
@@ -556,4 +560,4 @@ class TunefbServer(object):
         status_args = ["STATUS"] + [
             Status.STRINGS[code] for code in range(num_statuses)
         ]
-        self.status_pv = builder.mbbIn(*status_args, initial_value=Status.FEEDBACK_OFF)
+        self.status_pv = builder.mbbOut(*status_args, initial_value=Status.FEEDBACK_OFF)
