@@ -40,17 +40,17 @@ class Status(object):
     UNEXPECTED_ERROR = 11
 
     STRINGS = {
-        FEEDBACK_OFF: "Feedback off",
-        FEEDBACK_ON: "Feedback running",
-        FEEDBACK_SCALING: "Feedback running: scaled",
-        SINGLE_CORR: "Single correction applied",
-        SINGLE_SCALED: "Single correction: scaled",
+        FEEDBACK_OFF: ("Feedback off", "NO_ALARM"),
+        FEEDBACK_ON: ("Feedback running", "NO_ALARM"),
+        FEEDBACK_SCALING: ("Feedback running: scaled", "NO_ALARM"),
+        SINGLE_CORR: ("Single correction applied", "NO_ALARM"),
+        SINGLE_SCALED: ("Single correction: scaled", "NO_ALARM"),
         MAGNET_CURRENT: ("Magnet current error", "MAJOR"),
         TUNE_RANGE: ("Tunes outside valid range", "MINOR"),
         TUNE_VALIDITY: ("Tune measurement invalid", "MINOR"),
         TUNE_UPDATE: ("Tune PV not updated", "MINOR"),
         LOW_CURRENT: ("Beam current is too low", "MAJOR"),
-        TUNE_STEP: "Tune step applied",
+        TUNE_STEP: ("Tune step applied", "NO_ALARM"),
         UNEXPECTED_ERROR: ("Unexpected error", "MAJOR"),
     }
 
