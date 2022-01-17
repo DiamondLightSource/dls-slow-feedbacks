@@ -1071,6 +1071,7 @@ class VefbServer(object):
             ("Recovering cameras", "MINOR"),
             ("No emittance value", "MINOR"),
             ("Persistent emittance err", "MINOR"),
+            ("Invalid error status", "MINOR"),  # 'Having no effect' is not valid here
             ("Away from target", "MINOR"),
             ("Method change during FB", "MINOR"),
             initial_value=VefbStatus.OK,
