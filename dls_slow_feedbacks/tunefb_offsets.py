@@ -59,10 +59,14 @@ def main():
     mag_pvs = load_magnet_pvs(lattice)
     local_pvs = rename_pvs(mag_pvs)
 
+    caput_function = caput
+
     if "test" in sys.argv:
 
-        def caput(pv, value):
+        def test_caput(pv, value):
             print(f"{pv}   {value}")
+
+        caput_function = test_caput
 
     if "redirect" in sys.argv:
         # set INP to our PVs
@@ -80,5 +84,5 @@ def main():
 
     inps = [pv + ":OFFSET1.INP" for pv in mag_pvs]
     for inp, link in zip(inps, links):
-        caput(inp, link)
+        caput_function(inp, link)
         cothread.Sleep(BEAM_DAMP_TIME * 10.0)
