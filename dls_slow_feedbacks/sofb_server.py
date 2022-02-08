@@ -60,7 +60,7 @@ class SofbServer(object):
 
     def handle_exception(self, exception):
         if isinstance(exception, sofb.CalculationException):
-            self.pv_error.set(exception.message)
+            self.pv_error.set(str(exception))
             self.power_pv.set(0)
             self.calc_error.set(1)
         elif isinstance(exception, ca_nothing):
