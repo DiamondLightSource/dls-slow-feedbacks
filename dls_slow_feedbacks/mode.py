@@ -3,13 +3,13 @@ from softioc import builder
 
 RING_MODES = [
     "SR",
-    "SRI13",
+    "UNUSED",
     "SRI0913",
-    "SRLE3ps",
+    "I04",
     "SRLEm3ps",
     "SRLETHz",
-    "SRI0913_MOGA",
-    "SRI21",
+    "I04SP",
+    "I04THz",
     "VMX",
     "VMXSP",
     "VMXTHz",
