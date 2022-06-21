@@ -41,7 +41,11 @@ class RingMode(object):
     def records(self):
         builder.SetDeviceName("SR-CS-RING-01")
         self.mode = builder.mbbOut(
-            "MODE", on_update=self.set_mode, always_update=True, *RING_MODES
+            "MODE",
+            on_update=self.set_mode,
+            always_update=True,
+            *RING_MODES,
+            ONSV="MAJOR"
         )
 
     def init(self):
