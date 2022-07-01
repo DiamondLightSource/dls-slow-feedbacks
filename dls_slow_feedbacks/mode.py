@@ -20,7 +20,7 @@ RING_MODES = [
 
 DEFAULT_RING_MODE = "DIAD"
 
-DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
+DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
 
 
 def load_pml_lattice(ringmode):
