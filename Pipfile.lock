@@ -92,10 +92,10 @@
         },
         "pytac": {
             "hashes": [
-                "sha256:4053ca8243a07b0d123837a343a371aeb23bc5211f5851cd54b3ec8fa094a43c",
-                "sha256:66ef4996c29c6dcb3e331572e8f15ccf66cf98a4778cb658a52c604047ad3361"
+                "sha256:199435f8ed00d57e2c0c9cf355a84dcc4e53061a298453ba5666c1f4d6fae1a2",
+                "sha256:a9afceb92778a7a7b5ff591962c8e898a4ad003990305b89064aa7b94058c851"
             ],
-            "version": "==0.3.0"
+            "version": "==0.5.0"
         },
         "scipy": {
             "hashes": [
