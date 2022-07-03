@@ -3,13 +3,13 @@ from softioc import builder
 
 RING_MODES = [
     "SR",
-    "SRI13",
+    "UNUSED",
     "SRI0913",
-    "SRLE3ps",
+    "I04",
     "SRLEm3ps",
     "SRLETHz",
-    "SRI0913_MOGA",
-    "SRI21",
+    "I04SP",
+    "I04THz",
     "VMX",
     "VMXSP",
     "VMXTHz",
@@ -20,7 +20,7 @@ RING_MODES = [
 
 DEFAULT_RING_MODE = "DIAD"
 
-DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
+DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
 
 
 def load_pml_lattice(ringmode):
@@ -41,7 +41,11 @@ class RingMode(object):
     def records(self):
         builder.SetDeviceName("SR-CS-RING-01")
         self.mode = builder.mbbOut(
-            "MODE", on_update=self.set_mode, always_update=True, *RING_MODES
+            "MODE",
+            on_update=self.set_mode,
+            always_update=True,
+            *RING_MODES,
+            ONSV="MAJOR"
         )
 
     def init(self):
