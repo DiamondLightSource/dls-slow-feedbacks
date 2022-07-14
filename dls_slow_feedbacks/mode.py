@@ -18,7 +18,7 @@ RING_MODES = [
     "DIADTHz",
 ]
 
-DEFAULT_RING_MODE = "DIAD"
+DEFAULT_RING_MODE = "I04"
 
 DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
 
