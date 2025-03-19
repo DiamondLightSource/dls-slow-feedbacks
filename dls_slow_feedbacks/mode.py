@@ -1,4 +1,7 @@
+from typing import Callable, List
+
 from pytac import cothread_cs, load_csv
+from pytac.lattice import EpicsLattice
 from softioc import builder
 
 RING_MODES = [
@@ -19,26 +22,43 @@ RING_MODES = [
 ]
 
 DEFAULT_RING_MODE = "I04"
-
 DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
 
 
-def load_pml_lattice(ringmode):
+def load_pml_lattice(ringmode: str) -> EpicsLattice:
+    """Load the elements of the lattice for a given ring mode."""
     # Increase CA timeouts to improve reliability
     cs = cothread_cs.CothreadControlSystem(timeout=5.0)
-
     lattice = load_csv.load(ringmode, control_system=cs)
     return lattice
 
 
-class RingMode(object):
-    def __init__(self):
-        self.records()
-        self.listeners = []
-        self.name = DEFAULT_RING_MODE
-        self.lattice = load_pml_lattice(self.name)
+class RingMode:
+    """Manage the ring mode and its associated lattice."""
 
-    def records(self):
+    def __init__(self) -> None:
+        self.records()
+        self.listeners: List[Callable] = []
+        self.name: str = DEFAULT_RING_MODE
+        self.lattice: EpicsLattice = load_pml_lattice(self.name)
+
+    def init(self) -> None:
+        """Assign the ring mode to its associated PV."""
+        self.mode.set(RING_MODES.index(self.name))
+
+    def set_mode(self, mode) -> None:
+        """Set the ring mode and reload the lattice."""
+        self.name = RING_MODES[mode]
+        self.lattice = load_pml_lattice(self.name)
+        for listener in self.listeners:
+            listener(self.lattice)
+
+    def add_listener(self, listener: Callable) -> None:
+        """Add a listener to respond to changes in the lattice."""
+        self.listeners.append(listener)
+
+    def records(self) -> None:
+        """Define a pv for the ring mode."""
         builder.SetDeviceName("SR-CS-RING-01")
         self.mode = builder.mbbOut(
             "MODE",
@@ -47,15 +67,3 @@ class RingMode(object):
             *RING_MODES,
             ONSV="MAJOR"
         )
-
-    def init(self):
-        self.mode.set(RING_MODES.index(self.name))
-
-    def set_mode(self, mode):
-        self.name = RING_MODES[mode]
-        self.lattice = load_pml_lattice(self.name)
-        for listener in self.listeners:
-            listener(self.lattice)
-
-    def add_listener(self, listener):
-        self.listeners.append(listener)
