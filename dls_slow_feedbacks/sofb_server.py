@@ -39,10 +39,10 @@ class SofbServer(object):
     def set_limit(self, limit):
         self.sofb.step_limit = limit
 
-    def init(self):
-        cothread.Spawn(self.tick)
+    def start(self):
+        cothread.Spawn(self.run)
 
-    def tick(self):
+    def run(self):
         while True:
             cothread.Sleep(1.0)
             try:

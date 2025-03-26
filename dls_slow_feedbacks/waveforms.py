@@ -26,14 +26,14 @@ class WaveformsServer(object):
         self.create_info_waveforms()
         self.create_control_and_waveform_pvs()
 
-    def init(self):
+    def start(self):
         for device in ["cor", "bpm"]:
             for mode in self.SPEEDS:
                 for plane in self.PLANES:
                     self.write(device, mode, plane)
-        cothread.Spawn(self.timer)
+        cothread.Spawn(self.run)
 
-    def timer(self):
+    def run(self):
         while True:
             try:
                 cothread.Sleep(1.0)

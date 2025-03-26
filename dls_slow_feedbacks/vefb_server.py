@@ -335,7 +335,7 @@ class VefbServer(object):
 
         ring_mode.add_listener(self.on_ringmode_change)
 
-    def init(self):
+    def start(self):
         cothread.Spawn(self.run)
 
     def init_wait(self, wait_time):

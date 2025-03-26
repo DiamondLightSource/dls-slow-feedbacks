@@ -62,10 +62,10 @@ def create_pvs() -> None:
     builder.stringIn("HOSTNAME", VAL=os.uname()[1])
 
 
-def initialise_servers(servers: Tuple) -> None:
+def start_servers(servers: Tuple) -> None:
     """Spawn the cothread routines for each server."""
     for server in servers:
-        server.init()
+        server.start()
 
 
 def main() -> None:
@@ -82,10 +82,9 @@ def main() -> None:
     create_pvs()
     builder.LoadDatabase()
 
-    # All records created, can now fire up the IOC.
+    # Fire up the IOC.
     softioc.iocInit()
 
-    # Perform post iocInit initialisation
-    initialise_servers(servers)
+    start_servers(servers)
 
     softioc.interactive_ioc(globals())

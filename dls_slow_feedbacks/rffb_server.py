@@ -86,11 +86,11 @@ class RffbServer:
 
         ring_mode.add_listener(self.set_data_dir)
 
-    def init(self) -> None:
+    def start(self) -> None:
         """Start the feedback loop."""
-        cothread.Spawn(self.timer)
+        cothread.Spawn(self.run)
 
-    def timer(self) -> None:
+    def run(self) -> None:
         """Main feedback loop."""
         while True:
             cothread.Sleep(1.0)
