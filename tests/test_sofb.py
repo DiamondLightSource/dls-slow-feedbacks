@@ -81,7 +81,7 @@ def caget_responses():
 
 def test_zero_correction(test_sofb, lattice, mock_caput, mock_caget, caget_responses):
     mock_caget.side_effect = caget_responses.values()
-    test_sofb.correction()
+    test_sofb.correct()
     h_expected = numpy.zeros(NCOR)
     v_expected = numpy.zeros(NCOR)
     print(mock_caput.call_args_list)
@@ -105,14 +105,14 @@ def test_correction_fails_if_wrong_dimensions(
     caget_responses["bpmx"] = numpy.zeros(NBPM + 1)
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(Exception):
-        test_sofb.correction()
+        test_sofb.correct()
 
 
 def test_random_correction(test_sofb, lattice, mock_caput, mock_caget, caget_responses):
     caget_responses["bpmx"] = numpy.random.rand(NBPM)
     caget_responses["bpmy"] = numpy.random.rand(NBPM)
     mock_caget.side_effect = caget_responses.values()
-    test_sofb.correction()
+    test_sofb.correct()
     # Identity matrix RM means output = input
     h_expected = caget_responses["bpmx"][:NCOR]
     v_expected = caget_responses["bpmy"][:NCOR]
@@ -134,7 +134,7 @@ def test_afrac_correction(test_sofb, lattice, mock_caget, mock_caput, caget_resp
     caget_responses["bpmy"] = numpy.random.rand(NBPM)
     caget_responses["afrac"] = 0.5
     mock_caget.side_effect = caget_responses.values()
-    test_sofb.correction()
+    test_sofb.correct()
     # Identity matrix RM means output = input (this time scaled by afrac)
     h_expected = caget_responses["bpmx"][:NCOR] / 2
     v_expected = caget_responses["bpmy"][:NCOR] / 2
@@ -158,7 +158,7 @@ def test_scaled_correction(test_sofb, lattice, mock_caget, mock_caput, caget_res
     test_sofb.step_limit = 10
     caget_responses["bpmx"][10] = 20
     mock_caget.side_effect = caget_responses.values()
-    test_sofb.correction()
+    test_sofb.correct()
     # Identity matrix RM means output = input (this time scaled by limit)
     h_expected = caget_responses["bpmx"][:NCOR] / 2
     v_expected = caget_responses["bpmy"][:NCOR]
@@ -182,14 +182,14 @@ def test_psc_error_non_zero_multiple(
     caget_responses["psc_errors"][8] = 8
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(sofb.CalculationException):
-        test_sofb.correction()
+        test_sofb.correct()
 
 
 def test_psc_error_non_zero(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses["psc_errors"][112] = 8
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(sofb.CalculationException):
-        test_sofb.correction()
+        test_sofb.correct()
 
 
 def test_psc_state_not_on_multiple(test_sofb, mock_caget, caget_responses):
@@ -197,14 +197,14 @@ def test_psc_state_not_on_multiple(test_sofb, mock_caget, caget_responses):
     caget_responses["psc_states"][8] = 8
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(sofb.CalculationException):
-        test_sofb.correction()
+        test_sofb.correct()
 
 
 def test_psc_state_not_on(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses["psc_states"][23] = 0
     mock_caget.side_effect = caget_responses.values()
     with pytest.raises(sofb.CalculationException):
-        test_sofb.correction()
+        test_sofb.correct()
 
 
 def test_calc_error_reset_after_single(
@@ -216,7 +216,7 @@ def test_calc_error_reset_after_single(
 
     # Single correction
     MEANINGLESS_VALUE = 0
-    test_sofb_server.single(MEANINGLESS_VALUE)
+    test_sofb_server.run_single(MEANINGLESS_VALUE)
 
     # Errors should have been cleared
     assert test_sofb_server.calc_error.get() == 0
