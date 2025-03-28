@@ -78,7 +78,7 @@ class RffbServer:
             ring_mode.lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
         )
 
-        self.records()
+        self.create_records()
         self.set_data_dir(ring_mode.lattice)
 
         self.rf_freq_set_pv = PVWithValidity("LI-RF-MOSC-01:FREQ_SET")
@@ -154,6 +154,7 @@ class RffbServer:
         self, present_rf_demand: float, delta_rf_demand: float
     ) -> tuple:
         """Calculate the target RF frequency and limit."""
+
         def round10(x):
             return np.around(x * 10.0) / 10.0
 
@@ -267,7 +268,7 @@ class RffbServer:
         if raw_disp["BPMxDisp"]["Units"] != "Hardware":
             raise ValueError("Dispersion matrix is not set to hardware units")
 
-    def records(self) -> None:
+    def create_records(self) -> None:
         """Define PV's for RF Feedback."""
         builder.SetDeviceName("SR-CS-RFFB-01")
 

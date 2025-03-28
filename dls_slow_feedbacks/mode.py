@@ -37,7 +37,7 @@ class RingMode:
     """Manage the ring mode and its associated lattice."""
 
     def __init__(self) -> None:
-        self.records()
+        self.create_records()
         self.listeners: List[Callable] = []
         self.name: str = DEFAULT_RING_MODE
         self.lattice: EpicsLattice = load_pml_lattice(self.name)
@@ -57,7 +57,7 @@ class RingMode:
         """Add a listener to respond to changes in the lattice."""
         self.listeners.append(listener)
 
-    def records(self) -> None:
+    def create_records(self) -> None:
         """Define a pv for the ring mode."""
         builder.SetDeviceName("SR-CS-RING-01")
         self.mode = builder.mbbOut(

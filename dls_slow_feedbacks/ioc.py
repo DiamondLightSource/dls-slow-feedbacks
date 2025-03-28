@@ -50,7 +50,7 @@ def create_servers(ring_mode: mode.RingMode) -> Tuple:
     return wavs, rffb, sofb, vefb, tunefb
 
 
-def create_pvs() -> None:
+def create_records() -> None:
     """Create FOFB Mirror and Identification PV's for the IOC."""
     # Mirror PV for FOFB status to reduce overall load on vxWorks IOCs.
     builder.SetDeviceName("SR-CS-FOFB-01")
@@ -79,7 +79,7 @@ def main() -> None:
     ring_mode = mode.RingMode()
     servers = create_servers(ring_mode)
 
-    create_pvs()
+    create_records()
     builder.LoadDatabase()
 
     # Fire up the IOC.

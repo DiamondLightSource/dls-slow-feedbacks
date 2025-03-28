@@ -14,6 +14,7 @@ class SofbServer(object):
         self.sofb = sofb.Sofb(ring_mode.lattice)
         self.power = 0
         self.records(ring_mode.lattice)
+        self.create_records(ring_mode.lattice)
         ring_mode.add_listener(self.set_datadir)
 
     def set_datadir(self, lattice):
@@ -82,6 +83,8 @@ class SofbServer(object):
             self.handle_exception(e)
 
     def records(self, lattice):
+    def create_records(self, lattice: EpicsLattice) -> None:
+        """Define PV's for slow orbit feedback."""
         builder.SetDeviceName("SR-CS-SOFB-01")
 
         self.power_pv = builder.mbbOut(
