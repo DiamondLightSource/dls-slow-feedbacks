@@ -60,7 +60,7 @@ class WaveformsServer(object):
             # update max value and name
             i = np.argmax(abs(np.array(rhv[p])))
             self.maxval[p].set(rhv[p][i])
-            self.maxname[p].set(pvs[i].encode())
+            self.maxname[p].set(pvs[i])
 
             w = self.wf["current"][p].get()
             w = hv[p]
