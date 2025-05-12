@@ -70,8 +70,8 @@ class WaveformsServer(object):
             rw = rhv[p]
             self.wf["mag"][p].set(rw)
 
-        # update individule records on waveform change. we must latch the
-        # change to prevent the record and waveform from recursivly updating
+        # update individual records on waveform change. we must latch the
+        # change to prevent the record and waveform from recursively updating
         if self.latched:
             self.write(*self.latched)
             self.latched = None
@@ -87,7 +87,7 @@ class WaveformsServer(object):
 
     def create_info_waveforms(self):
         builder.SetDeviceName("SR-DI-EBPM-01")
-        builder.WaveformOut("S", initial_value=self.lattice.get_family_s("BPM"))
+        builder.WaveformOut("S", initial_value=self.lattice.get_family_s("BPM"), datatype=np.float64)
 
         nm = (("HSTR", "SR-PC-HSTR-01"), ("VSTR", "SR-PC-VSTR-01"))
 
@@ -97,18 +97,18 @@ class WaveformsServer(object):
             elements = self.lattice.get_elements(k)
             builder.SetDeviceName(v)
             self.wf["current"].append(
-                builder.WaveformOut("I", initial_value=np.zeros(len(elements)))
+                builder.WaveformOut("I", initial_value=np.zeros(len(elements)), datatype=np.float64)
             )
             self.wf["mag"].append(
-                builder.WaveformOut("MAG", initial_value=np.zeros(len(elements)))
+                builder.WaveformOut("MAG", initial_value=np.zeros(len(elements)), datatype=np.float64)
             )
-            builder.WaveformOut("S", initial_value=self.lattice.get_family_s(k))
+            builder.WaveformOut("S", initial_value=self.lattice.get_family_s(k), datatype=np.float64)
 
     def create_control_and_waveform_pvs(self):
         self.maxval = [None, None]
         self.maxname = [None, None]
 
-        # Declare individule records and waveforms
+        # Declare individual records and waveforms
         for dev in ["cor", "bpm"]:
             self.wf[dev] = {}
             self.records[dev] = {}
@@ -138,6 +138,7 @@ class WaveformsServer(object):
                             f, s, p
                         ),
                         initial_value=np.zeros(len(self.lattice.get_elements(fam))),
+                        datatype=np.int32
                     )
                 # Create individual control PVs
                 for n, c in enumerate(
