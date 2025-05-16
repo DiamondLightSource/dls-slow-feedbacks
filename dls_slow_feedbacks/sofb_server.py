@@ -5,7 +5,7 @@ import cothread
 from cothread.catools import ca_nothing, caget
 from scipy.io import loadmat
 from softioc import builder
-
+import numpy as np
 from dls_slow_feedbacks import mode, sofb
 
 
@@ -104,7 +104,7 @@ class SofbServer(object):
                 mag_ids.append(int(mag[2:4]) + 0.5 + (2.0 / 30) * (int(mag[-2:])))
             else:
                 mag_ids.append(int(mag[2:4]) + 0.1 * int(mag[-2:]))
-        builder.WaveformIn("CMID", initial_value=mag_ids)
+        builder.WaveformIn("CMID", initial_value=mag_ids, datatype=np.float64)
 
         # PVs for demonstrating SVD effect
         bpms = lattice.get_elements("BPM")
@@ -116,15 +116,15 @@ class SofbServer(object):
             )
 
             sv_pvs.s = builder.WaveformIn(
-                "SVD:%s:S" % plane, initial_value=[0.0] * svd_length
+                "SVD:%s:S" % plane, initial_value=[0.0] * svd_length, datatype=np.float64
             )
 
             sv_pvs.s_inv = builder.WaveformIn(
-                "SVD:%s:S_INV" % plane, initial_value=[0.0] * svd_length
+                "SVD:%s:S_INV" % plane, initial_value=[0.0] * svd_length, datatype=np.float64
             )
 
             sv_pvs.s_inv_cut = builder.WaveformIn(
-                "SVD:%s:S_INV_CUT" % plane, initial_value=[0.0] * svd_length
+                "SVD:%s:S_INV_CUT" % plane, initial_value=[0.0] * svd_length, datatype=np.float64
             )
             self.sofb.svd[plane] = sv_pvs
 
