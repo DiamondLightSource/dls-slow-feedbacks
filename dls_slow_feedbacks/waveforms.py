@@ -5,7 +5,7 @@ import numpy as np
 import pytac
 from cothread.catools import FORMAT_CTRL, ca_nothing, caget
 from softioc import builder
-
+import logging as log
 "waveforms and control PVs"
 
 
@@ -39,9 +39,9 @@ class WaveformsServer(object):
                 cothread.Sleep(1.0)
                 self.tick()
             except ca_nothing as pv_error:
-                print(f"PV error {pv_error}")
+                log.error(f"(Waveforms) PV error: {pv_error}")
             except BaseException:
-                traceback.print_exc()
+                log.exception("(Waveforms) Unexpected error")
 
     def tick(self):
         "read from individual correctors, write to corrector vector"

@@ -2,6 +2,7 @@ import numpy as np
 import pytac
 from cothread.catools import caget, caput
 from numpy import linalg
+import logging as log 
 
 # PSC Enum constants
 PSC_STATE_ON = 2
@@ -72,7 +73,7 @@ class Sofb(object):
         key = (tuple(hen), tuple(ven), tuple(hbpmen), tuple(vbpmen), mu)
         if key in self.cache:
             return self.cache[key]
-        print("new response matrix")
+        log.info("(SOFB) New response matrix")
         irm = [None, None]
         rmx = self.rmx[np.ix_(hbpmen, hen)]
         rmy = self.rmy[np.ix_(vbpmen, ven)]
@@ -90,7 +91,7 @@ class Sofb(object):
         error_pvs = array_of_pv_names[error_indices]
         # Message to be printed to the console can contain the whole
         # list and reason because not limited on space
-        print("Correctors {}: {}".format(error_description, error_pvs))
+        log.error(f"(SOFB) Correctors {error_description}: {error_pvs}")
 
         # If more than one PV in list, show how many more.
         more_to_show = " +{}".format(len(error_pvs) - 1) if len(error_pvs) > 1 else ""

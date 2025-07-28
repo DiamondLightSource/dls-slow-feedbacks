@@ -6,6 +6,7 @@ from cothread.catools import ca_nothing, caget
 from scipy.io import loadmat
 from softioc import builder
 import numpy as np
+import logging as log
 from dls_slow_feedbacks import mode, sofb
 
 
@@ -28,7 +29,7 @@ class SofbServer(object):
             self.sofb.set_rm(rmx, rmy)
             self.matrix_error.set(0)
         except BaseException:
-            traceback.print_exc()
+            log.exception(f"(SOFB) Failed to load matrix data {lattice.name}")
             self.sofb.rmx = None
             self.sofb.rmy = None
             self.matrix_error.set(1)
@@ -71,7 +72,7 @@ class SofbServer(object):
             self.power_pv.set(0)
             self.calc_error.set(1)
         # Log why we have failed
-        traceback.print_exc()
+        log.exception("(SOFB) Error during correction")
 
     def single(self, value):
         try:

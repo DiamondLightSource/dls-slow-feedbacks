@@ -8,6 +8,7 @@ import sys
 import cothread
 from pytac import cothread_cs, load_csv
 from cothread.catools import DBR_STRING, caget, caput  # noqa
+import logging as log
 
 # Constants
 BEAM_DAMP_TIME = 0.001
@@ -64,7 +65,7 @@ def main():
     if "test" in sys.argv:
 
         def test_caput(pv, value):
-            print(f"{pv}   {value}")
+            log.debug(f"(TFB) Testing caput: {pv}   {value}")
 
         caput_function = test_caput
 
@@ -75,11 +76,11 @@ def main():
         # set INP to the remote PVs
         links = [pv + LOCAL_LINK for pv in mag_pvs]
     elif "forwarded" in sys.argv:
-        print(all_forwarded(local_pvs, mag_pvs))
+        log.info("(TFB) mags forwarded = " + all_forwarded(local_pvs, mag_pvs))
         sys.exit()
     else:
-        print("usage: ")
-        print(f"    {sys.argv[0]} redirect|reset [test]")
+        log.info("(TFB) usage: ")
+        log.info(f"(TFB) {sys.argv[0]} redirect|reset [test]")
         sys.exit()
 
     inps = [pv + ":OFFSET1.INP" for pv in mag_pvs]

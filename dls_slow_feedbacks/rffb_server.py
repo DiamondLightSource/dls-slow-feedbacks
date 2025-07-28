@@ -1,4 +1,4 @@
-import logging
+import logging as log
 import os
 import traceback
 
@@ -51,13 +51,12 @@ class RffbServer(object):
                 self.feedback()
             except catools.ca_nothing as e:
                 # A caget or caput failed
-                print("Channel access exception; RFFB will be stopped.")
-                print(e)
+                log.exception(f"(RFFB) Channel access exception. RFFB will be stopped.")
                 self.pv_error.set(e.name)
                 self.calc_error.set(1)
                 self.power_pv.set(0)
             except BaseException:
-                traceback.print_exc()
+                log.exception("(RFFB) Feedback error occurred.")
                 self.calc_error.set(1)
                 self.power_pv.set(0)
 
@@ -96,14 +95,14 @@ class RffbServer(object):
 
             # turn off feedback loop with no orbit loop
             if fbstat == 0:
-                logging.fatal("No orbit feedback is running. " "RFFB will be stopped.")
+                log.fatal("(RFFB) No orbit feedback is running. RFFB will be stopped.")
                 self.power_pv.set(0)
                 self.pv_error.set("No orbit feedback")
                 return
 
             # turn off feedback loop below 2mA
             if current <= 2:
-                logging.fatal("Beam current <= 2mA. RFFB will be stopped.")
+                log.fatal("(RFFB) Beam current <= 2mA. RFFB will be stopped.")
                 self.power_pv.set(0)
                 self.pv_error.set("Current too low")
                 return
@@ -111,20 +110,16 @@ class RffbServer(object):
             # HLA-349: Check for discrepancy between present RF frequency and
             # setpoint; indicates problem with master oscillator
             if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
-                logging.fatal(
-                    "Discrepancy between RF frequency and setpoint. "
-                    "RFFB will be stopped."
+                log.fatal(
+                    "(RFFB) Discrepancy between RF frequency and setpoint. RFFB will be stopped."
                 )
                 self.power_pv.set(0)
                 self.pv_error.set(self.rf_freq_set_pv.get_name())
                 return
 
             if not self.rf_pvs_valid():
-                logging.fatal(
-                    "RF PV was invalid > {count} times. "
-                    "RFFB will be stopped.".format(
-                        count=PVWithValidity.ALLOWED_INVALID_CAGETS
-                    )
+                log.fatal(
+                    f"(RFFB) RF PV was invalid > {PVWithValidity.ALLOWED_INVALID_CAGETS} times. RFFB will be stopped."
                 )
                 self.power_pv.set(0)
                 return
@@ -185,9 +180,9 @@ class RffbServer(object):
             assert raw_bpmresp["Rmat"][0, 0]["Units"] == "Hardware"
             assert raw_disp["BPMxDisp"]["Units"] == "Hardware"
             self.matrix_error.set(0)
-            print(f"RFFB loaded matrix {lattice.name}")
+            log.info(f"(RFFB) Loaded matrix {lattice.name}")
         except BaseException:
-            traceback.print_exc()
+            log.exception(f"(RFFB) Failed to load matrix data {lattice.name}")
             self.bpmresp = None
             self.disp = None
             self.matrix_error.set(1)
@@ -279,10 +274,8 @@ class PVWithValidity(object):
         if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
             return True
         else:
-            logging.warning(
-                "{pv_name} had alarm more than {count} times".format(
-                    pv_name=self.pv_name, count=self.ALLOWED_INVALID_CAGETS
-                )
+            log.warning(
+                f"(RFFB) {self.pv_name} raised an alarm more than {self.ALLOWED_INVALID_CAGETS} times"
             )
             return False
 
