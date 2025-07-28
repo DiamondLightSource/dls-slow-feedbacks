@@ -1,18 +1,10 @@
 import logging as log
-
 # Slow feedback IOC startup.
 import os
 import sys
 
-from dls_slow_feedbacks import (
-    logconfig,
-    mode,
-    rffb_server,
-    sofb_server,
-    tunefb_server,
-    vefb_server,
-    waveforms,
-)
+from dls_slow_feedbacks import (logconfig, mode, rffb_server, sofb_server,
+                                tunefb_server, vefb_server, waveforms)
 from epicsdbbuilder import records
 from softioc import builder, softioc
 

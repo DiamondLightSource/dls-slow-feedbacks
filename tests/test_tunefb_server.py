@@ -9,9 +9,10 @@ import unittest
 
 import numpy
 import pytac
+from mock import MagicMock, patch
+
 from dls_slow_feedbacks import tunefb_server
 from dls_slow_feedbacks.tunefb_server import TunefbError, TunefbInvalid, TunefbServer
-from mock import MagicMock, patch
 
 RING_MODE = "DIAD"
 LATTICE = pytac.load_csv.load(RING_MODE)

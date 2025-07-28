@@ -3,13 +3,11 @@ import os
 import traceback
 
 import cothread
+import numpy as np
 from cothread.catools import ca_nothing, caget
 from dls_slow_feedbacks import mode, sofb
 from scipy.io import loadmat
 from softioc import builder
-import numpy as np
-import logging as log
-from dls_slow_feedbacks import mode, sofb
 
 
 class SofbServer(object):

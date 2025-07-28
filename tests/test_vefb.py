@@ -1,9 +1,9 @@
 import time
 
-import pytest
-
 import mock
 import pytac
+import pytest
+
 from dls_slow_feedbacks import vefb_server
 from dls_slow_feedbacks.vefb_server import VefbServer, VefbStatus
 

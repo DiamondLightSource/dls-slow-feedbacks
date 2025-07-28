@@ -1,13 +1,13 @@
 import collections
 
-import pytest
-
 import mock
 import numpy
 import pytac
+import pytest
 from cothread import catools
-from dls_slow_feedbacks import mode, sofb, sofb_server
 from pytac import cothread_cs
+
+from dls_slow_feedbacks import mode, sofb, sofb_server
 
 NCOR = 172
 NBPM = 173
