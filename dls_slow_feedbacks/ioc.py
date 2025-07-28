@@ -1,5 +1,5 @@
-import logging
-
+from dls_slow_feedbacks import logconfig
+import logging as log
 # Slow feedback IOC startup.
 import os
 import sys
@@ -22,12 +22,12 @@ if sys.argv[1:]:
     import cothread.catools
 
     def caput(pvs, values, **kargs):
-        print("caput", pvs, values, kargs)
+        log.debug("caput", pvs, values, kargs)
 
     cothread.catools.caput = caput
 
 # Configure logging
-logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
+logconfig.setup_logging(application="dls_slow_feedbacks")
 
 # Create the appropriate servers.
 
