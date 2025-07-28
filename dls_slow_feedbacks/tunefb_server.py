@@ -14,9 +14,6 @@ from softioc import alarm, builder
 from dls_slow_feedbacks import mode
 from dls_slow_feedbacks.tunefb_offsets import all_forwarded, load_magnet_pvs, rename_pvs
 
-LOG_FORMAT = "TFB: %(levelname)s %(message)s"
-LOG_LEVEL = log.WARNING
-log.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 numpy.set_printoptions(precision=4)
 
 
