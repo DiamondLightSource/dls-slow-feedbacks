@@ -1,8 +1,10 @@
+import logging as log
 import os
 import traceback
 
 import cothread
 from cothread.catools import ca_nothing, caget
+from dls_slow_feedbacks import mode, sofb
 from scipy.io import loadmat
 from softioc import builder
 import numpy as np

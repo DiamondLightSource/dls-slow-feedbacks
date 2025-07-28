@@ -32,5 +32,5 @@ def calc_rffb(bpmresp, disp, enabled_bpm, enabled_cor, hcm):
     # the "inverse" of a vector v is: v / |v|^2
     # same as you get from the svd pinv:
     # pinv([v])[0] = v / sum(v**2)
-    drf = np.dot(hcm, dispcor / sum(dispcor ** 2))
+    drf = np.dot(hcm, dispcor / sum(dispcor**2))
     return drf

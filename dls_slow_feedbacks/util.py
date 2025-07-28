@@ -1,4 +1,4 @@
-from dls_slow_feedbacks import waveforms, mode
+from dls_slow_feedbacks import mode, waveforms
 
 
 def get_bpm_and_corrector_feedback_disabled_pvs() -> list:

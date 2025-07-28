@@ -1,15 +1,15 @@
+import logging as log
 import os
 import time
 import traceback
-import logging as log
+
 import cothread
 import numpy as np
 import pytac
 from cothread.catools import FORMAT_TIME, camonitor, caput
+from dls_slow_feedbacks import mode
 from scipy.io import loadmat
 from softioc import builder
-
-from dls_slow_feedbacks import mode
 
 
 class VefbConstants(object):
@@ -378,7 +378,9 @@ class VefbServer(object):
                 log.exception("(VEFB) Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, True)
         else:
-            log.warning("(VEFB) Single correct disabled in loopback mode. Skipping correction.")
+            log.warning(
+                "(VEFB) Single correct disabled in loopback mode. Skipping correction."
+            )
 
     def add_single(self, value):
         if not self.enabled:
@@ -388,7 +390,9 @@ class VefbServer(object):
                 log.exception("(VEFB) Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, True)
         else:
-            log.warning("(VEFB) Add delta disabled in loopback mode. Skipping delta addition.")
+            log.warning(
+                "(VEFB) Add delta disabled in loopback mode. Skipping delta addition."
+            )
 
     def sub_single(self, value):
         if not self.enabled:
@@ -398,7 +402,9 @@ class VefbServer(object):
                 log.exception("(VEFB) Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, True)
         else:
-            log.warning("(VEFB) Subtract delta disabled in loopback mode. Skipping delta subtraction.")
+            log.warning(
+                "(VEFB) Subtract delta disabled in loopback mode. Skipping delta subtraction."
+            )
 
     def error_check(self):
 
@@ -643,7 +649,9 @@ class VefbServer(object):
             recovery_time = current_time - self.recovery_start_time
 
             if recovery_time > min_recovery_timeout and self.camera_recovery_complete():
-                log.info(f"(VEFB) Camera recovery successful after {recovery_time} seconds")
+                log.info(
+                    f"(VEFB) Camera recovery successful after {recovery_time} seconds"
+                )
                 self.recovering_cameras = False
 
             elif recovery_time > max_recovery_timeout:
@@ -779,12 +787,16 @@ class VefbServer(object):
             vwrite_max = target + self.vemit_err_max_pv.get()
             if vemit_used > vwrite_max:
                 if apply_calc:
-                    log.warning(f"(VEFB) Vemit too high - skip: {vemit_used} MAX: {vwrite_max}")
+                    log.warning(
+                        f"(VEFB) Vemit too high - skip: {vemit_used} MAX: {vwrite_max}"
+                    )
                 return VefbStatus.BAD_EMITTANCE_VALUE
             vwrite_min = target - self.vemit_err_max_pv.get()
             if vemit_used < vwrite_min:
                 if apply_calc:
-                    log.warning(f"(VEFB) Vemit too low - skip: {vemit_used} MIN: {vwrite_min}")
+                    log.warning(
+                        f"(VEFB) Vemit too low - skip: {vemit_used} MIN: {vwrite_min}"
+                    )
                 return VefbStatus.BAD_EMITTANCE_VALUE
 
         # calc skew quad delta

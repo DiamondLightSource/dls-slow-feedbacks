@@ -6,10 +6,9 @@ import cothread
 import numpy
 import pytac
 from cothread import catools
+from dls_slow_feedbacks import constants, mode, rffb_calc
 from scipy.io import loadmat
 from softioc import builder
-
-from dls_slow_feedbacks import constants, mode, rffb_calc
 
 "IOC for RF Feedback"
 

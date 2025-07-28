@@ -80,7 +80,7 @@ default_config = {
         # If you set a handler to level DEBUG you will need to set either this level, or
         # the level of one of the loggers above to DEBUG or you won't see any DEBUG messages
         "level": "INFO",
-        # As this is a continually running IOC, we dont have a 
+        # As this is a continually running IOC, we dont have a
         # 'useful output' (one that can be piped). Only user messages.
         # Hence, we default everything to stderr.
         "handlers": ["graylog_gelf", "stderr"],

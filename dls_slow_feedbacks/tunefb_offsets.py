@@ -3,12 +3,12 @@ Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
 Each .INP is set to the local PV mirrored in our IOC.
 """
+import logging as log
 import sys
 
 import cothread
-from pytac import cothread_cs, load_csv
 from cothread.catools import DBR_STRING, caget, caput  # noqa
-import logging as log
+from pytac import cothread_cs, load_csv
 
 # Constants
 BEAM_DAMP_TIME = 0.001

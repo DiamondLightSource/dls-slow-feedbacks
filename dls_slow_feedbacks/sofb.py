@@ -1,8 +1,9 @@
+import logging as log
+
 import numpy as np
 import pytac
 from cothread.catools import caget, caput
 from numpy import linalg
-import logging as log 
 
 # PSC Enum constants
 PSC_STATE_ON = 2
@@ -12,7 +13,7 @@ def tkv_reg(m, mu, singular_values):
     # Tikhonov regularization
     u, s, vt = linalg.svd(m, full_matrices=False)
     # We use nan_to_num here to catch the case of singular m and zero mu.
-    si = np.nan_to_num(s / (mu + s ** 2))
+    si = np.nan_to_num(s / (mu + s**2))
 
     if singular_values is not None:
         singular_values.s.set(s)

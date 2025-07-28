@@ -8,10 +8,9 @@ import numpy
 import scipy
 import scipy.io
 from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
-from softioc import alarm, builder
-
 from dls_slow_feedbacks import mode
 from dls_slow_feedbacks.tunefb_offsets import all_forwarded, load_magnet_pvs, rename_pvs
+from softioc import alarm, builder
 
 numpy.set_printoptions(precision=4)
 
@@ -263,7 +262,9 @@ class TunefbServer(object):
             log.warning("(TFB) Tune value NaN but PV not invalid.")
             raise TunefbInvalid(Status.TUNE_VALIDITY)
         log.info(f"(TFB) Tune delta before last correction {self.tune_deltas}")
-        log.info(f"(TFB) Tune change since last correction {str(tune_array - self.tunes)}")
+        log.info(
+            f"(TFB) Tune change since last correction {str(tune_array - self.tunes)}"
+        )
         self.tune_deltas = self.golden_tunes - tune_array
         log.info(f"(TFB) Actual tune deltas {self.tune_deltas}")
 

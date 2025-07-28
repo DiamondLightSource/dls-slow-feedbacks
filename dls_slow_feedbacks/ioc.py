@@ -1,13 +1,11 @@
-from dls_slow_feedbacks import logconfig
 import logging as log
+
 # Slow feedback IOC startup.
 import os
 import sys
 
-from epicsdbbuilder import records
-from softioc import builder, softioc
-
 from dls_slow_feedbacks import (
+    logconfig,
     mode,
     rffb_server,
     sofb_server,
@@ -15,6 +13,8 @@ from dls_slow_feedbacks import (
     vefb_server,
     waveforms,
 )
+from epicsdbbuilder import records
+from softioc import builder, softioc
 
 if sys.argv[1:]:
     # If running in testing mode log instead of executing caput.  We do this by

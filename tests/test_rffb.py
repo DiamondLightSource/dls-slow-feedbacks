@@ -1,9 +1,8 @@
 import unittest
 
 import cothread
-from mock import patch
-
 from dls_slow_feedbacks import constants, rffb_server
+from mock import patch
 
 
 class MockPV(object):
@@ -119,8 +118,7 @@ class PVWithValidityTests(unittest.TestCase):
                 self.assertEqual(pv.consecutive_times_invalid, i + 1)
 
                 print(
-                    "%d: healthy = %s, consecutive_times_invalid = %d"
-                    % (i, pv.healthy(), pv.consecutive_times_invalid)
+                    f"{i}: healthy = {pv.healthy()}, consecutive_times_invalid = {pv.consecutive_times_invalid}"
                 )
 
                 if i < pv.ALLOWED_INVALID_CAGETS:

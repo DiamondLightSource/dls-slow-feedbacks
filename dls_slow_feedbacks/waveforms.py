@@ -1,3 +1,4 @@
+import logging as log
 import traceback
 
 import cothread
@@ -5,7 +6,7 @@ import numpy as np
 import pytac
 from cothread.catools import FORMAT_CTRL, ca_nothing, caget
 from softioc import builder
-import logging as log
+
 "waveforms and control PVs"
 
 
