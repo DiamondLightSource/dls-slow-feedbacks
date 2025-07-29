@@ -4,8 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-# Pinning black stops us having to allow pre-releases globally
-black = "==21.5b2"
+black = "==22.3.0"
 
 mypy = "*"
 atomicwrites = "*"
