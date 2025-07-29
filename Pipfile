@@ -5,6 +5,9 @@ name = "pypi"
 
 [dev-packages]
 black = "==22.3.0"
+# Deprecations past this version cause issues with our code:
+# https://github.com/tholo/pytest-flake8/issues/87
+flake8 = "<5.0.0"
 
 mypy = "*"
 atomicwrites = "*"
