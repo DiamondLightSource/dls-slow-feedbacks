@@ -1,14 +1,16 @@
-import logging as log
+import logging
 import os
 import traceback
 
 import cothread
 import numpy as np
 from cothread.catools import ca_nothing, caget
-from dls_slow_feedbacks import mode, sofb
 from scipy.io import loadmat
 from softioc import builder
 
+from dls_slow_feedbacks import mode, sofb
+
+logger = logging.getLogger(name="usermessages")
 
 class SofbServer(object):
     def __init__(self, ring_mode):

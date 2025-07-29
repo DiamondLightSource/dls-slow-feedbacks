@@ -1,12 +1,25 @@
-import logging as log
+import logging
+
 # Slow feedback IOC startup.
 import os
 import sys
 
-from dls_slow_feedbacks import (logconfig, mode, rffb_server, sofb_server,
-                                tunefb_server, vefb_server, waveforms)
 from epicsdbbuilder import records
 from softioc import builder, softioc
+
+from dls_slow_feedbacks import (
+    logconfig,
+    mode,
+    rffb_server,
+    sofb_server,
+    tunefb_server,
+    vefb_server,
+    waveforms,
+)
+
+# Configure logging
+logconfig.setup_logging(application="dls_slow_feedbacks")
+debugger = logging.getLogger(name="debugger")
 
 if sys.argv[1:]:
     # If running in testing mode log instead of executing caput.  We do this by
@@ -14,12 +27,9 @@ if sys.argv[1:]:
     import cothread.catools
 
     def caput(pvs, values, **kargs):
-        log.debug("caput", pvs, values, kargs)
+        debugger.debug("caput", pvs, values, kargs)
 
     cothread.catools.caput = caput
-
-# Configure logging
-logconfig.setup_logging(application="dls_slow_feedbacks")
 
 # Create the appropriate servers.
 

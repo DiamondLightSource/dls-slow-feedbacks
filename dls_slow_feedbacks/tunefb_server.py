@@ -1,4 +1,4 @@
-import logging as log
+import logging
 import os
 import time
 import traceback
@@ -8,16 +8,17 @@ import numpy
 import scipy
 import scipy.io
 from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
-from dls_slow_feedbacks import mode
-from dls_slow_feedbacks.tunefb_offsets import (all_forwarded, load_magnet_pvs,
-                                               rename_pvs)
 from softioc import alarm, builder
+
+from dls_slow_feedbacks import mode
+from dls_slow_feedbacks.tunefb_offsets import all_forwarded, load_magnet_pvs, rename_pvs
 
 numpy.set_printoptions(precision=4)
 
-
 OFFSET_CURRENT_CHANGED = "Offset changed outside of TFB"
 
+logger = logging.getLogger(name="usermessages")
+debugger = logging.getLogger(name="debug")
 
 class Status(object):
     """Enum for tune feedback errors."""
@@ -149,7 +150,7 @@ class TunefbServer(object):
         )
         for i in range(len(self.startup_currents)):
             if not self.startup_currents[i].ok:
-                log.warning(f"(TFB) Unable to read {self.startup_currents[i].name}")
+                logger.warning(f"(TFB) Unable to read {self.startup_currents[i].name}")
                 self.startup_currents[i] = 0
 
         self.integrated_current = numpy.array(self.startup_currents)
@@ -204,7 +205,7 @@ class TunefbServer(object):
                 self.loop_correction()
             except Exception as e:
                 # stop feedback and print stack trace
-                log.exception(f"(TFB) Unexpected exception: {str(e)}")
+                logger.exception(f"(TFB) Unexpected exception: {str(e)}")
                 self.power_pv.set(False)
                 self.status_pv.set(Status.UNEXPECTED_ERROR)
 
@@ -232,14 +233,14 @@ class TunefbServer(object):
                 self.trip_feedback(e)
             if self.status_pv.get() != e.code:
                 self.status_pv.set(e.code)
-                log.warning(f"(TFB) Tune feedback paused: {str(e)}")
+                logger.warning(f"(TFB) Tune feedback paused: {str(e)}")
         except TunefbError as e:
             self.trip_feedback(e)
 
     def trip_feedback(self, exception):
         self.power_pv.set(False)
         self.status_pv.set(exception.code)
-        log.error(f"(TFB) Feedback tripped: {str(exception)}")
+        logger.error(f"(TFB) Feedback tripped: {str(exception)}")
 
     def check_current(self):
         """Check if current is greater than a mininum current."""
@@ -260,14 +261,14 @@ class TunefbServer(object):
         if any([tune.timestamp < last_check for tune in tunes]):
             raise TunefbInvalid(Status.TUNE_UPDATE)
         if numpy.isnan(tune_array).any():
-            log.warning("(TFB) Tune value NaN but PV not invalid.")
+            logger.warning("(TFB) Tune value NaN but PV not invalid.")
             raise TunefbInvalid(Status.TUNE_VALIDITY)
-        log.info(f"(TFB) Tune delta before last correction {self.tune_deltas}")
-        log.info(
+        logger.info(f"(TFB) Tune delta before last correction {self.tune_deltas}")
+        logger.info(
             f"(TFB) Tune change since last correction {str(tune_array - self.tunes)}"
         )
         self.tune_deltas = self.golden_tunes - tune_array
-        log.info(f"(TFB) Actual tune deltas {self.tune_deltas}")
+        logger.info(f"(TFB) Actual tune deltas {self.tune_deltas}")
 
     def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM):
         if any(tune.severity >= max_alarm for tune in self.tunes):
@@ -280,7 +281,7 @@ class TunefbServer(object):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
             self.scaling = True
-            log.info(f"(TFB) Using clipping factor: {factor}")
+            logger.info(f"(TFB) Using clipping factor: {factor}")
         else:
             self.scaling = False
         return deltas
@@ -288,30 +289,30 @@ class TunefbServer(object):
     def check_mag_limits(self, currents):
         max_i = max(abs(i) for i in currents)
         if max_i > self.max_current_range:
-            log.debug(f"(TFB) Max current offset: {max_i}")
-            log.debug(f"(TFB) Current offset limit: {self.max_current_range}")
+            debugger.debug(f"(TFB) Max current offset: {max_i}")
+            debugger.debug(f"(TFB) Current offset limit: {self.max_current_range}")
             raise TunefbError(Status.MAGNET_CURRENT)
 
     def apply_correction(self, deltas):
         # Calculate and publish tune correction
         calc_tune_corr = numpy.dot(self.rm, deltas)
-        log.info(f"(TFB) Theoretical tune correction {str(calc_tune_corr)}")
+        logger.info(f"(TFB) Theoretical tune correction {str(calc_tune_corr)}")
         self.integrated_tunes += calc_tune_corr
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
-        log.debug(f"(TFB) Calculated current deltas:\n{str(deltas)}")
+        debugger.debug(f"(TFB) Calculated current deltas:\n{str(deltas)}")
         # Refresh integrated currents so they match their PVs.
         fetched_current = numpy.array([pv.get() for pv in self.mirror_pvs])
         if any(fetched_current - self.integrated_current):
-            log.warning(f"(TFB) {OFFSET_CURRENT_CHANGED}")
+            logger.warning(f"(TFB) {OFFSET_CURRENT_CHANGED}")
 
         self.integrated_current = fetched_current + deltas
         if numpy.isnan(self.integrated_current).any():
-            log.warning("(TFB) Unexpected NaN in calculated current correction.")
+            logger.warning("(TFB) Unexpected NaN in calculated current correction.")
             raise TunefbError(Status.UNEXPECTED_ERROR)
         for pv, current in zip(self.mirror_pvs, self.integrated_current):
             pv.set(current)
-        log.info(f"(TFB) Total tune change from feedback {str(self.integrated_tunes)}")
+        logger.info(f"(TFB) Total tune change from feedback {str(self.integrated_tunes)}")
 
     def checked_correction(self):
         """Calculate and then apply a correction, will throw an execption
@@ -331,7 +332,7 @@ class TunefbServer(object):
         Catches all invalid and error states.
         """
         try:
-            log.info("(TFB) Single correction pressed")
+            logger.info("(TFB) Single correction pressed")
             # This is here only to give visual feedback when pressing the
             # single correction button
             self.status_pv.set(Status.FEEDBACK_OFF)
@@ -350,13 +351,13 @@ class TunefbServer(object):
             else:
                 self.status_pv.set(Status.SINGLE_CORR)
         except TunefbInvalid as e:
-            log.warning("(TFB) " + str(e))
+            logger.warning("(TFB) " + str(e))
             self.status_pv.set(e.code)
         except TunefbError as e:
-            log.error("(TFB) " + str(e))
+            logger.error("(TFB) " + str(e))
             self.status_pv.set(e.code)
         except Exception as e:
-            log.error(f"(TFB) Unexpected exception: {str(e)}")
+            logger.error(f"(TFB) Unexpected exception: {str(e)}")
             self.status_pv.set(Status.UNEXPECTED_ERROR)
 
     def step_tune(self, dummy):
@@ -372,7 +373,7 @@ class TunefbServer(object):
             deltas = (self.hstep_pv.get(), self.vstep_pv.get())
             mag_deltas = numpy.dot(self.irm, deltas)
             self.apply_correction(mag_deltas)
-            log.info("(TFB) Completed tune step")
+            logger.info("(TFB) Completed tune step")
             self.step_toggle_pv.set(1 - self.step_toggle_pv.get())
 
             # This sleep is also necessary to see the above status change
@@ -380,13 +381,13 @@ class TunefbServer(object):
             cothread.Sleep(0.2)
             self.status_pv.set(Status.TUNE_STEP)
         except TunefbInvalid as e:
-            log.warning(f"(TFB) {str(e)}")
+            logger.warning(f"(TFB) {str(e)}")
             self.status_pv.set(e.code)
         except TunefbError as e:
-            log.error(f"(TFB) {str(e)}")
+            logger.error(f"(TFB) {str(e)}")
             self.status_pv.set(e.code)
         except Exception as e:
-            log.error(f"(TFB) Unexpected exception: {str(e)}")
+            logger.error(f"(TFB) Unexpected exception: {str(e)}")
             self.status_pv.set(Status.UNEXPECTED_ERROR)
 
     def reset_error(self, dummy):
@@ -410,7 +411,7 @@ class TunefbServer(object):
             for pv in self.mirror_pvs:
                 pv.set(0)
                 cothread.Sleep(BEAM_DAMP_TIME * 10.0)
-            log.warning("(TFB) All integrated currents were reset to zero")
+            logger.warning("(TFB) All integrated currents were reset to zero")
             self._reset_state()
 
     def aggregate_setpoints(self, value):
@@ -423,7 +424,7 @@ class TunefbServer(object):
                 caput(pv, caget(pv) + self.integrated_current[i])
                 self.mirror_pvs[i].set(0)
                 cothread.Sleep(BEAM_DAMP_TIME * 10.0)
-            log.warning("(TFB) Aggregated offsets into setpoints")
+            logger.warning("(TFB) Aggregated offsets into setpoints")
             self._reset_state()
 
     def update_max_i_pv(self):

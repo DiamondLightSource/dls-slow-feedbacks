@@ -1,4 +1,4 @@
-import logging as log
+import logging
 import traceback
 
 import cothread
@@ -8,6 +8,8 @@ from cothread.catools import FORMAT_CTRL, ca_nothing, caget
 from softioc import builder
 
 "waveforms and control PVs"
+
+logger = logging.getLogger(name="usermessages")
 
 
 class WaveformsServer(object):
@@ -40,9 +42,9 @@ class WaveformsServer(object):
                 cothread.Sleep(1.0)
                 self.tick()
             except ca_nothing as pv_error:
-                log.error(f"(Waveforms) PV error: {pv_error}")
+                logger.error(f"(Waveforms) PV error: {pv_error}")
             except BaseException:
-                log.exception("(Waveforms) Unexpected error")
+                logger.exception("(Waveforms) Unexpected error")
 
     def tick(self):
         "read from individual correctors, write to corrector vector"
