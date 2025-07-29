@@ -59,7 +59,7 @@ default_config = {
     "loggers": {
         # Fine-grained logging configuration for individual modules or classes
         # Use this to set different log levels without changing 'real' code.
-        "dls_slow_feedbacks": {"level": "DEBUG", "propagate": True},
+        "debug": {"level": "DEBUG", "propagate": True},
         "usermessages": {
             # Designed for messages which should be visible to the user and
             # logged but which do not form part of the useful output
@@ -67,13 +67,13 @@ default_config = {
             "propagate": True,
             "handlers": ["stderr"],
         },
-        "output": {
-            # Designed for messages which are the ouptut of the program
-            # for example that which might be piped
-            "level": "INFO",
-            "propagate": True,
-            "handlers": ["console"],
-        },
+        # "output": {
+        #     # Designed for messages which are the ouptut of the program
+        #     # for example that which might be piped
+        #     "level": "INFO",
+        #     "propagate": True,
+        #     "handlers": ["console"],
+        # },
     },
     "root": {
         # Set the level here to be the default minimum level of log record to be produced
@@ -83,7 +83,7 @@ default_config = {
         # As this is a continually running IOC, we dont have a
         # 'useful output' (one that can be piped). Only user messages.
         # Hence, we default everything to stderr.
-        "handlers": ["graylog_gelf", "stderr"],
+        "handlers": ["graylog_gelf"],
         # "handlers": ["console"],
     },
 }
