@@ -17,8 +17,7 @@ CURRENT_LINK = ":I CPP MS"
 OFFSET_INPUT = ":OFFSET1.INP"
 LOCAL_LINK = ":LOFFSET1 CPP MS"
 
-logger = logging.getLogger(name="usermessages")
-debugger = logging.getLogger(name="debug")
+logger = logging.getLogger(name="dls_slow_Feedbacks")
 
 TUNE_QUAD_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
 
@@ -67,7 +66,7 @@ def main():
     if "test" in sys.argv:
 
         def test_caput(pv, value):
-            debugger.debug(f"(TFB) Testing caput: {pv}   {value}")
+            logger.debug(f"(TFB) Testing caput: {pv}   {value}")
 
         caput_function = test_caput
 

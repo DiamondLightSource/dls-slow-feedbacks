@@ -13,7 +13,7 @@ from softioc import builder
 from dls_slow_feedbacks import mode
 
 # logging
-logger = logging.getLogger(name="usermessages")
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 class VefbConstants(object):
     VEMIT_TARGET_INITIAL = 8.0
@@ -207,7 +207,7 @@ class SkewQuadrupoles(object):
         ):
             if a >= b:
                 if self.last_levels_ok_fail != c:
-                    logger.warning(f"(VEFB) Drive check DRVH <= DRVL {c}")
+                    logger.warning(f"Drive check DRVH <= DRVL {c}")
                     self.last_levels_ok_fail = c
                 return False
         self.last_levels_ok_fail = None
@@ -231,7 +231,7 @@ class SkewQuadrupoles(object):
             if values[i] < self.drvls[i]:
                 if self.last_drvl_fail != i:
                     logger.warning(
-                        f"(VEFB) DRVL check {self._pv_names[i]}: "
+                        f"DRVL check {self._pv_names[i]}: "
                         f"New SQUAD value {values[i]} < DRVL {drvls[i]}"
                     )
                     self.last_drvl_fail = i
@@ -242,7 +242,7 @@ class SkewQuadrupoles(object):
             if values[i] > self.drvhs[i]:
                 if self.last_drvh_fail != i:
                     logger.warning(
-                        f"(VEFB) DRVH check {self._pv_names[i]}: "
+                        f"DRVH check {self._pv_names[i]}: "
                         f"New SQUAD value {values[i]} > DRVH {drvhs[i]}"
                     )
                     self.last_drvh_fail = i
@@ -274,9 +274,9 @@ class SkewQuadrupoles(object):
         results = caput(self._pv_names, new_sqvals, throw=False)
         ok = np.all(map(bool, results))
         if not ok:
-            logger.error("(VEFB) Caput error")
+            logger.error("Caput error")
             for s in [str(r) for r in results if not bool(r)]:
-                logger.error(f"(VEFB) {s}")
+                logger.error(f"{s}")
         return ok
 
     def monitors(self):
@@ -342,7 +342,7 @@ class VefbServer(object):
         cothread.Spawn(self.run)
 
     def init_wait(self, wait_time):
-        logger.info("(VEFB) Init wait")
+        logger.info("Init wait")
         end_time = time.time() + wait_time
 
         while True:
@@ -354,10 +354,10 @@ class VefbServer(object):
             ]
 
             if np.all([pv.ok for pv in monitors]):
-                logger.info("(VEFB) Initialised ok")
+                logger.info("Initialised ok")
                 return
             if time.time() > end_time:
-                logger.warning("(VEFB) Init timeout")
+                logger.warning("Init timeout")
                 return
             cothread.Sleep(self.time_step)
 
@@ -369,20 +369,20 @@ class VefbServer(object):
                 self.run_once(self.enabled)
 
             except BaseException:
-                logger.exception("(VEFB) Vemit FB raised unexpected exception")
+                logger.exception("Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, False)
 
     def run_single(self, value):
-        logger.info("(VEFB) Single correct pressed")
+        logger.info("Single correct pressed")
         if not self.enabled:
             try:
                 self.run_once(True, True)
             except BaseException:
-                logger.exception("(VEFB) Vemit FB raised unexpected exception")
+                logger.exception("Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, True)
         else:
             logger.warning(
-                "(VEFB) Single correct disabled in loopback mode. Skipping correction."
+                "Single correct disabled in loopback mode. Skipping correction."
             )
 
     def add_single(self, value):
@@ -390,11 +390,11 @@ class VefbServer(object):
             try:
                 self.run_add_delta(self.vemit_single_delta.get())
             except BaseException:
-                logger.exception("(VEFB) Vemit FB raised unexpected exception")
+                logger.exception("Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, True)
         else:
             logger.warning(
-                "(VEFB) Add delta disabled in loopback mode. Skipping delta addition."
+                "Add delta disabled in loopback mode. Skipping delta addition."
             )
 
     def sub_single(self, value):
@@ -402,11 +402,11 @@ class VefbServer(object):
             try:
                 self.run_add_delta(-self.vemit_single_delta.get())
             except BaseException:
-                logger.exception("(VEFB) Vemit FB raised unexpected exception")
+                logger.exception("Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, True)
         else:
             logger.warning(
-                "(VEFB) Subtract delta disabled in loopback mode. Skipping delta subtraction."
+                "Subtract delta disabled in loopback mode. Skipping delta subtraction."
             )
 
     def error_check(self):
@@ -472,38 +472,38 @@ class VefbServer(object):
 
         try:
             self.skewhw_old = np.ones(self.skew_quads.num)
-            logger.info(f"(VEFB) Skewhw_old: {self.skewhw_old}")
+            logger.info(f"Skewhw_old: {self.skewhw_old}")
 
             rm_file = os.path.join(
                 mode.DATAROOT, lattice.name, "GoldenCouplingEmittance.mat"
             )
-            logger.info(f"(VEFB) LoadMatrix {lattice.name} {rm_file}")
+            logger.info(f"LoadMatrix {lattice.name} {rm_file}")
 
             RM_load = loadmat(rm_file)
             RM = RM_load["RM"]
-            logger.info(f"(VEFB) RM_old: {RM}")
+            logger.info(f"RM_old: {RM}")
             self.IRM_old = 1 / RM[0][0]
-            logger.info(f"(VEFB) IRM_old: {self.IRM_old}")
+            logger.info(f"IRM_old: {self.IRM_old}")
 
         except BaseException:
-            logger.exception("(VEFB) Ringmode_change raised unexpected exception")
+            logger.exception("Ringmode_change raised unexpected exception")
 
         try:
             rm_file = os.path.join(mode.DATAROOT, lattice.name, "GoldenSkewVector.mat")
-            logger.info(f"(VEFB) LoadSkewVector {lattice.name} {rm_file}")
+            logger.info(f"LoadSkewVector {lattice.name} {rm_file}")
 
             RM_load = loadmat(rm_file)
             RM = RM_load["RM"]
-            logger.info(f"(VEFB) RM_new: {RM}")
+            logger.info(f"RM_new: {RM}")
             skew = RM_load["skewhw"][0]
-            logger.info(f"(VEFB) Skew: {skew}")
+            logger.info(f"Skew: {skew}")
             self.IRM_new = 1 / RM[0][0]
             self.skewhw_new = skew
-            logger.info(f"(VEFB) IRM_new: {self.IRM_new}")
-            logger.info(f"(VEFB) Skewhw_new: {self.skewhw_new}")
+            logger.info(f"IRM_new: {self.IRM_new}")
+            logger.info(f"Skewhw_new: {self.skewhw_new}")
 
         except BaseException:
-            logger.exception("(VEFB) Ringmode_change raised unexpected exception")
+            logger.exception("Ringmode_change raised unexpected exception")
 
         self.update_calc_parameters()
 
@@ -524,8 +524,8 @@ class VefbServer(object):
         else:
             self.IRM = self.IRM_new
             self.skewhw = self.skewhw_new
-        logger.info(f"(VEFB) IRM: {self.IRM}")
-        logger.info(f"(VEFB) Skewhw: {self.skewhw}")
+        logger.info(f"IRM: {self.IRM}")
+        logger.info(f"Skewhw: {self.skewhw}")
 
     def handle_status(self, status, single):
         do_correction = single or self.enabled
@@ -545,7 +545,7 @@ class VefbServer(object):
             if status != old_status:
                 okStates = [VefbStatus.OK, VefbStatus.INJECTING]
                 if status not in okStates or old_status not in okStates:
-                    logger.info(f"(VEFB) Status change: {old_status} -> {status}")
+                    logger.info(f"Status change: {old_status} -> {status}")
 
             self.status_pv.set(status)
             if status not in [
@@ -579,13 +579,13 @@ class VefbServer(object):
             and self.error_or_recover_time > self.max_recovery_time_pv.get()
         ):
             logger.error(
-                "(VEFB) Time in error/recovery exceeds "
+                "Time in error/recovery exceeds "
                 f"timeout {self.max_recovery_time_pv}"
             )
             status = VefbStatus.PERSISTENT_EMITTANCE_ERRORS
 
         elif self.enabled and (self.error_time > self.max_error_time_pv.get()):
-            logger.error(f"(VEFB) Time in error exceeds timeout {self.max_error_time_pv}")
+            logger.error(f"Time in error exceeds timeout {self.max_error_time_pv}")
             status = VefbStatus.PERSISTENT_EMITTANCE_ERRORS
 
         self.current_time = current_time
@@ -608,12 +608,12 @@ class VefbServer(object):
                 and abs(self.sum_delta_oor) > sum_delta_oor_threshold
             ):
                 logger.info(
-                    f"(VEFB) oor v:{self.vemit_filtered:.2f} "
+                    f"oor v:{self.vemit_filtered:.2f} "
                     f"t:{self.vemit_target_pv.get():.2f} "
                     f"me:{self.vemit_acceptable_error_pv.get():.2f}"
                 )
                 logger.error(
-                    f"(VEFB) sum_delta_oor {self.sum_delta_oor:.6f} "
+                    f"sum_delta_oor {self.sum_delta_oor:.6f} "
                     f"exceeds threshold {sum_delta_oor_threshold:.6f}"
                 )
 
@@ -635,7 +635,7 @@ class VefbServer(object):
                     status = VefbStatus.OK
                 elif do_correction:
                     logger.warning(
-                        f"(VEFB) No value for {no_value_time:.2f}. "
+                        f"No value for {no_value_time:.2f}. "
                         f"Exceeds threshold ({self.no_value_timeout.get():.2f})"
                     )
 
@@ -653,13 +653,13 @@ class VefbServer(object):
 
             if recovery_time > min_recovery_timeout and self.camera_recovery_complete():
                 logger.info(
-                    f"(VEFB) Camera recovery successful after {recovery_time} seconds"
+                    f"Camera recovery successful after {recovery_time} seconds"
                 )
                 self.recovering_cameras = False
 
             elif recovery_time > max_recovery_timeout:
                 logger.warning(
-                    f"(VEFB) Camera recovery timeout {max_recovery_timeout} seconds"
+                    f"Camera recovery timeout {max_recovery_timeout} seconds"
                     " exceeded"
                 )
                 self.recovering_cameras = False
@@ -669,7 +669,7 @@ class VefbServer(object):
             if self.recovering_cameras:
                 current_time = time.time()
                 self.recovery_start_time = current_time
-                logger.info("(VEFB) Camera recovery started")
+                logger.info("Camera recovery started")
 
     def camera_recovery_started(self):
         emit_status = self.emit_status.value
@@ -709,7 +709,7 @@ class VefbServer(object):
         return False
 
     def set_enabled(self, value):
-        logger.info(f"(VEFB) LOOP ENABLE: {value}")
+        logger.info(f"LOOP ENABLE: {value}")
         enabled = value == 1
         self.enabled = enabled
         self.enabled_first_time = True
@@ -785,20 +785,20 @@ class VefbServer(object):
 
         if check_limits:
             if truncated:
-                logger.info(f"(VEFB) Vemit truncated: {vemit_raw} {vemit} {vemit_used}")
+                logger.info(f"Vemit truncated: {vemit_raw} {vemit} {vemit_used}")
 
             vwrite_max = target + self.vemit_err_max_pv.get()
             if vemit_used > vwrite_max:
                 if apply_calc:
                     logger.warning(
-                        f"(VEFB) Vemit too high - skip: {vemit_used} MAX: {vwrite_max}"
+                        f"Vemit too high - skip: {vemit_used} MAX: {vwrite_max}"
                     )
                 return VefbStatus.BAD_EMITTANCE_VALUE
             vwrite_min = target - self.vemit_err_max_pv.get()
             if vemit_used < vwrite_min:
                 if apply_calc:
                     logger.warning(
-                        f"(VEFB) Vemit too low - skip: {vemit_used} MIN: {vwrite_min}"
+                        f"Vemit too low - skip: {vemit_used} MIN: {vwrite_min}"
                     )
                 return VefbStatus.BAD_EMITTANCE_VALUE
 
@@ -829,16 +829,16 @@ class VefbServer(object):
         else:
             if delta_max <= 0:
                 if apply_calc:
-                    logger.error("(VEFB) Max delta non positive")
+                    logger.error("Max delta non positive")
                 return VefbStatus.MAGNET_DELTA_ERROR
 
             if delta > delta_max:
                 if apply_calc:
-                    logger.info(f"(VEFB) Delta scaled: {delta} -> {delta_max}")
+                    logger.info(f"Delta scaled: {delta} -> {delta_max}")
                 delta = delta_max
             elif delta < -delta_max:
                 if apply_calc:
-                    logger.info(f"(VEFB) Delta scaled: {delta} -> {-delta_max}")
+                    logger.info(f"Delta scaled: {delta} -> {-delta_max}")
                 delta = -delta_max
 
         self.delta = delta

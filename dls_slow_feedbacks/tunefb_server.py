@@ -17,8 +17,7 @@ numpy.set_printoptions(precision=4)
 
 OFFSET_CURRENT_CHANGED = "Offset changed outside of TFB"
 
-logger = logging.getLogger(name="usermessages")
-debugger = logging.getLogger(name="debug")
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 class Status(object):
     """Enum for tune feedback errors."""
@@ -289,8 +288,8 @@ class TunefbServer(object):
     def check_mag_limits(self, currents):
         max_i = max(abs(i) for i in currents)
         if max_i > self.max_current_range:
-            debugger.debug(f"(TFB) Max current offset: {max_i}")
-            debugger.debug(f"(TFB) Current offset limit: {self.max_current_range}")
+            logger.debug(f"(TFB) Max current offset: {max_i}")
+            logger.debug(f"(TFB) Current offset limit: {self.max_current_range}")
             raise TunefbError(Status.MAGNET_CURRENT)
 
     def apply_correction(self, deltas):
@@ -300,7 +299,7 @@ class TunefbServer(object):
         self.integrated_tunes += calc_tune_corr
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
-        debugger.debug(f"(TFB) Calculated current deltas:\n{str(deltas)}")
+        logger.debug(f"(TFB) Calculated current deltas:\n{str(deltas)}")
         # Refresh integrated currents so they match their PVs.
         fetched_current = numpy.array([pv.get() for pv in self.mirror_pvs])
         if any(fetched_current - self.integrated_current):

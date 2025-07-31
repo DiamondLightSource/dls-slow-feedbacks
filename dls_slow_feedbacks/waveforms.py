@@ -9,7 +9,7 @@ from softioc import builder
 
 "waveforms and control PVs"
 
-logger = logging.getLogger(name="usermessages")
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 
 class WaveformsServer(object):

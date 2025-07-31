@@ -19,7 +19,7 @@ from dls_slow_feedbacks import (
 
 # Configure logging
 logconfig.setup_logging(application="dls_slow_feedbacks")
-debugger = logging.getLogger(name="debugger")
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 if sys.argv[1:]:
     # If running in testing mode log instead of executing caput.  We do this by
@@ -27,7 +27,7 @@ if sys.argv[1:]:
     import cothread.catools
 
     def caput(pvs, values, **kargs):
-        debugger.debug("caput", pvs, values, kargs)
+        logger.debug("caput", pvs, values, kargs)
 
     cothread.catools.caput = caput
 

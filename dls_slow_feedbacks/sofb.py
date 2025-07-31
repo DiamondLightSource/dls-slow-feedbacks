@@ -8,7 +8,7 @@ from numpy import linalg
 # PSC Enum constants
 PSC_STATE_ON = 2
 
-logger = logging.getLogger(name="usermessages")
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 def tkv_reg(m, mu, singular_values):
     # Tikhonov regularization

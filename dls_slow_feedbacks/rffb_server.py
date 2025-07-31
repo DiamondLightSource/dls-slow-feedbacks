@@ -13,7 +13,7 @@ from dls_slow_feedbacks import constants, mode, rffb_calc
 
 "IOC for RF Feedback"
 
-logger = logging.getLogger(name="usermessages")
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 # Constants
 MAX_DIFFERENCE_Hz = 100  # Allowable difference between RF setpoint and rbv
