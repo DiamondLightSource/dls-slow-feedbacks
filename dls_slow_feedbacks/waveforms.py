@@ -42,9 +42,9 @@ class WaveformsServer(object):
                 cothread.Sleep(1.0)
                 self.tick()
             except ca_nothing as pv_error:
-                logger.error(f"(Waveforms) PV error: {pv_error}")
+                logger.error(f"PV error: {pv_error}")
             except BaseException:
-                logger.exception("(Waveforms) Unexpected error")
+                logger.exception("Unexpected error")
 
     def tick(self):
         "read from individual correctors, write to corrector vector"

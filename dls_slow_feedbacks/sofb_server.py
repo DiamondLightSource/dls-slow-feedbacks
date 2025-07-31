@@ -31,7 +31,7 @@ class SofbServer(object):
             self.sofb.set_rm(rmx, rmy)
             self.matrix_error.set(0)
         except BaseException:
-            logger.exception(f"(SOFB) Failed to load matrix data {lattice.name}")
+            logger.exception(f"Failed to load matrix data {lattice.name}")
             self.sofb.rmx = None
             self.sofb.rmy = None
             self.matrix_error.set(1)
@@ -74,7 +74,7 @@ class SofbServer(object):
             self.power_pv.set(0)
             self.calc_error.set(1)
         # Log why we have failed
-        logger.exception("(SOFB) Error during correction")
+        logger.exception("Error during correction")
 
     def single(self, value):
         try:
