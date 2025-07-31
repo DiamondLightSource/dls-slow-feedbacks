@@ -20,7 +20,7 @@ default_config = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "simple": {"format": "%(levelname)s %(message)s"},
+        "simple": {"format": "%(levelname)s (%(filename)s) %(message)s"},
         "extended": {
             "format": "%(asctime)s - %(filename)24s:%(lineno)d - %(name)24s - %(levelname)6s - %(message)s"
         },
@@ -59,30 +59,22 @@ default_config = {
     "loggers": {
         # Fine-grained logging configuration for individual modules or classes
         # Use this to set different log levels without changing 'real' code.
-        "debug": {"level": "DEBUG", "propagate": True},
-        "usermessages": {
-            # Designed for messages which should be visible to the user and
-            # logged but which do not form part of the useful output
+        "dls_slow_feedbacks": {
+            # To enable debug during runtime, run this in the ioc console:
+            # >>> logging.getLogger("dls_slow_feedbacks").setLevel(logging.DEBUG)
             "level": "INFO",
             "propagate": True,
+            # As this is a continually running IOC, we dont have a
+            # useful output (one that can be piped). Only user messages.
+            # Hence, we default everything to stderr.
             "handlers": ["stderr"],
         },
-        # "output": {
-        #     # Designed for messages which are the ouptut of the program
-        #     # for example that which might be piped
-        #     "level": "INFO",
-        #     "propagate": True,
-        #     "handlers": ["console"],
-        # },
     },
     "root": {
         # Set the level here to be the default minimum level of log record to be produced
         # If you set a handler to level DEBUG you will need to set either this level, or
         # the level of one of the loggers above to DEBUG or you won't see any DEBUG messages
         "level": "INFO",
-        # As this is a continually running IOC, we dont have a
-        # 'useful output' (one that can be piped). Only user messages.
-        # Hence, we default everything to stderr.
         "handlers": ["graylog_gelf"],
         # "handlers": ["console"],
     },
