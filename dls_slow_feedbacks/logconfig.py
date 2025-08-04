@@ -118,15 +118,12 @@ def setup_logging(
 
     Returns: None
     """
-    dict_config = None
+    dict_config = default_config
     logconfig_filename = default_log_config
     env_var_value = os.getenv(env_key, None)
 
     if env_var_value is not None:
         logconfig_filename = env_var_value
-
-    if default_config is not None:
-        dict_config = default_config
 
     if logconfig_filename is not None and os.path.exists(logconfig_filename):
         with open(logconfig_filename, "rt") as f:
@@ -134,14 +131,13 @@ def setup_logging(
         if file_config is not None:
             dict_config = file_config
 
-    if dict_config is not None:
-        if application is not None:
-            try:
-                dict_config["handlers"]["graylog_gelf"].update(
-                    {"application": str(application)}
-                )
-            except KeyError:
-                pass
-        logging.config.dictConfig(dict_config)
-    else:
-        logging.basicConfig(level=default_level)
+    if application is not None:
+        try:
+            dict_config["handlers"]["graylog_gelf"].update(
+                {"application": str(application)}
+            )
+        except KeyError:
+            print("Warning: No graylog_gelf handler found in the logging configuration. "
+                  "Application name will not be set in the logs.")
+    
+    logging.config.dictConfig(dict_config)
