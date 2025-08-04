@@ -18,5 +18,8 @@ RUN pip install ./
 ENV PATH=/venv/bin:$PATH
 ENV EPICS_CA_SERVER_PORT=8064
 ENV EPICS_CA_REPEATER_PORT=8065
+# Stop our IOCs providing PVs on the containers loopback network interface, otherwise
+# you get ca exceptions when a CA client on the same host requests PVs
+ENV EPICS_CAS_IGNORE_ADDR_LIST=host.containers.internal
 
 CMD ["start-ioc"]
