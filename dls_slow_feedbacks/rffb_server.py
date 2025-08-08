@@ -97,14 +97,14 @@ class RffbServer(object):
 
             # turn off feedback loop with no orbit loop
             if fbstat == 0:
-                logger.fatal("No orbit feedback is running. RFFB will be stopped.")
+                logger.critical("No orbit feedback is running. RFFB will be stopped.")
                 self.power_pv.set(0)
                 self.pv_error.set("No orbit feedback")
                 return
 
             # turn off feedback loop below 2mA
             if current <= 2:
-                logger.fatal("Beam current <= 2mA. RFFB will be stopped.")
+                logger.critical("Beam current <= 2mA. RFFB will be stopped.")
                 self.power_pv.set(0)
                 self.pv_error.set("Current too low")
                 return
@@ -112,7 +112,7 @@ class RffbServer(object):
             # HLA-349: Check for discrepancy between present RF frequency and
             # setpoint; indicates problem with master oscillator
             if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
-                logger.fatal(
+                logger.critical(
                     "Discrepancy between RF frequency and setpoint. RFFB will be stopped."
                 )
                 self.power_pv.set(0)
@@ -120,7 +120,7 @@ class RffbServer(object):
                 return
 
             if not self.rf_pvs_valid():
-                logger.fatal(
+                logger.critical(
                     f"RF PV was invalid > {PVWithValidity.ALLOWED_INVALID_CAGETS} times. RFFB will be stopped."
                 )
                 self.power_pv.set(0)
