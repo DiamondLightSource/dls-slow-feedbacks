@@ -8,6 +8,7 @@ from epicsdbbuilder import records
 from softioc import builder, softioc
 
 from dls_slow_feedbacks import (
+    logconfig,
     mode,
     rffb_server,
     sofb_server,
@@ -16,18 +17,19 @@ from dls_slow_feedbacks import (
     waveforms,
 )
 
+# Configure logging
+logconfig.setup_logging(application="dls_slow_feedbacks")
+logger = logging.getLogger(name="dls_slow_feedbacks")
+
 if sys.argv[1:]:
     # If running in testing mode log instead of executing caput.  We do this by
     # "monkey patching" catools!
     import cothread.catools
 
     def caput(pvs, values, **kargs):
-        print("caput", pvs, values, kargs)
+        logger.debug("caput", pvs, values, kargs)
 
     cothread.catools.caput = caput
-
-# Configure logging
-logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 # Create the appropriate servers.
 

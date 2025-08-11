@@ -114,6 +114,13 @@
             ],
             "version": "==1.21.6"
         },
+        "pygelf": {
+            "hashes": [
+                "sha256:ab57d1b26bffa014e29ae645ee51d2aa2f0c0cb419c522f2d24a237090b894a1",
+                "sha256:d0bb8f45ff648a9a187713f4a05c09f685fcb8add7b04bb7471f20071bd11aad"
+            ],
+            "version": "==0.4.2"
+        },
         "pytac": {
             "hashes": [
                 "sha256:199435f8ed00d57e2c0c9cf355a84dcc4e53061a298453ba5666c1f4d6fae1a2",

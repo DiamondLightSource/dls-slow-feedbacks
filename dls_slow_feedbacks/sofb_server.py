@@ -1,13 +1,16 @@
+import logging
 import os
 import traceback
 
 import cothread
+import numpy as np
 from cothread.catools import ca_nothing, caget
 from scipy.io import loadmat
 from softioc import builder
-import numpy as np
+
 from dls_slow_feedbacks import mode, sofb
 
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 class SofbServer(object):
     def __init__(self, ring_mode):
@@ -28,7 +31,7 @@ class SofbServer(object):
             self.sofb.set_rm(rmx, rmy)
             self.matrix_error.set(0)
         except BaseException:
-            traceback.print_exc()
+            logger.exception(f"Failed to load matrix data {lattice.name}")
             self.sofb.rmx = None
             self.sofb.rmy = None
             self.matrix_error.set(1)
@@ -71,7 +74,7 @@ class SofbServer(object):
             self.power_pv.set(0)
             self.calc_error.set(1)
         # Log why we have failed
-        traceback.print_exc()
+        logger.exception("Error during correction")
 
     def single(self, value):
         try:

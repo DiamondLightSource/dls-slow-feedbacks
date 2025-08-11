@@ -3,11 +3,12 @@ Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
 Each .INP is set to the local PV mirrored in our IOC.
 """
+import logging
 import sys
 
 import cothread
-from pytac import cothread_cs, load_csv
 from cothread.catools import DBR_STRING, caget, caput  # noqa
+from pytac import cothread_cs, load_csv
 
 # Constants
 BEAM_DAMP_TIME = 0.001
@@ -16,6 +17,7 @@ CURRENT_LINK = ":I CPP MS"
 OFFSET_INPUT = ":OFFSET1.INP"
 LOCAL_LINK = ":LOFFSET1 CPP MS"
 
+logger = logging.getLogger(name="dls_slow_Feedbacks")
 
 TUNE_QUAD_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
 
@@ -64,7 +66,7 @@ def main():
     if "test" in sys.argv:
 
         def test_caput(pv, value):
-            print(f"{pv}   {value}")
+            logger.debug(f"Testing caput: {pv}   {value}")
 
         caput_function = test_caput
 
@@ -75,11 +77,11 @@ def main():
         # set INP to the remote PVs
         links = [pv + LOCAL_LINK for pv in mag_pvs]
     elif "forwarded" in sys.argv:
-        print(all_forwarded(local_pvs, mag_pvs))
+        logger.info("mags forwarded = " + all_forwarded(local_pvs, mag_pvs))
         sys.exit()
     else:
-        print("usage: ")
-        print(f"    {sys.argv[0]} redirect|reset [test]")
+        logger.info("usage: ")
+        logger.info(f"{sys.argv[0]} redirect|reset [test]")
         sys.exit()
 
     inps = [pv + ":OFFSET1.INP" for pv in mag_pvs]

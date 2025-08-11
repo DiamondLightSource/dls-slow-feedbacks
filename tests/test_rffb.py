@@ -119,8 +119,8 @@ class PVWithValidityTests(unittest.TestCase):
                 self.assertEqual(pv.consecutive_times_invalid, i + 1)
 
                 print(
-                    "%d: healthy = %s, consecutive_times_invalid = %d"
-                    % (i, pv.healthy(), pv.consecutive_times_invalid)
+                    f"{i}: healthy = {pv.healthy()},"
+                    f"consecutive_times_invalid = {pv.consecutive_times_invalid}"
                 )
 
                 if i < pv.ALLOWED_INVALID_CAGETS:

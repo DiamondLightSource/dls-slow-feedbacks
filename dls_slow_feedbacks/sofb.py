@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pytac
 from cothread.catools import caget, caput
@@ -6,12 +8,13 @@ from numpy import linalg
 # PSC Enum constants
 PSC_STATE_ON = 2
 
+logger = logging.getLogger(name="dls_slow_feedbacks")
 
 def tkv_reg(m, mu, singular_values):
     # Tikhonov regularization
     u, s, vt = linalg.svd(m, full_matrices=False)
     # We use nan_to_num here to catch the case of singular m and zero mu.
-    si = np.nan_to_num(s / (mu + s ** 2))
+    si = np.nan_to_num(s / (mu + s**2))
 
     if singular_values is not None:
         singular_values.s.set(s)
@@ -72,7 +75,7 @@ class Sofb(object):
         key = (tuple(hen), tuple(ven), tuple(hbpmen), tuple(vbpmen), mu)
         if key in self.cache:
             return self.cache[key]
-        print("new response matrix")
+        logger.info("New response matrix")
         irm = [None, None]
         rmx = self.rmx[np.ix_(hbpmen, hen)]
         rmy = self.rmy[np.ix_(vbpmen, ven)]
@@ -90,7 +93,7 @@ class Sofb(object):
         error_pvs = array_of_pv_names[error_indices]
         # Message to be printed to the console can contain the whole
         # list and reason because not limited on space
-        print("Correctors {}: {}".format(error_description, error_pvs))
+        logger.error(f"Correctors {error_description}: {error_pvs}")
 
         # If more than one PV in list, show how many more.
         more_to_show = " +{}".format(len(error_pvs) - 1) if len(error_pvs) > 1 else ""
