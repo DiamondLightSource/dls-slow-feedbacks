@@ -1,6 +1,7 @@
 from pytac import cothread_cs, load_csv
 from softioc import builder
 
+
 RING_MODES = [
     "SR",
     "UNUSED",
@@ -18,9 +19,15 @@ RING_MODES = [
     "DIADTHz",
 ]
 
-DEFAULT_RING_MODE = "I04"
+D2_RING_MODES = [
+    "48",
+]
 
-DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
+RING_MODES.extend(D2_RING_MODES)
+
+DEFAULT_RING_MODE = "48"
+
+DATAROOT = "/home/zrv91478/Documents"
 
 
 def load_pml_lattice(ringmode):

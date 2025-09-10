@@ -8,6 +8,7 @@ import sys
 import cothread
 from pytac import cothread_cs, load_csv
 from cothread.catools import DBR_STRING, caget, caput  # noqa
+from dls_slow_feedbacks.mode import D2_RING_MODES
 
 # Constants
 BEAM_DAMP_TIME = 0.001
@@ -19,14 +20,21 @@ LOCAL_LINK = ":LOFFSET1 CPP MS"
 
 TUNE_QUAD_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
 
+D2_TUNE_QUAD_FAMILIES = ("Q0L", "Q1L", "Q2L", "Q1N", "Q2N")
 
 def load_magnet_pvs(lattice):
     """
     Load corrector magnet PVs from the specific format
     in the file.
     """
+    families = []
     quad_names = []
-    for family in TUNE_QUAD_FAMILIES:
+    if lattice.name in D2_RING_MODES:
+        families = D2_TUNE_QUAD_FAMILIES
+    else:
+        families = TUNE_QUAD_FAMILIES
+
+    for family in families:
         device_names = lattice.get_element_device_names(family, "b1")
         quad_names.extend(device_names)
     return quad_names

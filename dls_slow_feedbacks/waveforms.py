@@ -55,7 +55,11 @@ class WaveformsServer(object):
             pvs = self.lattice.get_element_pv_names(fam[p][0], fam[p][1], pytac.RB)
             hv[p] = caget(pvs, format=FORMAT_CTRL)
             # convert to relative magnitude
-            mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
+
+            # due to invalid limits, this currently gives a value of 0 which causes a divide by 0 exception
+            # mag[p] = [x.upper_ctrl_limit - x.lower_ctrl_limit for x in hv[p]]
+
+            mag[p] = 1
             rhv[p] = 2 * abs(np.array(hv[p]) / mag[p])
             # update max value and name
             i = np.argmax(abs(np.array(rhv[p])))

@@ -15,7 +15,7 @@ from dls_slow_feedbacks import mode
 from dls_slow_feedbacks.tunefb_offsets import all_forwarded, load_magnet_pvs, rename_pvs
 
 LOG_FORMAT = "TFB: %(levelname)s %(message)s"
-LOG_LEVEL = log.WARNING
+LOG_LEVEL = log.INFO
 log.basicConfig(format=LOG_FORMAT, level=LOG_LEVEL)
 numpy.set_printoptions(precision=4)
 
@@ -89,6 +89,7 @@ def load_tune_rm(mat_file):
         raw_rmy = raw_rm[0][0][0][1]
         rmx.extend(raw_rmx)
         rmy.extend(raw_rmy)
+
     return numpy.array([rmx, rmy])
 
 
@@ -174,8 +175,10 @@ class TunefbServer(object):
             exec(f.read(), env)
 
         # Select correct tune based on ringmode
-        tune_h = env["X_tune_" + lattice.name]
-        tune_v = env["Y_tune_" + lattice.name]
+        # tune_h = env["X_tune_" + lattice.name]
+        # tune_v = env["Y_tune_" + lattice.name]
+        tune_h = 0.14
+        tune_v = 0.2402
 
         # Load data from file
         mode_dir = os.path.join(mode.DATAROOT, lattice.name)
@@ -299,7 +302,7 @@ class TunefbServer(object):
         # Calculate and publish tune correction
         calc_tune_corr = numpy.dot(self.rm, deltas)
         log.info("Theoretical tune correction %s" % str(calc_tune_corr))
-        self.integrated_tunes += calc_tune_corr
+        self.integrated_tunes = calc_tune_corr
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
         log.debug("Calculated current deltas:\n%s" % str(deltas))
