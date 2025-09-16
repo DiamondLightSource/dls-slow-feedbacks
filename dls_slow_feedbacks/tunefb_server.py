@@ -260,7 +260,6 @@ class TunefbServer(object):
         """
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         # Store tunes in cothread wrapper to allow severity checking
-        self.tunes = tunes
         tune_array = numpy.array(tunes)
         # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.period
@@ -274,6 +273,7 @@ class TunefbServer(object):
         log.info("Tune change since last correction %s" % str(tune_array - self.tunes))
         self.tune_deltas = self.golden_tunes - tune_array
         log.info("Actual tune deltas %s" % self.tune_deltas)
+        self.tunes = tunes
 
     def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM):
         if any(tune.severity >= max_alarm for tune in self.tunes):
