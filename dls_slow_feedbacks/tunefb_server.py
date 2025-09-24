@@ -120,7 +120,7 @@ class TunefbServer(object):
         self.afrac = 0.2
         self.max_current_range = MAX_CURRENT_OFFSET
         self.min_beam_current = 1.0
-        self.period = 1.0
+        self.period = 1.5
         self.last_error = None
 
         # Whether the last correction was scaled
