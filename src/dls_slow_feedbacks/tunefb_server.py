@@ -10,7 +10,11 @@ from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
 from softioc import alarm, builder
 
 from dls_slow_feedbacks import mode
-from dls_slow_feedbacks.tunefb_offsets import all_forwarded, load_magnet_pvs, rename_pvs
+from dls_slow_feedbacks.tunefb_offsets import (
+    all_forwarded,
+    load_magnet_pvs,
+    rename_pvs,
+)
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
 np.set_printoptions(precision=4)
@@ -159,8 +163,19 @@ class TunefbServer:
             exec(f.read(), env)
 
         # Select correct tune based on ringmode
-        tune_h = env["X_tune_" + lattice.name]
-        tune_v = env["Y_tune_" + lattice.name]
+        # tune_h = env["X_tune_" + lattice.name]
+        # tune_v = env["Y_tune_" + lattice.name]
+        tune_h = 0.14
+        tune_v = 0.2402
+
+        # Load data from file
+        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
+        self.rm = self.load_tune_rm(
+            lattice.name, os.path.join(mode_dir, "GoldenTuneResp.mat")
+        )
+
+        # Invert response matrix
+        self.irm = np.linalg.pinv(self.rm)
 
         # Update PV values.
         self.tune_h_pv.set(tune_h)
