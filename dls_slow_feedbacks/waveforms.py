@@ -65,11 +65,9 @@ class WaveformsServer(object):
             self.maxval[p].set(rhv[p][i])
             self.maxname[p].set(pvs[i])
 
-            w = self.wf["current"][p].get()
             w = hv[p]
             self.wf["current"][p].set(w)
 
-            rw = self.wf["mag"][p].get()
             rw = rhv[p]
             self.wf["mag"][p].set(rw)
 
