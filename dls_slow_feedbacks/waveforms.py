@@ -84,7 +84,9 @@ class WaveformsServer(object):
         "update corrector enabled vector from individual records"
         (k, i) = key
         r = self.wf[element][mode][k]
-        wf = r.get()
+        # softioc returns an immutable reference to the numpy array, so we must copy it 
+        # and then modify the data before setting it back
+        wf = np.copy(r.get())
         wf[i] = value
         r.set(wf)
 
