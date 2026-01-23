@@ -71,9 +71,9 @@ class RffbServer:
         self.tick: int = 0
         self.power: int = 0  # ON/OFF
         self.rf_step: float = 0.1
-        self.period: int = 10
-        self.bpm_resp: Optional[np.ndarray] = None
-        self.disp: Optional[np.ndarray] = None
+        self.correction_period: int = 10
+        self.bpm_response_matrix: Optional[np.ndarray] = None
+        self.dispersion_matrix: Optional[np.ndarray] = None
         self.correctors = np.array(
             ring_mode.lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
         )
@@ -96,7 +96,7 @@ class RffbServer:
             cothread.Sleep(1.0)
             self.tick = (self.tick + 1) % 10
 
-            if self.period == 10 and self.tick != 0:
+            if self.correction_period == 10 and self.tick != 0:
                 continue
 
             try:
@@ -117,20 +117,20 @@ class RffbServer:
     def run_feedback(self) -> None:
         """Adjust the RF frequency to relieve orbit feeback correction"""
         fbstat = caget("CS-CS-MSTAT-01:FBSTAT")
-        current = caget("SR-DI-DCCT-01:SIGNAL")
-        enabled_bpm = caget("SR-DI-EBPM-01:ENABLED") == 0
+        ring_current = caget("SR-DI-DCCT-01:SIGNAL")
+        enabled_bpms = caget("SR-DI-EBPM-01:ENABLED") == 0
 
         # Use all correctors, enabled or not, in RFFB.
         ncor = len(self.correctors)
-        enabled_cor = np.ones(ncor, dtype=bool)
-        hcm = np.array(caget(self.correctors[enabled_cor]))
+        enabled_correctors = np.ones(ncor, dtype=bool)
+        hcm = np.array(caget(self.correctors[enabled_correctors]))
 
         present_rf_demand = self.rf_freq_set_pv.get()
         present_rf_freq = self.rf_freq_rbv_pv.get()
 
-        if self.bpm_resp is not None and self.disp is not None:
+        if self.bpm_response_matrix is not None and self.dispersion_matrix is not None:
             delta_rf_demand = rffb_calc.calc_rffb(
-                self.bpm_resp, self.disp, enabled_bpm, enabled_cor, hcm
+                self.bpm_response_matrix, self.dispersion_matrix, enabled_bpms, enabled_correctors, hcm
             )
         else:
             raise ValueError("BPM response and/or dispersion matrices not loaded")
@@ -144,7 +144,7 @@ class RffbServer:
 
         # Only caput if feedback loop is on and there are no errors
         if self.power and not self.check_for_errors(
-            fbstat, current, present_rf_freq, present_rf_demand
+            fbstat, ring_current, present_rf_freq, present_rf_demand
         ):
             caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
             self.calc_error.set(0)
@@ -234,7 +234,7 @@ class RffbServer:
         self.rf_step = rf_step
 
     def set_period(self, period: int) -> None:
-        self.period = period
+        self.correction_period = period
 
     def set_data_dir(self, lattice: EpicsLattice) -> None:
         """Load the BPM response and dispersion matrices."""
@@ -246,8 +246,8 @@ class RffbServer:
         try:
             raw_bpm_resp = loadmat(os.path.join(path, "GoldenBPMResp"))
             raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
-            self.bpm_resp = raw_bpm_resp["Rmat"][0, 0]["Data"]
-            self.disp = raw_disp["BPMxDisp"]["Data"][0, 0]
+            self.bpm_response_matrix = raw_bpm_resp["Rmat"][0, 0]["Data"]
+            self.dispersion_matrix = raw_disp["BPMxDisp"]["Data"][0, 0]
 
             self._validate_matrices(raw_bpm_resp, raw_disp)
 
@@ -256,8 +256,8 @@ class RffbServer:
 
         except BaseException:
             traceback.print_exc()
-            self.bpm_resp = None
-            self.disp = None
+            self.bpm_response_matrix = None
+            self.dispersion_matrix = None
             self.matrix_error.set(1)
 
     def _validate_matrices(self, raw_bpm_resp: dict, raw_disp: dict) -> None:
@@ -312,6 +312,6 @@ class RffbServer:
             "PERIOD",
             "1 second",
             "10 seconds",
-            initial_value=self.period,
+            initial_value=self.correction_period,
             on_update=self.set_period,
         )
