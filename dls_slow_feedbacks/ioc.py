@@ -36,8 +36,8 @@ def create_servers(ring_mode: mode.RingMode) -> Tuple:
     wavs - Monitors magnet settings and creates aggregated waveforms.
     rffb - Adjusts RF frequency to minimise horizontal dispersion.
     sofb - Slow orbit feedback. Ensures the beam is centred in the ring.
-    vefb - Vertical emittance feedback. Minimises vertical beam size.
-    tunefb - Tune feedback. Minimises tune spread.
+    vefb - Vertical emittance feedback. Maintains VE at a constant value for beamline use.
+    tunefb - Tune feedback. Minimises tune spread and allows setting of tune target.
 
     Return their instances in a tuple.
     """
