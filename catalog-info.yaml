@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: dls_slow_feedbacks
+  title: dls_slow_feedbacks
+  description: Slow feedback systems for the DLS storage ring
+spec:
+  type: application
+  lifecycle: production
+  owner: group:default/high-level-apps

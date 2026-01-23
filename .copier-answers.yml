@@ -1,0 +1,19 @@
+# Changes here will be overwritten by Copier
+_commit: 5.0.1
+_src_path: https://github.com/DiamondLightSource/python-copier-template.git
+author_email: diamhighlvlapps@diamond.ac.uk
+author_name: High Level Apps
+component_lifecycle: production
+component_owner: group:default/high-level-apps
+component_type: application
+description: Slow feedback systems for the DLS storage ring
+distribution_name: dls_slow_feedbacks
+docker: true
+docker_debug: true
+docs_type: README
+git_platform: github.com
+github_org: DiamondLightSource
+package_name: dls_slow_feedbacks
+pypi: false
+repo_name: dls_slow_feedbacks
+type_checker: mypy
