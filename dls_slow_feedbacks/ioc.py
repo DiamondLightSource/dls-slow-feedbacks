@@ -3,7 +3,8 @@ import logging
 # Slow feedback IOC startup.
 import os
 import sys
-from typing import Tuple
+from typing import Tuple, Annotated
+import typer
 
 import cothread.catools
 from epicsdbbuilder import records
@@ -17,8 +18,6 @@ from dls_slow_feedbacks import (
     vefb_server,
     waveforms,
 )
-
-TESTING_MODE = bool(sys.argv[1:])
 
 
 def mock_caput(pvs, values, **kargs) -> None:
@@ -68,10 +67,10 @@ def start_servers(servers: Tuple) -> None:
         server.start()
 
 
-def main() -> None:
+def main(test: Annotated[bool, typer.Option(help="Write to log instead of executing Caput")] = False) -> None:
     configure_logging()
 
-    if TESTING_MODE:
+    if test:
         cothread.catools.caput = mock_caput
 
     # Used externally to select the operating ring mode, used to define appropriate
@@ -88,3 +87,6 @@ def main() -> None:
     start_servers(servers)
 
     softioc.interactive_ioc(globals())
+
+if __name__ == "__main__":
+    typer.run(main)
