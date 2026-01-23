@@ -12,7 +12,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 description = "Slow feedback systems for the DLS storage ring"
-dependencies = [] # Add project dependencies here, e.g. ["click", "numpy"]
+dependencies = ["pytac", "cothread", "epicscorelibs", "softioc", "pygelf"]
 dynamic = ["version"]
 license.file = "LICENSE"
 readme = "README.md"
@@ -32,6 +32,12 @@ dev = [
 
 [project.scripts]
 dls_slow_feedbacks = "dls_slow_feedbacks.__main__:main"
+start-ioc = "dls_slow_feedbacks.ioc:main"
+start-css = "dls_slow_feedbacks.start_css:main"
+tune-feedback-offsets = "dls_slow_feedbacks.tunefb_offsets:main"
+start-sofb-edm = "dls_slow_feedbacks.start_edm:sofb_gui"
+start-vefb-edm = "dls_slow_feedbacks.start_edm:vefb_gui"
+start-tunefb-edm = "dls_slow_feedbacks.start_edm:tunefb_gui"
 
 [project.urls]
 GitHub = "https://github.com/DiamondLightSource/dls_slow_feedbacks"
@@ -42,6 +48,9 @@ name = "High Level Apps"
 
 [tool.setuptools_scm]
 version_file = "src/dls_slow_feedbacks/_version.py"
+
+[tool.setuptools.package-data]
+myModule = ["opi", "opi/*.edl", "opi/*.opi"]
 
 [tool.mypy]
 ignore_missing_imports = true # Ignore missing stubs in imported modules
@@ -102,7 +111,7 @@ commands = [
 description = "Run tests with coverage"
 commands = [
     [
-        "pytest", 
+        "pytest",
         "--cov=dls_slow_feedbacks",
         "--cov-report",
         "term",
