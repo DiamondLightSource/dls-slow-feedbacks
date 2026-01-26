@@ -1,6 +1,6 @@
 import unittest
 
-import cothread
+from cothread.dbr import ca_float
 from mock import patch
 
 from dls_slow_feedbacks import constants, rffb_server
@@ -13,7 +13,7 @@ class MockPV(object):
 
     def __init__(self, pv_name, value, severity=constants.SEVR_NO_ALARM, ok=True):
         self.pv_name = pv_name
-        self.value = cothread.dbr.ca_float(value)
+        self.value = ca_float(value)
         self.value.severity = severity
         self.value.ok = ok
 

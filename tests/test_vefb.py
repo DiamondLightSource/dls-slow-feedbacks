@@ -32,7 +32,7 @@ def nsquads(ring):
 @pytest.fixture
 def ring_mode(ring):
     ring_mode = mock.MagicMock(lattice=ring)
-    ring_mode.DATAROOT = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
+    ring_mode.DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
     return ring_mode
 
 

@@ -335,7 +335,7 @@ class PVWithValidity:
         Return the result of the caget. Does not store it to prevent stale data."""
 
         # Do caget and store attributes
-        value = caget(self.pv_name, format=FORMAT_TIME)
+        value = cothread.catools.caget(self.pv_name, format=FORMAT_TIME)
         self.severity = value.severity
         self.ok = value.ok
         self.last_caget_time = value.timestamp
