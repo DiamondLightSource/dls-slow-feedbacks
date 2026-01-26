@@ -122,7 +122,7 @@ class TunefbServer(object):
         self.scaling = False
         # Tune data - Golden tunes are set from ringmode
         self.golden_tunes = numpy.array([0.0, 0.0])
-        self.mag_delta_max = numpy.array([0.01])
+        self.mag_delta_max = 0.01
         self.tunes = numpy.zeros(2)
         self.tune_deltas = numpy.zeros(2)
         # Count consecutive invalid exceptions to eventually trip
