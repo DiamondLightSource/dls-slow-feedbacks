@@ -1,11 +1,13 @@
 import logging
 import os
 import traceback
+from typing import Optional
 
 import cothread
-import numpy
+import numpy as np
 import pytac
-from cothread import catools
+from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
+from pytac.lattice import EpicsLattice
 from scipy.io import loadmat
 from softioc import builder
 
@@ -16,184 +18,208 @@ from dls_slow_feedbacks import constants, mode, rffb_calc
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
 # Constants
-MAX_DIFFERENCE_Hz = 100  # Allowable difference between RF setpoint and rbv
+MAX_FREQ_DIFFERENCE = 100  # Allowable difference between RF setpoint and rbv
 
 
-class RffbServer(object):
-    def __init__(self, ring_mode):
-        self.tick = 0
-        self.power = 0
-        self.rfstep = 0.1
-        self.period = 10
-        self.correctors = numpy.array(
+class RffbServer:
+    def __init__(self, ring_mode: mode.RingMode) -> None:
+        self.tick: int = 0
+        self.power: int = 0  # ON/OFF
+        self.rf_step: float = 0.1
+        self.correction_period: int = 10
+        self.bpm_response_matrix: Optional[np.ndarray] = None
+        self.dispersion_matrix: Optional[np.ndarray] = None
+        self.correctors = np.array(
             ring_mode.lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
         )
 
-        self.records()
+        self.create_records()
+        self.set_data_dir(ring_mode.lattice)
 
         self.rf_freq_set_pv = PVWithValidity("LI-RF-MOSC-01:FREQ_SET")
         self.rf_freq_rbv_pv = PVWithValidity("LI-RF-MOSC-01:FREQ")
 
-        ring_mode.add_listener(self.set_datadir)
+        ring_mode.add_listener(self.set_data_dir)
 
-    def init(self):
-        cothread.Spawn(self.timer)
+    def start(self) -> None:
+        """Start the feedback loop."""
+        cothread.Spawn(self.run)
 
-    def timer(self):
-
+    def run(self) -> None:
+        """Main feedback loop."""
         while True:
-
             cothread.Sleep(1.0)
             self.tick = (self.tick + 1) % 10
 
-            if self.period == 10 and self.tick != 0:
+            if self.correction_period == 10 and self.tick != 0:
                 continue
 
             try:
-                self.feedback()
-            except catools.ca_nothing as e:
+                self.run_feedback()
+
+            except ca_nothing as e:
                 # A caget or caput failed
                 logger.exception(f"Channel access exception. RFFB will be stopped.")
                 self.pv_error.set(e.name)
                 self.calc_error.set(1)
                 self.power_pv.set(0)
+
             except BaseException:
                 logger.exception("Feedback error occurred.")
                 self.calc_error.set(1)
                 self.power_pv.set(0)
 
-    def feedback(self):
+    def run_feedback(self) -> None:
+        """Adjust the RF frequency to relieve orbit feeback correction"""
+        fbstat = caget("CS-CS-MSTAT-01:FBSTAT")
+        ring_current = caget("SR-DI-DCCT-01:SIGNAL")
+        enabled_bpms = caget("SR-DI-EBPM-01:ENABLED") == 0
 
-        # Check if either SOFB or FOFB is running
-        fbstat = catools.caget("CS-CS-MSTAT-01:FBSTAT")
         # Use all correctors, enabled or not, in RFFB.
         ncor = len(self.correctors)
-        enabled_cor = numpy.ones(ncor, dtype=numpy.bool)
-        enabled_bpm = catools.caget("SR-DI-EBPM-01:ENABLED") == 0
-        current = catools.caget("SR-DI-DCCT-01:SIGNAL")
+        enabled_correctors = np.ones(ncor, dtype=bool)
+        hcm = np.array(caget(self.correctors[enabled_correctors]))
 
-        hcm = numpy.array(catools.caget(self.correctors[enabled_cor]))
         present_rf_demand = self.rf_freq_set_pv.get()
         present_rf_freq = self.rf_freq_rbv_pv.get()
 
-        delta_rf_demand = rffb_calc.calc_rffb(
-            self.bpmresp, self.disp, enabled_bpm, enabled_cor, hcm
+        if self.bpm_response_matrix is not None and self.dispersion_matrix is not None:
+            delta_rf_demand = rffb_calc.calc_rffb(
+                self.bpm_response_matrix, self.dispersion_matrix, enabled_bpms, enabled_correctors, hcm
+            )
+        else:
+            raise ValueError("BPM response and/or dispersion matrices not loaded")
+
+        target, target_limit = self._calculate_targets(
+            present_rf_demand, delta_rf_demand
         )
 
         self.delta_pv.set(delta_rf_demand.item())
-
-        def round10(x):
-            return numpy.around(x * 10.0) / 10.0
-
-        target = round10(present_rf_demand + delta_rf_demand)
-        # If our demand is larger than our maximum step (self.rfstep) then we change the
-        # target rf by either +/- 0.1
-        if abs(delta_rf_demand) > self.rfstep:
-            delta_rf_demand = numpy.sign(delta_rf_demand) * self.rfstep
-        target_limit = round10(present_rf_demand + delta_rf_demand)
-
-        # update status
         self.target_pv.set(target.item())
 
-        # Only do checks and caput if feedback loop is on
-        if self.power:
-
-            # turn off feedback loop with no orbit loop
-            if fbstat == 0:
-                logger.critical("No orbit feedback is running. RFFB will be stopped.")
-                self.power_pv.set(0)
-                self.pv_error.set("No orbit feedback")
-                return
-
-            # turn off feedback loop below 2mA
-            if current <= 2:
-                logger.critical("Beam current <= 2mA. RFFB will be stopped.")
-                self.power_pv.set(0)
-                self.pv_error.set("Current too low")
-                return
-
-            # HLA-349: Check for discrepancy between present RF frequency and
-            # setpoint; indicates problem with master oscillator
-            if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
-                logger.critical(
-                    "Discrepancy between RF frequency and setpoint. RFFB will be stopped."
-                )
-                self.power_pv.set(0)
-                self.pv_error.set(self.rf_freq_set_pv.get_name())
-                return
-
-            if not self.rf_pvs_valid():
-                logger.critical(
-                    f"RF PV was invalid > {PVWithValidity.ALLOWED_INVALID_CAGETS} times. RFFB will be stopped."
-                )
-                self.power_pv.set(0)
-                return
-
-            # channel access write
-            catools.caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
-
+        # Only caput if feedback loop is on and there are no errors
+        if self.power and not self.check_for_errors(
+            fbstat, ring_current, present_rf_freq, present_rf_demand
+        ):
+            caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
             self.calc_error.set(0)
             self.pv_error.set("OK")
 
+    def _calculate_targets(
+        self, present_rf_demand: float, delta_rf_demand: float
+    ) -> tuple:
+        """Calculate the target RF frequency and limit."""
+
+        def round10(x):
+            return np.around(x * 10.0) / 10.0
+
+        target = round10(present_rf_demand + delta_rf_demand)
+        target_limit = target
+
+        # If our demand is larger than our maximum step (self.rfstep) then we change the
+        # target rf by either +/- 0.1
+        if abs(delta_rf_demand) > self.rf_step:
+            delta_rf_demand = np.sign(delta_rf_demand) * self.rf_step
+
+        target_limit = round10(present_rf_demand + delta_rf_demand)
+
+        return target, target_limit
+
+    def check_for_errors(
+        self, fbstat, current: float, present_rf_freq: float, present_rf_demand: float
+    ) -> bool:
+        """Check for conditions that would prevent RFFB from running."""
+        if fbstat == 0:
+            logger.critical("No orbit feedback is running. RFFB will be stopped.")
+            self.power_pv.set(0)
+            self.pv_error.set("No orbit feedback")
+            return True
+
+        if current <= 2:
+            logger.critical("Beam current <= 2mA. RFFB will be stopped.")
+            self.power_pv.set(0)
+            self.pv_error.set("Current too low")
+            return True
+
+        # HLA-349
+        if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
+            logger.critical(
+                    "Discrepancy between RF frequency and setpoint. RFFB will be stopped."
+                )
+            self.power_pv.set(0)
+            self.pv_error.set(self.rf_freq_set_pv.get_name())
+            return True
+
+        if not self.rf_pvs_valid():
+            logger.critical(f"RF PV was invalid > {PVWithValidity.ALLOWED_INVALID_CAGETS} times. RFFB will be stopped.")
+            self.power_pv.set(0)
+            return True
+
+        return False
+
     @staticmethod
-    def rf_near_setpoint(present_rf_freq, rf_setpoint):
-        """Returns True if RF frequency and setpoint differ by
-        less than a threshold
+    def rf_near_setpoint(present_rf_freq: float, rf_setpoint: float) -> bool:
+        """Return True if RF frequency and setpoint differ by
+        less than a threshold.
         """
-        frequency_difference_Hz = abs(present_rf_freq - rf_setpoint)
-        return frequency_difference_Hz <= MAX_DIFFERENCE_Hz
+        frequency_difference = abs(present_rf_freq - rf_setpoint)
+        return frequency_difference <= MAX_FREQ_DIFFERENCE
 
-    def rf_pvs_valid(self):
-        """RF FREQ and FREQ_SET PVs have both not been invalid too many times"""
-
+    def rf_pvs_valid(self) -> bool:
+        """Check that RF FREQ and FREQ_SET PVs have both
+        not been invalid too many times.
+        """
         rf_pvs = [self.rf_freq_set_pv, self.rf_freq_rbv_pv]
 
-        # Check each PV
-        ok = True
         for rf_pv in rf_pvs:
             if not rf_pv.healthy():
-                ok = False
-                # Easiest to set the "Bad PV" from here
                 self.pv_error.set(rf_pv.get_name())
-                break
+                return False
 
-        return ok
+        return True
 
-    def set_power(self, power):
+    def set_power(self, power: int) -> None:
         self.power = power
 
-    def set_rfstep(self, rfstep):
-        self.rfstep = rfstep
+    def set_rf_step(self, rf_step: float) -> None:
+        self.rf_step = rf_step
 
-    def set_period(self, period):
-        self.period = period
+    def set_period(self, period: int) -> None:
+        self.correction_period = period
 
-    def set_valid(self, valid):
-        self.valid = valid
-
-    def set_datadir(self, lattice):
+    def set_data_dir(self, lattice: EpicsLattice) -> None:
+        """Load the BPM response and dispersion matrices."""
         rffb_calc.cache.clear()
         path = os.path.join(mode.DATAROOT, lattice.name)
-        self.correctors = numpy.array(
+        self.correctors = np.array(
             lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
         )
         try:
-            raw_bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
+            raw_bpm_resp = loadmat(os.path.join(path, "GoldenBPMResp"))
             raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
-            self.bpmresp = raw_bpmresp["Rmat"][0, 0]["Data"]
-            self.disp = raw_disp["BPMxDisp"]["Data"][0, 0]
-            assert raw_bpmresp["Rmat"][0, 0]["Units"] == "Hardware"
-            assert raw_disp["BPMxDisp"]["Units"] == "Hardware"
+            self.bpm_response_matrix = raw_bpm_resp["Rmat"][0, 0]["Data"]
+            self.dispersion_matrix = raw_disp["BPMxDisp"]["Data"][0, 0]
+
+            self._validate_matrices(raw_bpm_resp, raw_disp)
+
             self.matrix_error.set(0)
             logger.info(f"Loaded matrix {lattice.name}")
         except BaseException:
             logger.exception(f"Failed to load matrix data {lattice.name}")
-            self.bpmresp = None
-            self.disp = None
+            self.bpm_response_matrix = None
+            self.dispersion_matrix = None
             self.matrix_error.set(1)
 
-    def records(self):
+    def _validate_matrices(self, raw_bpm_resp: dict, raw_disp: dict) -> None:
+        """Validate the BPM response and dispersion matrices."""
+        if raw_bpm_resp["Rmat"][0, 0]["Units"] != "Hardware":
+            raise ValueError("BPM response matrix is not set to hardware units")
 
+        if raw_disp["BPMxDisp"]["Units"] != "Hardware":
+            raise ValueError("Dispersion matrix is not set to hardware units")
+
+    def create_records(self) -> None:
+        """Define PV's for RF Feedback."""
         builder.SetDeviceName("SR-CS-RFFB-01")
 
         self.matrix_error = builder.boolIn(
@@ -224,8 +250,8 @@ class RffbServer(object):
 
         builder.aOut(
             "RFSTEP",
-            initial_value=self.rfstep,
-            on_update=self.set_rfstep,
+            initial_value=self.rf_step,
+            on_update=self.set_rf_step,
             DRVH=100,
             DRVL=0.1,
             PREC=1,
@@ -236,7 +262,7 @@ class RffbServer(object):
             "PERIOD",
             "1 second",
             "10 seconds",
-            initial_value=self.period,
+            initial_value=self.correction_period,
             on_update=self.set_period,
         )
 
@@ -261,7 +287,7 @@ class PVWithValidity(object):
         Does not store it to prevent stale data"""
 
         # Do caget and store attributes
-        value = catools.caget(self.pv_name, format=catools.FORMAT_TIME)
+        value = caget(self.pv_name, format=FORMAT_TIME)
         self.severity = value.severity
         self.ok = value.ok
         self.last_caget_time = value.timestamp
@@ -286,4 +312,54 @@ class PVWithValidity(object):
 
     def get_name(self):
         """Return PV name"""
+        return self.pv_name
+
+
+class PVWithValidity:
+    """For a PV, maintain a history of cagets
+    in order to decide if current value is valid.
+    """
+
+    ALLOWED_INVALID_CAGETS: int = 10
+
+    def __init__(self, pv_name) -> None:
+        self.pv_name: str = pv_name
+        self.consecutive_times_invalid: int = 0
+        self.ok: bool = False
+        self.last_caget_time = None
+        self.severity = None
+
+    def get(self):
+        """Do a caget, store the value and severity.
+
+        Return the result of the caget. Does not store it to prevent stale data."""
+
+        # Do caget and store attributes
+        value = caget(self.pv_name, format=FORMAT_TIME)
+        self.severity = value.severity
+        self.ok = value.ok
+        self.last_caget_time = value.timestamp
+
+        # Check alarm severity not OK and increment counter
+        if self.severity != constants.SEVR_NO_ALARM or not self.ok:
+            self.consecutive_times_invalid += 1
+        else:
+            self.consecutive_times_invalid = 0
+
+        return value
+
+    def healthy(self) -> bool:
+        """Return False if too many cagets have returned alarm."""
+        if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
+            return True
+        else:
+            logging.warning(
+                "{pv_name} had alarm more than {count} times".format(
+                    pv_name=self.pv_name, count=self.ALLOWED_INVALID_CAGETS
+                )
+            )
+            return False
+
+    def get_name(self) -> str:
+        """Return PV name."""
         return self.pv_name

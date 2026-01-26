@@ -1,18 +1,31 @@
 import logging
+from typing import List, Optional
 
 import numpy as np
 import pytac
 from cothread.catools import caget, caput
-from numpy import linalg
+from pytac.lattice import EpicsLattice
 
 # PSC Enum constants
 PSC_STATE_ON = 2
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-def tkv_reg(m, mu, singular_values):
-    # Tikhonov regularization
-    u, s, vt = linalg.svd(m, full_matrices=False)
+class SingularValuePVs(object):
+    """Stores references to PV objects that can be set to provide
+    waveforms representing SVD Data."""
+
+    def __init__(self):
+        # Requires injecting of fields from instantiating class
+        self.s = None
+        self.s_inv = None
+        self.s_inv_cut = None
+        self.length = None
+
+
+def tkv_reg(m: np.ndarray, mu: float, singular_values: SingularValuePVs) -> np.ndarray:
+    """Tikhonov regularization of a matrix, m."""
+    u, s, vt = np.linalg.svd(m, full_matrices=False)
     # We use nan_to_num here to catch the case of singular m and zero mu.
     si = np.nan_to_num(s / (mu + s**2))
 
@@ -24,33 +37,22 @@ def tkv_reg(m, mu, singular_values):
     return np.dot(vt.T * si, u.T)
 
 
-class SingularValuePVs(object):
-    """
-    Stores references to PV objects that can be set to provide
-    waveforms representing SVD Data.
-    """
-
-    def __init__(self):
-        # Requires injecting of fields from instantiating class
-        self.s = None
-        self.s_inv = None
-        self.s_inv_cut = None
-        self.length = None
-
-
 class CalculationException(Exception):
     pass
 
 
-class Sofb(object):
-    def __init__(self, lattice):
+class Sofb:
+    def __init__(self, lattice: EpicsLattice) -> None:
         self.set_lattice(lattice)
-        self.step_limit = 0.1
-        self.mu = 0.01
-        self.svd = {"X": None, "Y": None}
-        self.cache = {}
+        self.step_limit: float = 0.1
+        self.mu: float = 0.01
+        self.svd: dict = {"X": None, "Y": None}
+        self.cache: dict = {}
+        self.rm_x: Optional[np.ndarray] = None
+        self.rm_y: Optional[np.ndarray] = None
 
-    def set_lattice(self, lattice):
+    def set_lattice(self, lattice: EpicsLattice) -> None:
+        """Set the lattice and extract the psc names."""
         self.lattice = lattice
         device_names = np.concatenate(
             (
@@ -61,35 +63,59 @@ class Sofb(object):
         self.psc_error_names = np.array([d + ":ERCSUM" for d in device_names])
         self.psc_state_names = np.array([d + ":STATE" for d in device_names])
 
-    def set_rm(self, rmx, rmy):
-        self.rmx = rmx
-        self.rmy = rmy
+    def set_rm(self, rm_x: Optional[np.ndarray], rm_y: Optional[np.ndarray]) -> None:
+        """Set the response matrices."""
+        self.rm_x = rm_x
+        self.rm_y = rm_y
 
-    def set_step_limit(self, step_limit):
+    def set_step_limit(self, step_limit: float) -> None:
+        """Set the step limit for the correction."""
         self.step_limit = step_limit
 
-    def set_mu(self, mu):
+    def set_mu(self, mu: float) -> None:
+        """Set the mu value for the correction."""
         self.mu = mu
 
-    def get_irm(self, hen, ven, hbpmen, vbpmen, mu):
-        key = (tuple(hen), tuple(ven), tuple(hbpmen), tuple(vbpmen), mu)
+    def get_irm(
+        self,
+        h_enable: np.ndarray,
+        v_enable: np.ndarray,
+        h_bpm_enable: np.ndarray,
+        v_bpm_enable: np.ndarray,
+        mu: float,
+    ) -> List[np.ndarray]:
+        """Calculate the inverse response matrix for the given correctors and BPMs."""
+        key = (
+            tuple(h_enable),
+            tuple(v_enable),
+            tuple(h_bpm_enable),
+            tuple(v_bpm_enable),
+            mu,
+        )
         if key in self.cache:
             return self.cache[key]
         logger.info("New response matrix")
-        irm = [None, None]
-        rmx = self.rmx[np.ix_(hbpmen, hen)]
-        rmy = self.rmy[np.ix_(vbpmen, ven)]
-        irm = [
-            tkv_reg(rmx, mu, self.svd["X"]) if rmx.size else np.array([]),
-            tkv_reg(rmy, mu, self.svd["Y"]) if rmy.size else np.array([]),
-        ]
-        self.cache.clear()
-        self.cache[key] = irm
+        irm: List[np.ndarray] = [np.array([]), np.array([])]
+
+        if self.rm_x is None or self.rm_y is None:
+            raise CalculationException("Response matrices not set.")
+        else:
+            rm_x = self.rm_x[np.ix_(h_bpm_enable, h_enable)]
+            rm_y = self.rm_y[np.ix_(v_bpm_enable, v_enable)]
+            irm = [
+                tkv_reg(rm_x, mu, self.svd["X"]) if rm_x.size else np.array([]),
+                tkv_reg(rm_y, mu, self.svd["Y"]) if rm_y.size else np.array([]),
+            ]
+            self.cache.clear()
+            self.cache[key] = irm
         return irm
 
     def report_corrector_error(
-        self, array_of_pv_names, error_indices, error_description
-    ):
+        self,
+        array_of_pv_names: np.ndarray,
+        error_indices: np.ndarray,
+        error_description: str,
+    ) -> None:
         error_pvs = array_of_pv_names[error_indices]
         # Message to be printed to the console can contain the whole
         # list and reason because not limited on space
@@ -106,7 +132,7 @@ class Sofb(object):
         )
         raise CalculationException(exception_message)
 
-    def correction(self):
+    def correct(self) -> None:
         # Correction is scaled by this fraction <= 1
         afrac = caget("SR-CS-SOFB-01:AFRAC")
 
@@ -214,7 +240,7 @@ class Sofb(object):
 
         caput("CS-CS-MSTAT-01:FBHEART", 10)
 
-    def correction_scale_factor(self, unscaled_steps):
+    def correction_scale_factor(self, unscaled_steps: np.ndarray) -> float:
         """Calculate the scale factor <= 1.0 to be applied to all
         steps, so that all are within the limit for maximum step.
 

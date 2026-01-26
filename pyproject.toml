@@ -12,7 +12,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 description = "Slow feedback systems for the DLS storage ring"
-dependencies = ["pytac", "cothread", "epicscorelibs", "softioc", "pygelf"]
+dependencies = [
+    "pytac",
+    "cothread",
+    "epicscorelibs",
+    "softioc",
+    "pygelf",
+    "typer",
+]
 dynamic = ["version"]
 license.file = "LICENSE"
 readme = "README.md"
@@ -28,6 +35,7 @@ dev = [
     "ruff",
     "tox-uv",
     "types-mock",
+    "mock",
 ]
 
 [project.scripts]

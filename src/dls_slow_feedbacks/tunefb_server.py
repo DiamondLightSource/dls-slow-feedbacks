@@ -188,12 +188,11 @@ class TunefbServer(object):
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
 
-    def init(self):
+    def start(self):
         """Spawn a new thread to run the main ioc loop."""
-        # Start the loop.
-        cothread.Spawn(self.tick)
+        cothread.Spawn(self.run)
 
-    def tick(self):
+    def run(self):
         """Top level loop in the ioc, if it terminates then
         a restart of the ioc is required. Therefore, it is appropriate
         to catch all exceptions.

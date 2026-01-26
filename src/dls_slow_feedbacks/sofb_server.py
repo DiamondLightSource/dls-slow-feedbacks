@@ -1,34 +1,42 @@
 import logging
 import os
 import traceback
+from typing import List
 
 import cothread
 import numpy as np
 from cothread.catools import ca_nothing, caget
+from pytac.lattice import EpicsLattice
 from scipy.io import loadmat
 from softioc import builder
 
 from dls_slow_feedbacks import mode, sofb
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
+CURRENT_THRESHOLD = 2.0
 
-class SofbServer(object):
-    def __init__(self, ring_mode):
-        self.sofb = sofb.Sofb(ring_mode.lattice)
-        self.power = 0
-        self.records(ring_mode.lattice)
+
+class SofbServer:
+    def __init__(self, ring_mode: mode.RingMode) -> None:
+        self.power: int = 0  # ON/OFF
+        self.sofb: sofb.Sofb = sofb.Sofb(ring_mode.lattice)
+        self.create_records(ring_mode.lattice)
         ring_mode.add_listener(self.set_datadir)
 
-    def set_datadir(self, lattice):
+    def set_datadir(self, lattice: EpicsLattice) -> None:
+        """Load the BPM response matrix."""
         self.sofb.cache.clear()
         path = os.path.join(mode.DATAROOT, lattice.name)
         self.sofb.set_lattice(lattice)
+
         try:
-            bpmresp = loadmat(os.path.join(path, "GoldenBPMResp"))
-            assert bpmresp["Rmat"][0, 0]["Units"] == "Hardware"
-            rmx = bpmresp["Rmat"][0, 0]["Data"]
-            rmy = bpmresp["Rmat"][1, 1]["Data"]
-            self.sofb.set_rm(rmx, rmy)
+            bpm_resp = loadmat(os.path.join(path, "GoldenBPMResp"))
+            if bpm_resp["Rmat"][0, 0]["Units"] != "Hardware":
+                raise ValueError("BPM response matrix is not set to hardware units")
+
+            rm_x = bpm_resp["Rmat"][0, 0]["Data"]
+            rm_y = bpm_resp["Rmat"][1, 1]["Data"]
+            self.sofb.set_rm(rm_x, rm_y)
             self.matrix_error.set(0)
         except BaseException:
             logger.exception(f"Failed to load matrix data {lattice.name}")
@@ -36,55 +44,60 @@ class SofbServer(object):
             self.sofb.rmy = None
             self.matrix_error.set(1)
 
-    def set_power(self, power):
-        self.power = power
+    def start(self) -> None:
+        """Start the feedback loop."""
+        cothread.Spawn(self.run)
 
-    def set_limit(self, limit):
-        self.sofb.step_limit = limit
-
-    def init(self):
-        cothread.Spawn(self.tick)
-
-    def tick(self):
+    def run(self) -> None:
+        """Main feedback loop."""
         while True:
             cothread.Sleep(1.0)
             try:
                 if self.power:
-                    # no loop below 2mA
-                    current = caget("SR-DI-DCCT-01:SIGNAL")
-                    if current > 2:
-                        self.sofb.correction()
-                        self.calc_error.set(0)
-                        self.pv_error.set("OK")
-                    else:
-                        self.power_pv.set(0)
+                    self.perform_correction()
             except Exception as e:
                 self.handle_exception(e)
 
-    def handle_exception(self, exception):
-        if isinstance(exception, sofb.CalculationException):
-            self.pv_error.set(str(exception))
-            self.power_pv.set(0)
-            self.calc_error.set(1)
-        elif isinstance(exception, ca_nothing):
-            self.pv_error.set(exception.name)
-            self.power_pv.set(0)
-            self.calc_error.set(1)
+    def perform_correction(self) -> None:
+        """Safely perform the slow orbit feedback correction"""
+        current = caget("SR-DI-DCCT-01:SIGNAL")
+        if current > CURRENT_THRESHOLD:
+            self.sofb.correct()
+            self.calc_error.set(0)
+            self.pv_error.set("OK")
         else:
             self.power_pv.set(0)
             self.calc_error.set(1)
-        # Log why we have failed
-        logger.exception("Error during correction")
 
-    def single(self, value):
+    def handle_exception(self, exception: Exception) -> None:
+        """Handle exceptions raised during the feedback loop."""
+        self.calc_error.set(1)
+        self.power_pv.set(0)
+
+        if isinstance(exception, sofb.CalculationException):
+            self.pv_error.set(str(exception))
+        elif isinstance(exception, ca_nothing):
+            self.pv_error.set(exception.name)
+        else:
+            self.pv_error.set("An unexpected error occurred")
+
+        traceback.print_exc()
+
+    def run_single(self, value: int) -> None:
+        """Run a single correction."""
         try:
-            self.sofb.correction()
+            self.sofb.correct()
             self.calc_error.set(0)
             self.pv_error.set("OK")
         except Exception as e:
             self.handle_exception(e)
 
-    def records(self, lattice):
+    def set_power(self, power: int) -> None:
+        """Turn the feedback loop on or off."""
+        self.power = power
+
+    def create_records(self, lattice: EpicsLattice) -> None:
+        """Define PV's for slow orbit feedback."""
         builder.SetDeviceName("SR-CS-SOFB-01")
 
         self.power_pv = builder.mbbOut(
@@ -99,15 +112,8 @@ class SofbServer(object):
 
         # Corrector magnet ID, in floating point format: cell.position_in_cell
         # This matches the format of SR-DI-EBPM-01:BPMID
-        mag_ids = []
-        for mag in lattice.get_element_device_names("HSTR", "x_kick"):
-            if mag[4] == "S":
-                mag_ids.append(int(mag[2:4]) + 0.1 * (int(mag[-2:]) - 2))
-            elif mag[10:14] == "SCOR":
-                mag_ids.append(int(mag[2:4]) + 0.5 + (2.0 / 30) * (int(mag[-2:])))
-            else:
-                mag_ids.append(int(mag[2:4]) + 0.1 * int(mag[-2:]))
-        builder.WaveformIn("CMID", initial_value=mag_ids, datatype=np.float64)
+        mag_ids = self.get_corrector_magnet_ids(lattice)
+        builder.WaveformIn("CMID", initial_value=mag_ids)
 
         # PVs for demonstrating SVD effect
         bpms = lattice.get_elements("BPM")
@@ -132,7 +138,7 @@ class SofbServer(object):
             self.sofb.svd[plane] = sv_pvs
 
         builder.aOut(
-            "CORRECT", initial_value=0, on_update=self.single, always_update=True
+            "CORRECT", initial_value=0, on_update=self.run_single, always_update=True
         )
 
         builder.aOut(
@@ -140,7 +146,7 @@ class SofbServer(object):
             initial_value=self.sofb.step_limit,
             DRVH=0.5,
             DRVL=1e-3,
-            on_update=self.set_limit,
+            on_update=self.sofb.set_step_limit,
             PREC=3,
         )
 
@@ -161,3 +167,15 @@ class SofbServer(object):
         )
 
         self.pv_error = builder.stringIn("EPV", DESC="PV Error", initial_value="OK")
+
+    def get_corrector_magnet_ids(self, lattice: EpicsLattice) -> List[float]:
+        """Get the corrector magnet IDs."""
+        mag_ids = []
+        for mag in lattice.get_element_device_names("HSTR", "x_kick"):
+            if mag[4] == "S":
+                mag_ids.append(int(mag[2:4]) + 0.1 * (int(mag[-2:]) - 2))
+            elif mag[10:14] == "SCOR":
+                mag_ids.append(int(mag[2:4]) + 0.5 + (2.0 / 30) * (int(mag[-2:])))
+            else:
+                mag_ids.append(int(mag[2:4]) + 0.1 * int(mag[-2:]))
+        return mag_ids
