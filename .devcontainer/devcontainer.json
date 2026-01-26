@@ -63,6 +63,16 @@
             "source": "devcontainer-shared-cache",
             "target": "/cache",
             "type": "volume"
+        },
+        {
+            "source": "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata/",
+            "target": "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata/",
+            "type": "bind"
+        },
+        {
+            "source": "/home/ops/diagnostics/config/",
+            "target": "/home/ops/diagnostics/config/",
+            "type": "bind"
         }
     ],
     // Mount the parent as /workspaces so we can pip install peers as editable
