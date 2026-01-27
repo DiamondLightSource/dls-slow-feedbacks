@@ -1,17 +1,17 @@
 import logging
-from typing import List, Optional
 
 import numpy as np
 import pytac
 from cothread.catools import caget, caput
 from pytac.lattice import EpicsLattice
 
+EPS = 1e-9
 # PSC Enum constants
 PSC_STATE_ON = 2
-
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-class SingularValuePVs(object):
+
+class SingularValuePVs:
     """Stores references to PV objects that can be set to provide
     waveforms representing SVD Data."""
 
@@ -37,7 +37,8 @@ def tkv_reg(m: np.ndarray, mu: float, singular_values: SingularValuePVs) -> np.n
     return np.dot(vt.T * si, u.T)
 
 
-class CalculationException(Exception):
+class CalculationError(Exception):
+    # TODO: This should probably do something?
     pass
 
 
@@ -48,8 +49,8 @@ class Sofb:
         self.mu: float = 0.01
         self.svd: dict = {"X": None, "Y": None}
         self.cache: dict = {}
-        self.rm_x: Optional[np.ndarray] = None
-        self.rm_y: Optional[np.ndarray] = None
+        self.rm_x: np.ndarray | None = None
+        self.rm_y: np.ndarray | None = None
 
     def set_lattice(self, lattice: EpicsLattice) -> None:
         """Set the lattice and extract the psc names."""
@@ -63,7 +64,7 @@ class Sofb:
         self.psc_error_names = np.array([d + ":ERCSUM" for d in device_names])
         self.psc_state_names = np.array([d + ":STATE" for d in device_names])
 
-    def set_rm(self, rm_x: Optional[np.ndarray], rm_y: Optional[np.ndarray]) -> None:
+    def set_rm(self, rm_x: np.ndarray | None, rm_y: np.ndarray | None) -> None:
         """Set the response matrices."""
         self.rm_x = rm_x
         self.rm_y = rm_y
@@ -83,7 +84,7 @@ class Sofb:
         h_bpm_enable: np.ndarray,
         v_bpm_enable: np.ndarray,
         mu: float,
-    ) -> List[np.ndarray]:
+    ) -> list[np.ndarray]:
         """Calculate the inverse response matrix for the given correctors and BPMs."""
         key = (
             tuple(h_enable),
@@ -95,10 +96,10 @@ class Sofb:
         if key in self.cache:
             return self.cache[key]
         logger.info("New response matrix")
-        irm: List[np.ndarray] = [np.array([]), np.array([])]
+        irm: list[np.ndarray] = [np.array([]), np.array([])]
 
         if self.rm_x is None or self.rm_y is None:
-            raise CalculationException("Response matrices not set.")
+            raise CalculationError("Response matrices not set.")
         else:
             rm_x = self.rm_x[np.ix_(h_bpm_enable, h_enable)]
             rm_y = self.rm_y[np.ix_(v_bpm_enable, v_enable)]
@@ -122,15 +123,11 @@ class Sofb:
         logger.error(f"Correctors {error_description}: {error_pvs}")
 
         # If more than one PV in list, show how many more.
-        more_to_show = " +{}".format(len(error_pvs) - 1) if len(error_pvs) > 1 else ""
+        more_to_show = f" +{len(error_pvs) - 1}" if len(error_pvs) > 1 else ""
 
         # This message goes into the error PV so we keep it short
-        exception_message = "{}{} {}".format(
-            error_pvs[0],
-            more_to_show,
-            error_description,
-        )
-        raise CalculationException(exception_message)
+        exception_message = f"{error_pvs[0]}{more_to_show} {error_description}"
+        raise CalculationError(exception_message)
 
     def correct(self) -> None:
         # Correction is scaled by this fraction <= 1
@@ -198,14 +195,14 @@ class Sofb:
         )
 
         # Get the values required to calculate corrections
-        BPMs_x_values = self.lattice.get_element_values(
+        bpms_x_values = self.lattice.get_element_values(
             "BPM", "x", pytac.RB, dtype=np.float64
         )[bpms_x_enabled]
         correctors_x_values = self.lattice.get_element_values(
             "HSTR", "x_kick", pytac.RB, dtype=np.float64
         )[correctors_x_enabled]
 
-        BPMs_y_values = self.lattice.get_element_values(
+        bpms_y_values = self.lattice.get_element_values(
             "BPM", "y", pytac.RB, dtype=np.float64
         )[bpms_y_enabled]
         correctors_y_values = self.lattice.get_element_values(
@@ -215,7 +212,7 @@ class Sofb:
         # Calculate horizontal corrections
         if not irm[0].size == 0:
             # Array of deltas for each x corrector
-            hdelta = np.dot(irm[0], BPMs_x_values)
+            hdelta = np.dot(irm[0], bpms_x_values)
 
             # Scale deltas so that largest < step_limit
             hdelta = hdelta * self.correction_scale_factor(hdelta)
@@ -228,7 +225,7 @@ class Sofb:
         # Calculate vertical corrections
         if not irm[1].size == 0:
             # Array of deltas for each y corrector
-            vdelta = np.dot(irm[1], BPMs_y_values)
+            vdelta = np.dot(irm[1], bpms_y_values)
 
             # Scale deltas so that largest < step_limit
             vdelta = vdelta * self.correction_scale_factor(vdelta)
@@ -247,7 +244,6 @@ class Sofb:
         The factor scale factor calculated is the largest which satisfies:
         max(abs(scale_factor * unscaled_steps)) < step_limit
         """
-        EPS = 1e-9
         largest_step = max(abs(unscaled_steps))
         if largest_step > EPS:
             scale_factor = min(1.0, self.step_limit / largest_step)

@@ -1,7 +1,5 @@
 import logging
 import os
-import traceback
-from typing import Optional
 
 import cothread
 import numpy as np
@@ -27,8 +25,8 @@ class RffbServer:
         self.power: int = 0  # ON/OFF
         self.rf_step: float = 0.1
         self.correction_period: int = 10
-        self.bpm_response_matrix: Optional[np.ndarray] = None
-        self.dispersion_matrix: Optional[np.ndarray] = None
+        self.bpm_response_matrix: np.ndarray | None = None
+        self.dispersion_matrix: np.ndarray | None = None
         self.correctors = np.array(
             ring_mode.lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
         )
@@ -59,7 +57,7 @@ class RffbServer:
 
             except ca_nothing as e:
                 # A caget or caput failed
-                logger.exception(f"Channel access exception. RFFB will be stopped.")
+                logger.exception("Channel access exception. RFFB will be stopped.")
                 self.pv_error.set(e.name)
                 self.calc_error.set(1)
                 self.power_pv.set(0)
@@ -85,7 +83,11 @@ class RffbServer:
 
         if self.bpm_response_matrix is not None and self.dispersion_matrix is not None:
             delta_rf_demand = rffb_calc.calc_rffb(
-                self.bpm_response_matrix, self.dispersion_matrix, enabled_bpms, enabled_correctors, hcm
+                self.bpm_response_matrix,
+                self.dispersion_matrix,
+                enabled_bpms,
+                enabled_correctors,
+                hcm,
             )
         else:
             raise ValueError("BPM response and/or dispersion matrices not loaded")
@@ -144,14 +146,17 @@ class RffbServer:
         # HLA-349
         if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
             logger.critical(
-                    "Discrepancy between RF frequency and setpoint. RFFB will be stopped."
-                )
+                "Discrepancy between RF frequency and setpoint. RFFB will be stopped."
+            )
             self.power_pv.set(0)
             self.pv_error.set(self.rf_freq_set_pv.get_name())
             return True
 
         if not self.rf_pvs_valid():
-            logger.critical(f"RF PV was invalid > {PVWithValidity.ALLOWED_INVALID_CAGETS} times. RFFB will be stopped.")
+            logger.critical(
+                f"RF PV was invalid > {PVWithValidity.ALLOWED_INVALID_CAGETS} times. "
+                "RFFB will be stopped."
+            )
             self.power_pv.set(0)
             return True
 
@@ -267,54 +272,6 @@ class RffbServer:
         )
 
 
-class PVWithValidity(object):
-    """For a PV, maintain a history of cagets
-    in order to decide if current value is valid
-    """
-
-    ALLOWED_INVALID_CAGETS = 10
-
-    def __init__(self, pv_name):
-        self.pv_name = pv_name
-        self.consecutive_times_invalid = 0
-        self.ok = False
-        self.last_caget_time = None
-        self.severity = None
-
-    def get(self):
-        """Do a caget, store the value and severity
-        Returns the result of the caget.
-        Does not store it to prevent stale data"""
-
-        # Do caget and store attributes
-        value = caget(self.pv_name, format=FORMAT_TIME)
-        self.severity = value.severity
-        self.ok = value.ok
-        self.last_caget_time = value.timestamp
-
-        # Check alarm severity not OK and increment counter
-        if self.severity != constants.SEVR_NO_ALARM or not self.ok:
-            self.consecutive_times_invalid += 1
-        else:
-            self.consecutive_times_invalid = 0
-
-        return value
-
-    def healthy(self):
-        """Return False if too many cagets have returned alarm"""
-        if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
-            return True
-        else:
-            logger.warning(
-                f"{self.pv_name} raised an alarm more than {self.ALLOWED_INVALID_CAGETS} times"
-            )
-            return False
-
-    def get_name(self):
-        """Return PV name"""
-        return self.pv_name
-
-
 class PVWithValidity:
     """For a PV, maintain a history of cagets
     in order to decide if current value is valid.
@@ -353,10 +310,9 @@ class PVWithValidity:
         if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
             return True
         else:
-            logging.warning(
-                "{pv_name} had alarm more than {count} times".format(
-                    pv_name=self.pv_name, count=self.ALLOWED_INVALID_CAGETS
-                )
+            logger.warning(
+                f"{self.pv_name} raised an alarm more than "
+                "{self.ALLOWED_INVALID_CAGETS} times."
             )
             return False
 

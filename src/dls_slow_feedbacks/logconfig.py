@@ -1,4 +1,4 @@
-""" logconfig
+"""logconfig
 
 This is essentially a template which can be copied into a python project and
 used to easily achieve a good practice of logging. Modify the local copy as per
@@ -22,10 +22,12 @@ default_config = {
     "formatters": {
         "simple": {"format": "%(levelname)s (%(filename)s) %(message)s"},
         "extended": {
-            "format": "%(asctime)s - %(filename)24s:%(lineno)d - %(name)24s - %(levelname)6s - %(message)s"
+            "format": "%(asctime)s - %(filename)24s:%(lineno)d - %(name)24s - "
+            "%(levelname)6s - %(message)s"
         },
         "json": {
-            "format": "name: %(name)s, level: %(levelname)s, time: %(asctime)s, message: %(message)s"
+            "format": "name: %(name)s, level: %(levelname)s, time: %(asctime)s, "
+            "message: %(message)s"
         },
     },
     "handlers": {
@@ -71,9 +73,10 @@ default_config = {
         },
     },
     "root": {
-        # Set the level here to be the default minimum level of log record to be produced
-        # If you set a handler to level DEBUG you will need to set either this level, or
-        # the level of one of the loggers above to DEBUG or you won't see any DEBUG messages
+        # Set the level here to be the default minimum level of log record to be
+        # produced If you set a handler to level DEBUG you will need to set either this
+        # level, or the level of one of the loggers above to DEBUG or you won't see any
+        # DEBUG messages
         "level": "INFO",
         "handlers": ["graylog_gelf"],
         # "handlers": ["console"],
@@ -103,10 +106,12 @@ def setup_logging(
     This will configure the python logging module based on a logging configuration
     in the following order of priority:
 
-       1. Log configuration file found in the environment variable specified in the `env_key` argument.
+       1. Log configuration file found in the environment variable specified in the
+       `env_key` argument.
        2. Log configuration file found in the `default_log_config` argument.
        3. Default log configuration found in the `logconfig.default_config` dict.
-       4. If all of the above fails: basicConfig is called with the `default_level` argument.
+       4. If all of the above fails: basicConfig is called with the `default_level`
+       argument.
 
     Args:
         default_log_config (Optional[str]): Path to log configuration file.
@@ -126,7 +131,7 @@ def setup_logging(
         logconfig_filename = env_var_value
 
     if logconfig_filename is not None and os.path.exists(logconfig_filename):
-        with open(logconfig_filename, "rt") as f:
+        with open(logconfig_filename) as f:
             file_config = json.load(f)
         if file_config is not None:
             dict_config = file_config
@@ -137,7 +142,9 @@ def setup_logging(
                 {"application": str(application)}
             )
         except KeyError:
-            print("Warning: No graylog_gelf handler found in the logging configuration. "
-                  "Application name will not be set in the logs.")
-    
+            print(
+                "Warning: No graylog_gelf handler found in the logging configuration. "
+                "Application name will not be set in the logs."
+            )
+
     logging.config.dictConfig(dict_config)

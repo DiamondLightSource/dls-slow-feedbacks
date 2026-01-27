@@ -1,5 +1,4 @@
 import logging
-import traceback
 
 import cothread
 import numpy as np
@@ -12,8 +11,7 @@ from softioc import builder
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
 
-class WaveformsServer(object):
-
+class WaveformsServer:
     PLANES = [0, 1]
     FAMILIES = {
         "cor": [("HSTR", "x_kick"), ("VSTR", "y_kick")],
@@ -82,7 +80,7 @@ class WaveformsServer(object):
         "update corrector enabled vector from individual records"
         (k, i) = key
         r = self.wf[element][mode][k]
-        # softioc returns an immutable reference to the numpy array, so we must copy it 
+        # softioc returns an immutable reference to the numpy array, so we must copy it
         # and then modify the data before setting it back
         wf = np.copy(r.get())
         wf[i] = value
@@ -90,22 +88,30 @@ class WaveformsServer(object):
 
     def create_info_waveforms(self):
         builder.SetDeviceName("SR-DI-EBPM-01")
-        builder.WaveformOut("S", initial_value=self.lattice.get_family_s("BPM"), datatype=np.float64)
+        builder.WaveformOut(
+            "S", initial_value=self.lattice.get_family_s("BPM"), datatype=np.float64
+        )
 
         nm = (("HSTR", "SR-PC-HSTR-01"), ("VSTR", "SR-PC-VSTR-01"))
 
         self.wf["current"] = []
         self.wf["mag"] = []
-        for i, (k, v) in enumerate(nm):
+        for k, v in nm:
             elements = self.lattice.get_elements(k)
             builder.SetDeviceName(v)
             self.wf["current"].append(
-                builder.WaveformOut("I", initial_value=np.zeros(len(elements)), datatype=np.float64)
+                builder.WaveformOut(
+                    "I", initial_value=np.zeros(len(elements)), datatype=np.float64
+                )
             )
             self.wf["mag"].append(
-                builder.WaveformOut("MAG", initial_value=np.zeros(len(elements)), datatype=np.float64)
+                builder.WaveformOut(
+                    "MAG", initial_value=np.zeros(len(elements)), datatype=np.float64
+                )
             )
-            builder.WaveformOut("S", initial_value=self.lattice.get_family_s(k), datatype=np.float64)
+            builder.WaveformOut(
+                "S", initial_value=self.lattice.get_family_s(k), datatype=np.float64
+            )
 
     def create_control_and_waveform_pvs(self):
         self.maxval = [None, None]
@@ -121,14 +127,14 @@ class WaveformsServer(object):
 
         for p in self.PLANES:
             # Build vectors of maximum magnet values
-            builder.SetDeviceName("SR-PC-%sSTR-01" % "HV"[p])
+            builder.SetDeviceName("SR-PC-{}STR-01".format("HV"[p]))
             self.maxval[p] = builder.aOut("MAXI", initial_value=0)
             self.maxname[p] = builder.stringOut("MAXNAME")
 
             # Build individual controls and connected waveforms
             device_name_func = {
-                "cor": lambda p: "SR-PC-%sSTR-01" % "HV"[p],
-                "bpm": lambda p: "SR-PC-%sBPM-01" % "HV"[p],
+                "cor": lambda p: "SR-PC-{}STR-01".format("HV"[p]),
+                "bpm": lambda p: "SR-PC-{}BPM-01".format("HV"[p]),
             }
             for fam_type in self.FAMILIES.keys():
                 fam, field = self.FAMILIES[fam_type][p]
@@ -136,24 +142,24 @@ class WaveformsServer(object):
                 for speed in self.SPEEDS:
                     builder.SetDeviceName(device_name_func[fam_type](p))
                     self.wf[fam_type][speed][p] = builder.WaveformOut(
-                        "%s:ENABLED" % speed.upper(),
+                        f"{speed.upper()}:ENABLED",
                         on_update=lambda _, f=fam_type, s=speed, p=p: self.latch(
                             f, s, p
                         ),
                         initial_value=np.zeros(len(self.lattice.get_elements(fam))),
-                        datatype=np.int32
+                        datatype=np.int32,
                     )
                 # Create individual control PVs
                 for n, c in enumerate(
                     self.lattice.get_element_device_names(fam, field)
                 ):
                     # Replace bpm names with plane-dependent names
-                    c = c.replace("DI-EBPM", "PC-%sBPM" % "HV"[p])
+                    c = c.replace("DI-EBPM", "PC-{}BPM".format("HV"[p]))
                     builder.SetDeviceName(c)
                     for speed in self.SPEEDS:
                         self.records[fam_type][speed][p].append(
                             builder.mbbOut(
-                                "%s:DISABLED" % speed.upper(),
+                                f"{speed.upper()}:DISABLED",
                                 "Enabled",
                                 "Disabled",
                                 on_update=lambda x, n=n, p=p, s=speed, f=fam_type: (
@@ -167,6 +173,8 @@ class WaveformsServer(object):
 
     def write(self, device, mode, plane):
         for r, x in zip(
-            self.records[device][mode][plane], self.wf[device][mode][plane].get()
+            self.records[device][mode][plane],
+            self.wf[device][mode][plane].get(),
+            strict=True,
         ):
             r.set(x)

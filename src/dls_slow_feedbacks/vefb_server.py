@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-import traceback
 
 import cothread
 import numpy as np
@@ -15,7 +14,8 @@ from dls_slow_feedbacks import mode
 # logging
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-class VefbConstants(object):
+
+class VefbConstants:
     VEMIT_TARGET_INITIAL = 8.0
     AFRAC_INITIAL = 0.25
     IIRF_PARAM_INITIAL = 0.25
@@ -34,7 +34,7 @@ class VefbConstants(object):
     VEMIT_ACCEPTABLE_ERR_INITIAL = 0.5
 
 
-class EmittanceStatus(object):
+class EmittanceStatus:
     # Successful emittance calculation.
     OK = 0
     # Successful emittance calculation on invalid beam (no beam or injecting).
@@ -67,7 +67,7 @@ class EmittanceStatus(object):
     RECOVER_FAILED = 12
 
 
-class VefbStatus(object):
+class VefbStatus:
     # Feedback operation successful.
     OK = 0
 
@@ -125,7 +125,7 @@ class VefbStatus(object):
 # Monitors:
 
 
-class PVMonitor(object):
+class PVMonitor:
     def __init__(self, name):
         self.name = name
         self.ok = False
@@ -148,7 +148,7 @@ class PVMonitor(object):
         self._sub.close()
 
 
-class WFMonitor(object):
+class WFMonitor:
     def __init__(self, names, dtype=np.double):
         self.names = names
         self.ok = False
@@ -177,7 +177,7 @@ class WFMonitor(object):
 # Skew Quads:
 
 
-class SkewQuadrupoles(object):
+class SkewQuadrupoles:
     def __init__(self, pv_names):
         self._pv_names = pv_names
         self.monitors()
@@ -199,11 +199,11 @@ class SkewQuadrupoles(object):
     @property
     def ok(self):
         pvs = [self.seti, self.seti_drvls, self.seti_drvls]
-        return all([s.ok for s in pvs])
+        return all([s.ok for s in pvs])  # noqa: C419
 
     def drive_levels_ok(self):
         for a, b, c in zip(
-            self.seti_drvls.values, self.seti_drvhs.values, self._pv_names
+            self.seti_drvls.values, self.seti_drvhs.values, self._pv_names, strict=True
         ):
             if a >= b:
                 if self.last_levels_ok_fail != c:
@@ -282,8 +282,8 @@ class SkewQuadrupoles(object):
     def monitors(self):
         self.seti = WFMonitor(self._pv_names)
 
-        squad_pv_drvhs = ["{}.DRVH".format(name) for name in self._pv_names]
-        squad_pv_drvls = ["{}.DRVL".format(name) for name in self._pv_names]
+        squad_pv_drvhs = [f"{name}.DRVH" for name in self._pv_names]
+        squad_pv_drvls = [f"{name}.DRVL" for name in self._pv_names]
 
         self.seti_drvhs = WFMonitor(squad_pv_drvhs)
         self.seti_drvls = WFMonitor(squad_pv_drvls)
@@ -303,7 +303,7 @@ class SkewQuadrupoles(object):
 # VEMIT FB:
 
 
-class VefbServer(object):
+class VefbServer:
     def __init__(self, ring_mode):
         squad_pv_names = ring_mode.lattice.get_element_pv_names("SQUAD", "a1", pytac.SP)
         self.skew_quads = SkewQuadrupoles(squad_pv_names)
@@ -410,7 +410,6 @@ class VefbServer(object):
             )
 
     def error_check(self):
-
         status = VefbStatus.OK
 
         self.check_camera_state()
@@ -439,7 +438,6 @@ class VefbServer(object):
         return status
 
     def run_once(self, do_correction, single=False):
-
         status = self.error_check()
 
         if single and status == VefbStatus.AWAY_FROM_TARGET:
@@ -479,10 +477,10 @@ class VefbServer(object):
             )
             logger.info(f"LoadMatrix {lattice.name} {rm_file}")
 
-            RM_load = loadmat(rm_file)
-            RM = RM_load["RM"]
-            logger.info(f"RM_old: {RM}")
-            self.IRM_old = 1 / RM[0][0]
+            load_rm = loadmat(rm_file)
+            rm = load_rm["RM"]
+            logger.info(f"RM_old: {rm}")
+            self.IRM_old = 1 / rm[0][0]
             logger.info(f"IRM_old: {self.IRM_old}")
 
         except BaseException:
@@ -492,12 +490,12 @@ class VefbServer(object):
             rm_file = os.path.join(mode.DATAROOT, lattice.name, "GoldenSkewVector.mat")
             logger.info(f"LoadSkewVector {lattice.name} {rm_file}")
 
-            RM_load = loadmat(rm_file)
-            RM = RM_load["RM"]
-            logger.info(f"RM_new: {RM}")
-            skew = RM_load["skewhw"][0]
+            load_rm = loadmat(rm_file)
+            rm = load_rm["RM"]
+            logger.info(f"RM_new: {rm}")
+            skew = load_rm["skewhw"][0]
             logger.info(f"Skew: {skew}")
-            self.IRM_new = 1 / RM[0][0]
+            self.IRM_new = 1 / rm[0][0]
             self.skewhw_new = skew
             logger.info(f"IRM_new: {self.IRM_new}")
             logger.info(f"Skewhw_new: {self.skewhw_new}")
@@ -543,8 +541,8 @@ class VefbServer(object):
         if do_correction:
             old_status = self.status_pv.get()
             if status != old_status:
-                okStates = [VefbStatus.OK, VefbStatus.INJECTING]
-                if status not in okStates or old_status not in okStates:
+                ok_states = [VefbStatus.OK, VefbStatus.INJECTING]
+                if status not in ok_states or old_status not in ok_states:
                     logger.info(f"Status change: {old_status} -> {status}")
 
             self.status_pv.set(status)
@@ -559,7 +557,6 @@ class VefbServer(object):
                 self.enable_pv.set(0)
 
     def persistent_error_check(self, status):
-
         current_time = time.time()
         diff = current_time - self.current_time
 
@@ -579,8 +576,7 @@ class VefbServer(object):
             and self.error_or_recover_time > self.max_recovery_time_pv.get()
         ):
             logger.error(
-                "Time in error/recovery exceeds "
-                f"timeout {self.max_recovery_time_pv}"
+                f"Time in error/recovery exceeds timeout {self.max_recovery_time_pv}"
             )
             status = VefbStatus.PERSISTENT_EMITTANCE_ERRORS
 
@@ -652,15 +648,12 @@ class VefbServer(object):
             recovery_time = current_time - self.recovery_start_time
 
             if recovery_time > min_recovery_timeout and self.camera_recovery_complete():
-                logger.info(
-                    f"Camera recovery successful after {recovery_time} seconds"
-                )
+                logger.info(f"Camera recovery successful after {recovery_time} seconds")
                 self.recovering_cameras = False
 
             elif recovery_time > max_recovery_timeout:
                 logger.warning(
-                    f"Camera recovery timeout {max_recovery_timeout} seconds"
-                    " exceeded"
+                    f"Camera recovery timeout {max_recovery_timeout} seconds exceeded"
                 )
                 self.recovering_cameras = False
 
@@ -737,7 +730,6 @@ class VefbServer(object):
         )
 
     def do_calc(self, apply_calc, use_filter=True, check_limits=True):
-
         if not self.calc_parameters_ok():
             return VefbStatus.MISSING_CALC_PARAMETERS
 
@@ -757,7 +749,6 @@ class VefbServer(object):
 
         # values ok?
         if check_limits:
-
             vmax = (
                 target + self.vemit_err_max_pv.get() + self.vemit_extra_err_max_pv.get()
             )
@@ -809,7 +800,6 @@ class VefbServer(object):
         return self.apply_delta(delta, apply_calc, check_limits)
 
     def run_add_delta(self, delta):
-
         if self.check_status_on_delta_pv.get() == 0:
             status = VefbStatus.OK
         else:

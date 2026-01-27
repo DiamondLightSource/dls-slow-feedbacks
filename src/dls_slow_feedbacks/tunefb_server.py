@@ -1,7 +1,6 @@
 import logging
 import os
 import time
-import traceback
 
 import cothread
 import numpy
@@ -19,7 +18,8 @@ OFFSET_CURRENT_CHANGED = "Offset changed outside of TFB"
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-class Status(object):
+
+class Status:
     """Enum for tune feedback errors."""
 
     FEEDBACK_OFF = 0
@@ -88,7 +88,7 @@ def load_tune_rm(mat_file):
     return numpy.array([rmx, rmy])
 
 
-class TunefbInvalid(Exception):
+class TunefbInvalidError(Exception):
     """Exception used to pause tune feedback."""
 
     def __init__(self, code):
@@ -104,7 +104,7 @@ class TunefbError(Exception):
         self.code = code
 
 
-class TunefbServer(object):
+class TunefbServer:
     """Server for tune feedback. Creates PVs, and monitors and then
     corrects tune towards a setpoint.
     """
@@ -224,7 +224,7 @@ class TunefbServer(object):
                     Status.FEEDBACK_SCALING,
                 ):
                     self.status_pv.set(Status.FEEDBACK_OFF)
-        except TunefbInvalid as e:
+        except TunefbInvalidError as e:
             # skip corrections for a while before tripping off
             self.invalid_counter += 1
             if self.invalid_counter >= MAX_CONSECUTIVE_INVALIDS:
@@ -256,21 +256,19 @@ class TunefbServer(object):
         # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.period
         last_check = time.time() - self.period
-        if any([tune.timestamp < last_check for tune in tunes]):
-            raise TunefbInvalid(Status.TUNE_UPDATE)
+        if any([tune.timestamp < last_check for tune in tunes]):  # noqa: C419
+            raise TunefbInvalidError(Status.TUNE_UPDATE)
         if numpy.isnan(tune_array).any():
             logger.warning("Tune value NaN but PV not invalid.")
-            raise TunefbInvalid(Status.TUNE_VALIDITY)
+            raise TunefbInvalidError(Status.TUNE_VALIDITY)
         logger.info(f"Tune delta before last correction {self.tune_deltas}")
-        logger.info(
-            f"Tune change since last correction {str(tune_array - self.tunes)}"
-        )
+        logger.info(f"Tune change since last correction {str(tune_array - self.tunes)}")
         self.tune_deltas = self.golden_tunes - tune_array
         logger.info(f"Actual tune deltas {self.tune_deltas}")
 
     def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM):
         if any(tune.severity >= max_alarm for tune in self.tunes):
-            raise TunefbInvalid(Status.TUNE_VALIDITY)
+            raise TunefbInvalidError(Status.TUNE_VALIDITY)
 
     def scale_deltas(self, deltas):
         """Put delta correction to magnets, clipping if neccassary."""
@@ -308,7 +306,7 @@ class TunefbServer(object):
         if numpy.isnan(self.integrated_current).any():
             logger.warning("Unexpected NaN in calculated current correction.")
             raise TunefbError(Status.UNEXPECTED_ERROR)
-        for pv, current in zip(self.mirror_pvs, self.integrated_current):
+        for pv, current in zip(self.mirror_pvs, self.integrated_current, strict=True):
             pv.set(current)
         logger.info(f"Total tune change from feedback {str(self.integrated_tunes)}")
 
@@ -348,7 +346,7 @@ class TunefbServer(object):
                 self.status_pv.set(Status.SINGLE_SCALED)
             else:
                 self.status_pv.set(Status.SINGLE_CORR)
-        except TunefbInvalid as e:
+        except TunefbInvalidError as e:
             logger.warning("" + str(e))
             self.status_pv.set(e.code)
         except TunefbError as e:
@@ -378,7 +376,7 @@ class TunefbServer(object):
             # in the GUI
             cothread.Sleep(0.2)
             self.status_pv.set(Status.TUNE_STEP)
-        except TunefbInvalid as e:
+        except TunefbInvalidError as e:
             logger.warning(f"{str(e)}")
             self.status_pv.set(e.code)
         except TunefbError as e:
@@ -546,7 +544,7 @@ class TunefbServer(object):
 
         # initialise each current PV to the value from the remote
         # PV from which it will be starting
-        for pv, value in zip(self.local_pvs, self.startup_currents):
+        for pv, value in zip(self.local_pvs, self.startup_currents, strict=True):
             self.mirror_pvs.append(
                 builder.aOut(pv.split(":")[1] + ":I", initial_value=value)
             )

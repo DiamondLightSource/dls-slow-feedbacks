@@ -1,7 +1,6 @@
 import logging
 import os
 import traceback
-from typing import List
 
 import cothread
 import numpy as np
@@ -74,7 +73,7 @@ class SofbServer:
         self.calc_error.set(1)
         self.power_pv.set(0)
 
-        if isinstance(exception, sofb.CalculationException):
+        if isinstance(exception, sofb.CalculationError):
             self.pv_error.set(str(exception))
         elif isinstance(exception, ca_nothing):
             self.pv_error.set(exception.name)
@@ -120,20 +119,24 @@ class SofbServer:
         svd_length = len(bpms)
         for plane in ["X", "Y"]:
             sv_pvs = sofb.SingularValuePVs()
-            sv_pvs.length = builder.aIn(
-                "SVD:%s:LENGTH" % plane, initial_value=svd_length
-            )
+            sv_pvs.length = builder.aIn(f"SVD:{plane}:LENGTH", initial_value=svd_length)
 
             sv_pvs.s = builder.WaveformIn(
-                "SVD:%s:S" % plane, initial_value=[0.0] * svd_length, datatype=np.float64
+                f"SVD:{plane}:S",
+                initial_value=[0.0] * svd_length,
+                datatype=np.float64,
             )
 
             sv_pvs.s_inv = builder.WaveformIn(
-                "SVD:%s:S_INV" % plane, initial_value=[0.0] * svd_length, datatype=np.float64
+                f"SVD:{plane}:S_INV",
+                initial_value=[0.0] * svd_length,
+                datatype=np.float64,
             )
 
             sv_pvs.s_inv_cut = builder.WaveformIn(
-                "SVD:%s:S_INV_CUT" % plane, initial_value=[0.0] * svd_length, datatype=np.float64
+                f"SVD:{plane}:S_INV_CUT",
+                initial_value=[0.0] * svd_length,
+                datatype=np.float64,
             )
             self.sofb.svd[plane] = sv_pvs
 
@@ -168,7 +171,7 @@ class SofbServer:
 
         self.pv_error = builder.stringIn("EPV", DESC="PV Error", initial_value="OK")
 
-    def get_corrector_magnet_ids(self, lattice: EpicsLattice) -> List[float]:
+    def get_corrector_magnet_ids(self, lattice: EpicsLattice) -> list[float]:
         """Get the corrector magnet IDs."""
         mag_ids = []
         for mag in lattice.get_element_device_names("HSTR", "x_kick"):

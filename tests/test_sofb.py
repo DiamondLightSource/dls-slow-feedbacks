@@ -1,6 +1,6 @@
 import collections
+from unittest import mock
 
-import mock
 import numpy
 import pytac
 import pytest
@@ -104,7 +104,7 @@ def test_correction_fails_if_wrong_dimensions(
 ):
     caget_responses["bpmx"] = numpy.zeros(NBPM + 1)
     mock_caget.side_effect = caget_responses.values()
-    with pytest.raises(Exception):
+    with pytest.raises(IndexError):
         test_sofb.correct()
 
 
@@ -181,14 +181,14 @@ def test_psc_error_non_zero_multiple(
     caget_responses["psc_errors"][112] = 8
     caget_responses["psc_errors"][8] = 8
     mock_caget.side_effect = caget_responses.values()
-    with pytest.raises(sofb.CalculationException):
+    with pytest.raises(sofb.CalculationError):
         test_sofb.correct()
 
 
 def test_psc_error_non_zero(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses["psc_errors"][112] = 8
     mock_caget.side_effect = caget_responses.values()
-    with pytest.raises(sofb.CalculationException):
+    with pytest.raises(sofb.CalculationError):
         test_sofb.correct()
 
 
@@ -196,14 +196,14 @@ def test_psc_state_not_on_multiple(test_sofb, mock_caget, caget_responses):
     caget_responses["psc_states"][112] = 0
     caget_responses["psc_states"][8] = 8
     mock_caget.side_effect = caget_responses.values()
-    with pytest.raises(sofb.CalculationException):
+    with pytest.raises(sofb.CalculationError):
         test_sofb.correct()
 
 
 def test_psc_state_not_on(test_sofb, mock_caget, mock_caput, caget_responses):
     caget_responses["psc_states"][23] = 0
     mock_caget.side_effect = caget_responses.values()
-    with pytest.raises(sofb.CalculationException):
+    with pytest.raises(sofb.CalculationError):
         test_sofb.correct()
 
 
@@ -215,8 +215,8 @@ def test_calc_error_reset_after_single(
     test_sofb_server.pv_error.set("Some error")
 
     # Single correction
-    MEANINGLESS_VALUE = 0
-    test_sofb_server.run_single(MEANINGLESS_VALUE)
+    meaningless_value = 0
+    test_sofb_server.run_single(meaningless_value)
 
     # Errors should have been cleared
     assert test_sofb_server.calc_error.get() == 0

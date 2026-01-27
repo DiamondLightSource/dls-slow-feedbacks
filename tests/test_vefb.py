@@ -1,6 +1,6 @@
 import time
+from unittest import mock
 
-import mock
 import pytac
 import pytest
 
@@ -66,12 +66,12 @@ def vefb(ring_mode, nsquads):
         return v
 
 
-def test_VefbServer_do_calc_fails_if_calc_parameters_ok_returns_false(vefb):
+def test_vefb_server_do_calc_fails_if_calc_parameters_ok_returns_false(vefb):
     vefb.calc_parameters_ok = mock.MagicMock(return_value=False)
     assert vefb.do_calc(False) == VefbStatus.MISSING_CALC_PARAMETERS
 
 
-def test_VefbServer_do_calc_fails_if_vemit_timestamp_older_than_1_sec(vefb):
+def test_vefb_server_do_calc_fails_if_vemit_timestamp_older_than_1_sec(vefb):
     # More than one second older than the mocked value of 1000.1
     vefb.vemit.timestamp = 999
     assert vefb.do_calc(False) == VefbStatus.NO_EMITTANCE_VALUE
@@ -79,7 +79,7 @@ def test_VefbServer_do_calc_fails_if_vemit_timestamp_older_than_1_sec(vefb):
 
 @pytest.mark.parametrize("apply", (True, False))
 @pytest.mark.parametrize("check_limits", (True, False))
-def test_VefbServer_do_calc_succeeds_if_calc_parameters_ok_returns_true(
+def test_vefb_server_do_calc_succeeds_if_calc_parameters_ok_returns_true(
     vefb, apply, check_limits
 ):
     # Set up variables for the calculation
@@ -100,14 +100,14 @@ def test_VefbServer_do_calc_succeeds_if_calc_parameters_ok_returns_true(
         assert mock_apply.call_args[0][2] == check_limits
 
 
-def test_apply_delta_returns_MAGNET_DELTA_ERROR_if_delta_gt_delta_max_and_check_limits(
+def test_apply_delta_returns_magnet_delta_error_if_delta_gt_delta_max_and_check_limits(
     vefb,
 ):
     vefb.squad_delta_max_pv = soft_ioc_pv(2)
     assert vefb.apply_delta(3, check_limits=True) == VefbStatus.MAGNET_DELTA_ERROR
 
 
-def test_apply_delta_returns_MAGNET_ERROR_if_put_delta_not_ok(vefb):
+def test_apply_delta_returns_magnet_error_if_put_delta_not_ok(vefb):
     vefb.skew_quads.put_delta.return_value = False
     assert vefb.apply_delta(1) == VefbStatus.MAGNET_ERROR
 

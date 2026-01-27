@@ -2,12 +2,10 @@ import logging
 
 # Slow feedback IOC startup.
 import os
-import sys
-from typing import Tuple, Annotated
-import typer
+from typing import Annotated
 
 import cothread.catools
-from epicsdbbuilder import records
+import typer
 from softioc import builder, softioc
 
 from dls_slow_feedbacks import (
@@ -24,6 +22,7 @@ from dls_slow_feedbacks import (
 logconfig.setup_logging(application="dls_slow_feedbacks")
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
+
 # If running in testing mode log instead of executing caput.  We do this by
 # "monkey patching" catools!
 def mock_caput(pvs, values, **kargs):
@@ -35,13 +34,14 @@ def configure_logging() -> None:
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 
-def create_servers(ring_mode: mode.RingMode) -> Tuple:
+def create_servers(ring_mode: mode.RingMode) -> tuple:
     """Instantiate the appropriate servers:
 
     wavs - Monitors magnet settings and creates aggregated waveforms.
     rffb - Adjusts RF frequency to minimise horizontal dispersion.
     sofb - Slow orbit feedback. Ensures the beam is centred in the ring.
-    vefb - Vertical emittance feedback. Maintains VE at a constant value for beamline use.
+    vefb - Vertical emittance feedback. Maintains VE at a constant value for beamline
+           use.
     tunefb - Tune feedback. Minimises tune spread and allows setting of tune target.
 
     Return their instances in a tuple.
@@ -58,7 +58,7 @@ def create_records() -> None:
     """Create FOFB Mirror and Identification PV's for the IOC."""
     # Mirror PV for FOFB status to reduce overall load on vxWorks IOCs.
     builder.SetDeviceName("SR-CS-FOFB-01")
-    run = records.ai("RUN", PINI="YES", VAL=0, INP="SR01A-CS-FOFB-01:RUN CP MS")
+    builder.aIn("RUN", PINI="YES", VAL=0, INP="SR01A-CS-FOFB-01:RUN CP MS")
 
     # Identification PV's
     builder.SetDeviceName("CS-DI-IOC-09")
@@ -66,13 +66,17 @@ def create_records() -> None:
     builder.stringIn("HOSTNAME", VAL=os.uname()[1])
 
 
-def start_servers(servers: Tuple) -> None:
+def start_servers(servers: tuple) -> None:
     """Spawn the cothread routines for each server."""
     for server in servers:
         server.start()
 
 
-def main(test: Annotated[bool, typer.Option(help="Write to log instead of executing Caput")] = False) -> None:
+def main(
+    test: Annotated[
+        bool, typer.Option(help="Write to log instead of executing Caput")
+    ] = False,
+) -> None:
     configure_logging()
 
     if test:
@@ -93,6 +97,7 @@ def main(test: Annotated[bool, typer.Option(help="Write to log instead of execut
     start_servers(servers)
 
     softioc.interactive_ioc(globals())
+
 
 if __name__ == "__main__":
     typer.run(main)

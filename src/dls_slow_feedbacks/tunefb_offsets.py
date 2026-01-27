@@ -3,6 +3,7 @@ Simple script to set OFFSET1.INP for each magnet used in tune feedback.
 
 Each .INP is set to the local PV mirrored in our IOC.
 """
+
 import logging
 import sys
 
@@ -85,6 +86,6 @@ def main():
         sys.exit()
 
     inps = [pv + ":OFFSET1.INP" for pv in mag_pvs]
-    for inp, link in zip(inps, links):
+    for inp, link in zip(inps, links, strict=True):
         caput_function(inp, link)
         cothread.Sleep(BEAM_DAMP_TIME * 10.0)

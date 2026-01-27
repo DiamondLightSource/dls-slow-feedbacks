@@ -1,4 +1,4 @@
-from typing import Callable, List
+from collections.abc import Callable
 
 from pytac import cothread_cs, load_csv
 from pytac.lattice import EpicsLattice
@@ -38,7 +38,7 @@ class RingMode:
 
     def __init__(self) -> None:
         self.create_records()
-        self.listeners: List[Callable] = []
+        self.listeners: list[Callable] = []
         self.name: str = DEFAULT_RING_MODE
         self.lattice: EpicsLattice = load_pml_lattice(self.name)
 
@@ -62,8 +62,8 @@ class RingMode:
         builder.SetDeviceName("SR-CS-RING-01")
         self.mode = builder.mbbOut(
             "MODE",
+            *RING_MODES,
             on_update=self.set_mode,
             always_update=True,
-            *RING_MODES,
-            ONSV="MAJOR"
+            ONSV="MAJOR",
         )
