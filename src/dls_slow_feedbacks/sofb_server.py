@@ -95,6 +95,18 @@ class SofbServer:
         """Turn the feedback loop on or off."""
         self.power = power
 
+    def get_corrector_magnet_ids(self, lattice: EpicsLattice) -> list[float]:
+        """Get the corrector magnet IDs."""
+        mag_ids = []
+        for mag in lattice.get_element_device_names("HSTR", "x_kick"):
+            if mag[4] == "S":
+                mag_ids.append(int(mag[2:4]) + 0.1 * (int(mag[-2:]) - 2))
+            elif mag[10:14] == "SCOR":
+                mag_ids.append(int(mag[2:4]) + 0.5 + (2.0 / 30) * (int(mag[-2:])))
+            else:
+                mag_ids.append(int(mag[2:4]) + 0.1 * int(mag[-2:]))
+        return mag_ids
+
     def create_records(self, lattice: EpicsLattice) -> None:
         """Define PV's for slow orbit feedback."""
         builder.SetDeviceName("SR-CS-SOFB-01")
@@ -170,15 +182,3 @@ class SofbServer:
         )
 
         self.pv_error = builder.stringIn("EPV", DESC="PV Error", initial_value="OK")
-
-    def get_corrector_magnet_ids(self, lattice: EpicsLattice) -> list[float]:
-        """Get the corrector magnet IDs."""
-        mag_ids = []
-        for mag in lattice.get_element_device_names("HSTR", "x_kick"):
-            if mag[4] == "S":
-                mag_ids.append(int(mag[2:4]) + 0.1 * (int(mag[-2:]) - 2))
-            elif mag[10:14] == "SCOR":
-                mag_ids.append(int(mag[2:4]) + 0.5 + (2.0 / 30) * (int(mag[-2:])))
-            else:
-                mag_ids.append(int(mag[2:4]) + 0.1 * int(mag[-2:]))
-        return mag_ids
