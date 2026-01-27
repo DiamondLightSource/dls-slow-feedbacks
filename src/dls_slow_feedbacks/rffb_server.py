@@ -11,18 +11,18 @@ from softioc import builder
 
 from dls_slow_feedbacks import constants, mode, rffb_calc
 
-"IOC for RF Feedback"
-
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-# Constants
-MAX_FREQ_DIFFERENCE = 100  # Allowable difference between RF setpoint and rbv
+# Allowable difference between RF (master oscillator) setpoint and rbv
+MAX_FREQ_DIFFERENCE = 100
 
 
 class RffbServer:
+    """IOC for RF Feedback"""
+
     def __init__(self, ring_mode: mode.RingMode) -> None:
         self.tick: int = 0
-        self.power: int = 0  # ON/OFF
+        self.power: int = 0  # ON=1/OFF=0
         self.rf_step: float = 0.1
         self.correction_period: int = 10
         self.bpm_response_matrix: np.ndarray | None = None
@@ -274,8 +274,8 @@ class RffbServer:
 
 
 class PVWithValidity:
-    """For a PV, maintain a history of cagets
-    in order to decide if current value is valid.
+    """For a PV, maintain a history of cagets in order to decide if current value is
+    valid.
     """
 
     ALLOWED_INVALID_CAGETS: int = 10
@@ -288,9 +288,8 @@ class PVWithValidity:
         self.severity = None
 
     def get(self):
-        """Do a caget, store the value and severity.
-
-        Return the result of the caget. Does not store it to prevent stale data."""
+        """Do a caget, store the severity and ok status and return the result.
+        Do not store the caget value to prevent stale data."""
 
         # Do caget and store attributes
         value = cothread.catools.caget(self.pv_name, format=FORMAT_TIME)
@@ -307,7 +306,7 @@ class PVWithValidity:
         return value
 
     def healthy(self) -> bool:
-        """Return False if too many cagets have returned alarm."""
+        """Return False if too many cagets have returned a PV alarm status."""
         if self.consecutive_times_invalid <= self.ALLOWED_INVALID_CAGETS:
             return True
         else:
