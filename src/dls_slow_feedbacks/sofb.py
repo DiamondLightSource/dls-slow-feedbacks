@@ -47,7 +47,7 @@ class Sofb:
         self.set_lattice(lattice)
         self.step_limit: float = 0.1
         self.mu: float = 0.01
-        self.svd: dict = {"X": None, "Y": None}
+        self.svd_pvs: dict = {"X": None, "Y": None}
         self.cache: dict = {}
         self.rm_x: np.ndarray | None = None
         self.rm_y: np.ndarray | None = None
@@ -104,8 +104,8 @@ class Sofb:
             rm_x = self.rm_x[np.ix_(h_bpm_enable, h_enable)]
             rm_y = self.rm_y[np.ix_(v_bpm_enable, v_enable)]
             irm = [
-                tkv_reg(rm_x, mu, self.svd["X"]) if rm_x.size else np.array([]),
-                tkv_reg(rm_y, mu, self.svd["Y"]) if rm_y.size else np.array([]),
+                tkv_reg(rm_x, mu, self.svd_pvs["X"]) if rm_x.size else np.array([]),
+                tkv_reg(rm_y, mu, self.svd_pvs["Y"]) if rm_y.size else np.array([]),
             ]
             self.cache.clear()
             self.cache[key] = irm

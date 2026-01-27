@@ -17,7 +17,7 @@ CURRENT_THRESHOLD = 2.0
 
 class SofbServer:
     def __init__(self, ring_mode: mode.RingMode) -> None:
-        self.power: int = 0  # ON/OFF
+        self.power: int = 0  # ON=1/OFF=0
         self.sofb: sofb.Sofb = sofb.Sofb(ring_mode.lattice)
         self.create_records(ring_mode.lattice)
         ring_mode.add_listener(self.set_datadir)
@@ -138,7 +138,7 @@ class SofbServer:
                 initial_value=[0.0] * svd_length,
                 datatype=np.float64,
             )
-            self.sofb.svd[plane] = sv_pvs
+            self.sofb.svd_pvs[plane] = sv_pvs
 
         builder.aOut(
             "CORRECT", initial_value=0, on_update=self.run_single, always_update=True
