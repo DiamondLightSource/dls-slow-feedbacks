@@ -79,18 +79,21 @@ class RffbServer(object):
         delta_rf_demand = rffb_calc.calc_rffb(
             self.bpmresp, self.disp, enabled_bpm, enabled_cor, hcm
         )
-        self.delta_pv.set(delta_rf_demand)
+
+        self.delta_pv.set(delta_rf_demand.item())
 
         def round10(x):
             return numpy.around(x * 10.0) / 10.0
 
         target = round10(present_rf_demand + delta_rf_demand)
+        # If our demand is larger than our maximum step (self.rfstep) then we change the
+        # target rf by either +/- 0.1
         if abs(delta_rf_demand) > self.rfstep:
             delta_rf_demand = numpy.sign(delta_rf_demand) * self.rfstep
         target_limit = round10(present_rf_demand + delta_rf_demand)
 
         # update status
-        self.target_pv.set(target)
+        self.target_pv.set(target.item())
 
         # Only do checks and caput if feedback loop is on
         if self.power:
