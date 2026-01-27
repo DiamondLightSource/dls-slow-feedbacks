@@ -96,8 +96,8 @@ class RffbServer:
             present_rf_demand, delta_rf_demand
         )
 
-        self.delta_pv.set(delta_rf_demand.item())
-        self.target_pv.set(target.item())
+        self.delta_pv.set(delta_rf_demand)
+        self.target_pv.set(target)
 
         # Only caput if feedback loop is on and there are no errors
         if self.power and not self.check_for_errors(
@@ -124,8 +124,9 @@ class RffbServer:
             delta_rf_demand = np.sign(delta_rf_demand) * self.rf_step
 
         target_limit = round10(present_rf_demand + delta_rf_demand)
-
-        return target, target_limit
+        # TODO: target should always be a float, but is sometimes a float in a numpy
+        # array which we have to get it out of, investigate the root cause of this
+        return target.item(), target_limit
 
     def check_for_errors(
         self, fbstat, current: float, present_rf_freq: float, present_rf_demand: float

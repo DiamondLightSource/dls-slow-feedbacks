@@ -45,4 +45,4 @@ def calc_rffb(
         enabled_bpms, enabled_correctors, bpm_response_matrix, dispersion_matrix
     )
     delta_rf = np.dot(hcm, dispersion_correction / sum(dispersion_correction**2))
-    return delta_rf
+    return delta_rf.item()

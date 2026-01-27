@@ -39,8 +39,8 @@ class SofbServer:
             self.matrix_error.set(0)
         except BaseException:
             logger.exception(f"Failed to load matrix data {lattice.name}")
-            self.sofb.rmx = None
-            self.sofb.rmy = None
+            self.sofb.rm_x = None
+            self.sofb.rm_y = None
             self.matrix_error.set(1)
 
     def start(self) -> None:
