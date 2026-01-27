@@ -254,7 +254,7 @@ class SkewQuadrupoles:
 
         return True
 
-    def put_delta(self, delta):
+    def apply_correction(self, delta):
         if self._use_setpoint:
             if self.sp is None:
                 return False
@@ -838,7 +838,7 @@ class VefbServer:
 
         if apply_calc:
             # apply correction to skew quads
-            ok = self.skew_quads.put_delta(sq_delta)
+            ok = self.skew_quads.apply_correction(sq_delta)
             if not ok:
                 return VefbStatus.MAGNET_ERROR
 

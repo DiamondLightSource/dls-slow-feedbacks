@@ -53,7 +53,7 @@ class RffbServer:
                 continue
 
             try:
-                self.run_feedback()
+                self.apply_correction()
 
             except ca_nothing as e:
                 # A caget or caput failed
@@ -67,7 +67,7 @@ class RffbServer:
                 self.calc_error.set(1)
                 self.power_pv.set(0)
 
-    def run_feedback(self) -> None:
+    def apply_correction(self) -> None:
         """Adjust the RF frequency to relieve orbit feeback correction"""
         fbstat = caget("CS-CS-MSTAT-01:FBSTAT")
         ring_current = caget("SR-DI-DCCT-01:SIGNAL")

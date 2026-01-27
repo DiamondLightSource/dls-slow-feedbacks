@@ -129,7 +129,7 @@ class Sofb:
         exception_message = f"{error_pvs[0]}{more_to_show} {error_description}"
         raise CalculationError(exception_message)
 
-    def correct(self) -> None:
+    def apply_correction(self) -> None:
         # Correction is scaled by this fraction <= 1
         afrac = caget("SR-CS-SOFB-01:AFRAC")
 

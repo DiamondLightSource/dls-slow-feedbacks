@@ -60,7 +60,7 @@ def vefb(ring_mode, nsquads):
         v.squad_delta_max_pv = soft_ioc_pv(1)
         v.calc_parameters_ok = soft_ioc_pv(True)
         v.skew_quads.set_pv_names = mock.MagicMock()
-        v.skew_quads.put_delta = mock.MagicMock()
+        v.skew_quads.apply_correction = mock.MagicMock()
         v.skew_quads.num = nsquads
         v.on_ringmode_change(ring_mode.lattice)
         return v

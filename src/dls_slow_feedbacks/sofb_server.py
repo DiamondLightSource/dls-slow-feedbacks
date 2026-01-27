@@ -61,7 +61,7 @@ class SofbServer:
         """Safely perform the slow orbit feedback correction"""
         current = caget("SR-DI-DCCT-01:SIGNAL")
         if current > CURRENT_THRESHOLD:
-            self.sofb.correct()
+            self.sofb.apply_correction()
             self.calc_error.set(0)
             self.pv_error.set("OK")
         else:
@@ -85,7 +85,7 @@ class SofbServer:
     def run_single(self, value: int) -> None:
         """Run a single correction."""
         try:
-            self.sofb.correct()
+            self.sofb.apply_correction()
             self.calc_error.set(0)
             self.pv_error.set("OK")
         except Exception as e:
