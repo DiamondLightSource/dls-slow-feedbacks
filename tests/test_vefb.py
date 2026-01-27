@@ -108,10 +108,10 @@ def test_apply_delta_returns_magnet_delta_error_if_delta_gt_delta_max_and_check_
 
 
 def test_apply_delta_returns_magnet_error_if_put_delta_not_ok(vefb):
-    vefb.skew_quads.put_delta.return_value = False
+    vefb.skew_quads.apply_correction.return_value = False
     assert vefb.apply_delta(1) == VefbStatus.MAGNET_ERROR
 
 
 def test_apply_delta_applies_correct_dimensions(vefb, nsquads):
     vefb.apply_delta(2)
-    assert vefb.skew_quads.put_delta.call_args[0][0].size == nsquads
+    assert vefb.skew_quads.apply_correction.call_args[0][0].size == nsquads
