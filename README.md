@@ -17,10 +17,10 @@ Physics Applications IOC CS-DI-IOC-09
 
 Glossary
 -------
-rffb - Radio Frequency FeedBacks
-sofb - Slow Orbit FeedBacks
-tfb - Tune FeedBacks
-vefb - Vertical Emittance FeedBacks
+rffb - RF (Radio Frequency) FeedBack
+sofb - Slow Orbit FeedBack
+tfb - Tune FeedBack
+vefb - Vertical Emittance FeedBack
 bpm - Beam Position Monitor
 bpmx/bpmy - x and y position values for each BPM
 hcm/vcm - Horizontal Correction Matrix / Vertical Correction Matrix
