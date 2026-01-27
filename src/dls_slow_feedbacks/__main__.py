@@ -112,3 +112,7 @@ def main(
 
 def typer_main():
     typer.run(main)
+
+
+if __name__ == "__main__":
+    typer_main()

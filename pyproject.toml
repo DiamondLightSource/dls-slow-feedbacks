@@ -39,9 +39,9 @@ dev = [
 ]
 
 [project.scripts]
-start-ioc = "dls_slow_feedbacks.__main__:typer_main"
+dls-slow-feedbacks = "dls_slow_feedbacks.__main__:typer_main"
 start-css = "dls_slow_feedbacks.start_css:main"
-tune-feedback-offsets = "dls_slow_feedbacks.tunefb_offsets:main"
+tune-feedback-offsets = "dls_slow_feedbacks.tunefb_offsets:typer_main"
 start-sofb-edm = "dls_slow_feedbacks.start_edm:sofb_gui"
 start-vefb-edm = "dls_slow_feedbacks.start_edm:vefb_gui"
 start-tunefb-edm = "dls_slow_feedbacks.start_edm:tunefb_gui"
