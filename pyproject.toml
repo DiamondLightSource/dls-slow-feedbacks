@@ -39,8 +39,7 @@ dev = [
 ]
 
 [project.scripts]
-dls_slow_feedbacks = "dls_slow_feedbacks.__main__:main"
-start-ioc = "dls_slow_feedbacks.ioc:main"
+start-ioc = "dls_slow_feedbacks.__main__:typer_main"
 start-css = "dls_slow_feedbacks.start_css:main"
 tune-feedback-offsets = "dls_slow_feedbacks.tunefb_offsets:main"
 start-sofb-edm = "dls_slow_feedbacks.start_edm:sofb_gui"
