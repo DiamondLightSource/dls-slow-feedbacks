@@ -68,22 +68,6 @@ class Status:
     }
 
 
-def load_tune_rm(mat_file):
-    """Load response matrix from the specific format found
-    in the specified file.
-    """
-    raw_rms = scipy.io.loadmat(mat_file)
-    # Construct complete response matrix.
-    rmx = []
-    rmy = []
-    for raw_rm in raw_rms["Rmat"][0]:
-        raw_rmx = raw_rm[0][0][0][0]
-        raw_rmy = raw_rm[0][0][0][1]
-        rmx.extend(raw_rmx)
-        rmy.extend(raw_rmy)
-    return np.array([rmx, rmy])
-
-
 class TunefbInvalidError(Exception):
     """Exception used to pause tune feedback."""
 
@@ -154,7 +138,7 @@ class TunefbServer:
         # Initalise EPICS records
         self.records()
 
-    def set_datadir(self, lattice):
+    def set_datadir(self, lattice) -> None:
         """Load required data from files in datadir."""
         # Load magnet PVs from Pytac
         self.mag_pvs = load_magnet_pvs(lattice)
@@ -171,7 +155,7 @@ class TunefbServer:
 
         # Load data from file
         mode_dir = os.path.join(mode.DATAROOT, lattice.name)
-        self.rm = load_tune_rm(os.path.join(mode_dir, "GoldenTuneResp.mat"))
+        self.rm = self.load_tune_rm(os.path.join(mode_dir, "GoldenTuneResp.mat"))
 
         # Invert response matrix
         self.irm = np.linalg.pinv(self.rm)
@@ -184,11 +168,26 @@ class TunefbServer:
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
 
-    def start(self):
+    def load_tune_rm(self, mat_file) -> np.ndarray:
+        """Load response matrix from the specific format found
+        in the specified file.
+        """
+        raw_rms = scipy.io.loadmat(mat_file)
+        # Construct complete response matrix.
+        rmx = []
+        rmy = []
+        for raw_rm in raw_rms["Rmat"][0]:
+            raw_rmx = raw_rm[0][0][0][0]
+            raw_rmy = raw_rm[0][0][0][1]
+            rmx.extend(raw_rmx)
+            rmy.extend(raw_rmy)
+        return np.array([rmx, rmy])
+
+    def start(self) -> None:
         """Spawn a new thread to run the main ioc loop."""
         cothread.Spawn(self.run)
 
-    def run(self):
+    def run(self) -> None:
         """Top level loop in the ioc, if it terminates then
         a restart of the ioc is required. Therefore, it is appropriate
         to catch all exceptions.
@@ -203,7 +202,9 @@ class TunefbServer:
                 self.power_pv.set(False)
                 self.status_pv.set(Status.UNEXPECTED_ERROR)
 
-    def loop_correction(self):
+    def loop_correction(self) -> None:
+        """If key parameters are within expected ranges and power is true, attempts to
+        do a correction. This is run periodically"""
         self.update_max_i_pv()
         self.update_fwd_ok_pv()
         try:
@@ -231,17 +232,18 @@ class TunefbServer:
         except TunefbError as e:
             self.trip_feedback(e)
 
-    def trip_feedback(self, exception):
+    def trip_feedback(self, exception) -> None:
+        """Take the appropriate action when a trip occurs."""
         self.power_pv.set(False)
         self.status_pv.set(exception.code)
         logger.error(f"Feedback tripped: {str(exception)}")
 
-    def check_current(self):
+    def check_current(self) -> None:
         """Check if current is greater than a mininum current."""
         if caget(CURRENT_PV) < self.min_beam_current:
             raise TunefbError(Status.LOW_CURRENT)
 
-    def refresh_tune_deltas(self):
+    def refresh_tune_deltas(self) -> None:
         """Update values for tune deltas, checking if the values are
         reliable.
         """
@@ -262,11 +264,11 @@ class TunefbServer:
         self.tune_deltas = self.golden_tunes - tune_array
         logger.info(f"Actual tune deltas {self.tune_deltas}")
 
-    def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM):
+    def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM) -> None:
         if any(tune.severity >= max_alarm for tune in self.tunes):
             raise TunefbInvalidError(Status.TUNE_VALIDITY)
 
-    def scale_deltas(self, deltas):
+    def scale_deltas(self, deltas) -> None:
         """Put delta correction to magnets, clipping if neccassary."""
         # Scale values over the step current limit
         if any(abs(deltas) > self.mag_delta_max):
@@ -278,15 +280,15 @@ class TunefbServer:
             self.scaling = False
         return deltas
 
-    def check_mag_limits(self, currents):
+    def check_mag_limits(self, currents) -> None:
         max_i = max(abs(i) for i in currents)
         if max_i > self.max_current_range:
             logger.debug(f"Max current offset: {max_i}")
             logger.debug(f"Current offset limit: {self.max_current_range}")
             raise TunefbError(Status.MAGNET_CURRENT)
 
-    def apply_correction(self, deltas):
-        # Calculate and publish tune correction
+    def apply_correction(self, deltas) -> None:
+        """Do final calculations and apply corrections to PVs."""
         calc_tune_corr = np.dot(self.rm, deltas)
         logger.info(f"Theoretical tune correction {str(calc_tune_corr)}")
         self.integrated_tunes += calc_tune_corr
@@ -306,7 +308,7 @@ class TunefbServer:
             pv.set(current)
         logger.info(f"Total tune change from feedback {str(self.integrated_tunes)}")
 
-    def checked_correction(self):
+    def checked_correction(self) -> None:
         """Calculate and then apply a correction, will throw an execption
         in the event of an invalid or error state.
         """
@@ -319,7 +321,7 @@ class TunefbServer:
         self.check_mag_limits(self.integrated_current)
         self.apply_correction(scaled_deltas)
 
-    def unchecked_correction(self, dummy):
+    def unchecked_correction(self, dummy) -> None:
         """Calculate and apply correction without checking beam current.
         Catches all invalid and error states.
         """
@@ -352,7 +354,7 @@ class TunefbServer:
             logger.error(f"Unexpected exception: {str(e)}")
             self.status_pv.set(Status.UNEXPECTED_ERROR)
 
-    def step_tune(self, dummy):
+    def step_tune(self, dummy) -> None:
         """Apply raw correction without checking beam current.
         Catches all invalid and error states.
         """
@@ -382,20 +384,20 @@ class TunefbServer:
             logger.error(f"Unexpected exception: {str(e)}")
             self.status_pv.set(Status.UNEXPECTED_ERROR)
 
-    def reset_error(self, dummy):
+    def reset_error(self, dummy) -> None:
         """Reset the error pv."""
         self.status_pv.set(Status.FEEDBACK_OFF)
         self.reset_pv.set(0)
         self.invalid_counter = 0
 
-    def _reset_state(self):
+    def _reset_state(self) -> None:
         """Set internal current and tune state to zero."""
         self.tune_int_h_pv.set(0)
         self.tune_int_v_pv.set(0)
         self.integrated_tunes = np.zeros(2)
         self.integrated_current = np.zeros(self.integrated_current.shape)
 
-    def reset_integrated_current(self, value):
+    def reset_integrated_current(self, value) -> None:
         """Set all integrated currents to zero."""
         if value:
             self.reset_integrated_current_pv.set(0)
@@ -406,7 +408,7 @@ class TunefbServer:
             logger.warning("All integrated currents were reset to zero")
             self._reset_state()
 
-    def aggregate_setpoints(self, value):
+    def aggregate_setpoints(self, value) -> None:
         """Move offsets from this ioc to the quadrupole setpoints."""
         if value:
             self.aggregate_pv.set(0)
@@ -419,7 +421,7 @@ class TunefbServer:
             logger.warning("Aggregated offsets into setpoints")
             self._reset_state()
 
-    def update_max_i_pv(self):
+    def update_max_i_pv(self) -> None:
         """Update value and severity of IMAX PV."""
         value = max(abs(i) for i in self.integrated_current)
         if value > self.max_current_range:
@@ -430,7 +432,7 @@ class TunefbServer:
             sev = alarm.NO_ALARM
         self.max_i_pv.set(value, severity=sev)
 
-    def update_fwd_ok_pv(self):
+    def update_fwd_ok_pv(self) -> None:
         """Update value and severity of FWDOK PV."""
         try:
             if not all_forwarded(self.local_pvs, self.mag_pvs):
@@ -440,28 +442,28 @@ class TunefbServer:
         except ca_nothing:
             self.fwd_ok_pv.set(2)
 
-    def set_afrac(self, value):
+    def set_afrac(self, value) -> None:
         self.afrac = value
 
-    def set_max_current_range(self, value):
+    def set_max_current_range(self, value) -> None:
         self.max_current_range = value
 
-    def set_min_beam_current(self, value):
+    def set_min_beam_current(self, value) -> None:
         self.min_beam_current = value
 
-    def set_period(self, value):
+    def set_period(self, value) -> None:
         self.period = value
 
-    def set_tune_h(self, value):
+    def set_tune_h(self, value) -> None:
         self.golden_tunes[0] = value
 
-    def set_tune_v(self, value):
+    def set_tune_v(self, value) -> None:
         self.golden_tunes[1] = value
 
-    def set_mag_delta_max(self, value):
+    def set_mag_delta_max(self, value) -> None:
         self.mag_delta_max = value
 
-    def records(self):
+    def records(self) -> None:
         """Setup iocbuilder to create required records."""
         builder.SetDeviceName(IOC)
         self.power_pv = builder.boolOut("ONOFF", "OFF", "ON", initial_value=False)
