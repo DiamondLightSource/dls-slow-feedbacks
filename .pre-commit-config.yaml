@@ -7,6 +7,7 @@ repos:
       - id: check-yaml
       - id: check-merge-conflict
       - id: end-of-file-fixer
+        exclude: ^src/dls_slow_feedbacks/opi/
 
   - repo: local
     hooks:
@@ -16,6 +17,7 @@ repos:
         entry: ruff check --force-exclude --fix
         types: [python]
         require_serial: true
+        exclude: ^src/dls_slow_feedbacks/opi/
 
       - id: ruff-format
         name: format with ruff
@@ -23,6 +25,7 @@ repos:
         entry: ruff format --force-exclude
         types: [python]
         require_serial: true
+        exclude: ^src/dls_slow_feedbacks/opi/
 
       - id: uv-sync
         name: update uv.lock and venv
