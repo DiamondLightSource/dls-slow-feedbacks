@@ -127,6 +127,9 @@ class VefbStatus:
 
 
 class PVMonitor:
+    """A class to monitor a single PV and update internal variables when the PV
+    changes value."""
+
     def __init__(self, name):
         self.name = name
         self.ok = False
@@ -137,6 +140,7 @@ class PVMonitor:
         )
 
     def on_update(self, value) -> None:
+        """Camonitor callback"""
         self.ok = value.ok
         if value.ok:
             self.value = +value
@@ -146,10 +150,14 @@ class PVMonitor:
             self.timestamp = time.time()
 
     def close(self) -> None:
+        """Close the camonitor connection"""
         self._sub.close()
 
 
 class WFMonitor:
+    """A class to monitor a list of PVs and update internal variables when the PVs
+    change value."""
+
     def __init__(self, names, dtype=np.double):
         self.names = names
         self.ok = False
@@ -161,6 +169,7 @@ class WFMonitor:
         )
 
     def on_update(self, value, index) -> None:
+        """Camonitor callback"""
         self.oks[index] = value.ok
         if value.ok:
             self.values[index] = +value
@@ -171,28 +180,26 @@ class WFMonitor:
         self.ok = all(self.oks)
 
     def close(self) -> None:
+        """Close the camonitor connection"""
         for sub in self._subs:
             sub.close()
 
 
-# Skew Quads:
-
-
 class SkewQuadrupoles:
     def __init__(self, pv_names):
-        self._pv_names = pv_names
+        self._squad_pv_names = pv_names
         self.monitors()
         self.sp = None
         self.sum_delta = np.zeros(self.num)
         self._use_setpoint = False
 
-        self.last_levels_ok_fail = None
+        self.last_levels_ok_fail: None | str = None
         self.last_drvl_fail = None
         self.last_drvh_fail = None
 
     @property
     def num(self) -> int:
-        return len(self._pv_names)
+        return len(self._squad_pv_names)
 
     def check_state(self) -> bool:
         return self.ok and self.drive_levels_ok()
@@ -203,8 +210,12 @@ class SkewQuadrupoles:
         return all([s.ok for s in pvs])  # noqa: C419
 
     def drive_levels_ok(self) -> bool:
+        """Check that DRVL < DRVH for each squad PV"""
         for a, b, c in zip(
-            self.seti_drvls.values, self.seti_drvhs.values, self._pv_names, strict=True
+            self.seti_drvls.values,
+            self.seti_drvhs.values,
+            self._squad_pv_names,
+            strict=True,
         ):
             if a >= b:
                 if self.last_levels_ok_fail != c:
@@ -215,16 +226,20 @@ class SkewQuadrupoles:
         return True
 
     def make_setpoint(self) -> None:
+        """Update the self.sp array with the current values of squad PVs and reset
+        self.sum_delta to an array of zeros."""
         if self.seti.ok:
             self.sp = +self.seti.values
             self.sum_delta = np.zeros(self.num)
 
     def use_setpoint(self, use) -> None:
+        """Setpoint is only enabled when vefb is run in loop mode."""
         if use and (self.sp is None or not self._use_setpoint):
             self.make_setpoint()
         self._use_setpoint = use
 
     def values_within_levels(self, values) -> bool:
+        """Check if squad PV values are within the valid range."""
         drvhs = self.seti_drvhs.values
         drvls = self.seti_drvls.values
 
@@ -232,7 +247,7 @@ class SkewQuadrupoles:
             if values[i] < self.drvls[i]:
                 if self.last_drvl_fail != i:
                     logger.warning(
-                        f"DRVL check {self._pv_names[i]}: "
+                        f"DRVL check {self._squad_pv_names[i]}: "
                         f"New SQUAD value {values[i]} < DRVL {drvls[i]}"
                     )
                     self.last_drvl_fail = i
@@ -243,7 +258,7 @@ class SkewQuadrupoles:
             if values[i] > self.drvhs[i]:
                 if self.last_drvh_fail != i:
                     logger.warning(
-                        f"DRVH check {self._pv_names[i]}: "
+                        f"DRVH check {self._squad_pv_names[i]}: "
                         f"New SQUAD value {values[i]} > DRVH {drvhs[i]}"
                     )
                     self.last_drvh_fail = i
@@ -256,6 +271,7 @@ class SkewQuadrupoles:
         return True
 
     def apply_correction(self, delta) -> bool:
+        """Do final calculation and apply correction to PVs"""
         if self._use_setpoint:
             if self.sp is None:
                 return False
@@ -272,7 +288,7 @@ class SkewQuadrupoles:
         if not self.values_within_levels(new_sqvals):
             return False
 
-        results = caput(self._pv_names, new_sqvals, throw=False)
+        results = caput(self._squad_pv_names, new_sqvals, throw=False)
         ok = np.all(map(bool, results))
         if not ok:
             logger.error("Caput error")
@@ -281,10 +297,11 @@ class SkewQuadrupoles:
         return ok
 
     def monitors(self) -> None:
-        self.seti = WFMonitor(self._pv_names)
+        """Setup squad PV monitoring."""
+        self.seti = WFMonitor(self._squad_pv_names)
 
-        squad_pv_drvhs = [f"{name}.DRVH" for name in self._pv_names]
-        squad_pv_drvls = [f"{name}.DRVL" for name in self._pv_names]
+        squad_pv_drvhs = [f"{name}.DRVH" for name in self._squad_pv_names]
+        squad_pv_drvls = [f"{name}.DRVL" for name in self._squad_pv_names]
 
         self.seti_drvhs = WFMonitor(squad_pv_drvhs)
         self.seti_drvls = WFMonitor(squad_pv_drvls)
@@ -292,8 +309,10 @@ class SkewQuadrupoles:
         self.drvhs = self.seti_drvhs.values
         self.drvls = self.seti_drvls.values
 
-    def set_pv_names(self, pv_names) -> None:
-        self._pv_names = pv_names
+    def set_pv_names(self, squad_pv_names) -> None:
+        """Restarts squad monitoring. Called when the ringmode is changed as this may
+        change which PVs we need to monitor."""
+        self._squad_pv_names = squad_pv_names
 
         self.seti.close()
         self.seti_drvhs.close()
@@ -301,15 +320,15 @@ class SkewQuadrupoles:
         self.monitors()
 
 
-# VEMIT FB:
-
-
 class VefbServer:
+    """The main class which provides the vertical emittance feedback PV interface,
+    and contains the algorithms for making single and loop corrections."""
+
     def __init__(self, ring_mode):
         squad_pv_names = ring_mode.lattice.get_element_pv_names("SQUAD", "a1", pytac.SP)
         self.skew_quads = SkewQuadrupoles(squad_pv_names)
 
-        self.enabled = False
+        self.loop_enabled = False
         self.enabled_first_time = False
         self.time_step = 0.2
 
@@ -342,7 +361,9 @@ class VefbServer:
     def start(self) -> None:
         cothread.Spawn(self.run)
 
-    def init_wait(self, wait_time) -> None:
+    def init_wait(self, wait_time: int) -> None:
+        """Wait a few seconds to ensure all camonitor connections are connected. If
+        connections fail then we continue anyway after the wait time has elapsed."""
         logger.info("Init wait")
         end_time = time.time() + wait_time
 
@@ -363,21 +384,24 @@ class VefbServer:
             cothread.Sleep(self.time_step)
 
     def run(self) -> None:
+        """Main runtime loop"""
         self.init_wait(3.0)
         while True:
             try:
                 cothread.Sleep(self.time_step)
-                self.run_once(self.enabled)
+                self.perform_correction(self.loop_enabled)
 
             except BaseException:
                 logger.exception("Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, False)
 
     def run_single(self, value) -> None:
+        """Called when SR-CS-VEFB-01:SINGLE changes value. This does a single
+        correction"""
         logger.info("Single correct pressed")
-        if not self.enabled:
+        if not self.loop_enabled:
             try:
-                self.run_once(True, True)
+                self.perform_correction(True, True)
             except BaseException:
                 logger.exception("Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, True)
@@ -387,7 +411,9 @@ class VefbServer:
             )
 
     def add_single(self, value) -> None:
-        if not self.enabled:
+        """Called when SR-CS-VEFB-01:ADD_DELTA changes value. This directly adds
+        a delta to squad PVs."""
+        if not self.loop_enabled:
             try:
                 self.run_add_delta(self.vemit_single_delta.get())
             except BaseException:
@@ -399,7 +425,9 @@ class VefbServer:
             )
 
     def sub_single(self, value) -> None:
-        if not self.enabled:
+        """Called when SR-CS-VEFB-01:SUB_DELTA changes value. This directly subtracts
+        a delta from squad PVs."""
+        if not self.loop_enabled:
             try:
                 self.run_add_delta(-self.vemit_single_delta.get())
             except BaseException:
@@ -411,6 +439,7 @@ class VefbServer:
             )
 
     def error_check(self) -> Literal[8, 4, 9, 10, 14, 1, 2, 0]:
+        """Check for common error conditions."""
         status = VefbStatus.OK
 
         self.check_camera_state()
@@ -438,7 +467,9 @@ class VefbServer:
 
         return status
 
-    def run_once(self, do_correction, single=False) -> None:
+    def perform_correction(self, do_correction, single=False) -> None:
+        """Check for errors, then run the appropriate correction, finally handle any
+        resulting errors."""
         status = self.error_check()
 
         if single and status == VefbStatus.AWAY_FROM_TARGET:
@@ -508,17 +539,20 @@ class VefbServer:
 
         self.update_calc_parameters()
 
-        if self.enabled:
+        if self.loop_enabled:
             self.handle_status(VefbStatus.RING_MODE_CHANGE, True)
         else:
             self.handle_status(VefbStatus.OK, True)
 
     def on_method_change(self, value) -> None:
-        if self.enabled:
+        """Callback for SR-CS-VEFB-01:METHOD. Allows users to change the vefb aglorithm
+        being used"""
+        if self.loop_enabled:
             self.handle_status(VefbStatus.METHOD_CHANGE, True)
         self.update_calc_parameters()
 
     def update_calc_parameters(self) -> None:
+        """Update calculation params when the vefb algorithm or ringmode changes."""
         if self.method_pv.get() == 0:
             self.IRM = self.IRM_old
             self.skewhw = self.skewhw_old
@@ -528,8 +562,10 @@ class VefbServer:
         logger.info(f"IRM: {self.IRM}")
         logger.info(f"Skewhw: {self.skewhw}")
 
-    def handle_status(self, status, single) -> None:
-        do_correction = single or self.enabled
+    def handle_status(self, status: int, single: bool) -> None:
+        """Handle any errors which occurred since the last check. Check for
+        persistant errors and update the status PV."""
+        do_correction = single or self.loop_enabled
 
         status = self.persistent_error_check(status)
         status = self.no_effect_check(status)
@@ -557,9 +593,11 @@ class VefbServer:
                 VefbStatus.BAD_EMITTANCE_VALUE,
                 VefbStatus.RECOVERING_CAMERAS,
             ]:
-                self.enable_pv.set(0)
+                self.enable_loop_pv.set(0)
 
-    def persistent_error_check(self, status) -> int:
+    def persistent_error_check(self, status: int) -> int:
+        """Check for re-occuring errors. The feedback loop may be disabled if an
+        error persists."""
         current_time = time.time()
         diff = current_time - self.current_time
 
@@ -575,7 +613,7 @@ class VefbServer:
             self.error_time += diff
 
         if (
-            self.enabled
+            self.loop_enabled
             and self.error_or_recover_time > self.max_recovery_time_pv.get()
         ):
             logger.error(
@@ -583,7 +621,7 @@ class VefbServer:
             )
             status = VefbStatus.PERSISTENT_EMITTANCE_ERRORS
 
-        elif self.enabled and (self.error_time > self.max_error_time_pv.get()):
+        elif self.loop_enabled and (self.error_time > self.max_error_time_pv.get()):
             logger.error(f"Time in error exceeds timeout {self.max_error_time_pv}")
             status = VefbStatus.PERSISTENT_EMITTANCE_ERRORS
 
@@ -592,7 +630,9 @@ class VefbServer:
         return status
 
     def no_effect_check(self, status) -> int:
-        if not self.enabled or status not in [VefbStatus.OK]:
+        """Check whether the applied corrections are moving the emittance towards the
+        desired target. This is only used in loop mode."""
+        if not self.loop_enabled or status not in [VefbStatus.OK]:
             return status
 
         err = abs(self.vemit_filtered - self.vemit_target_pv.get())
@@ -644,6 +684,8 @@ class VefbServer:
         return status
 
     def check_camera_state(self) -> None:
+        """Check that the two pinhole cameras which calculate the vertical emittance
+        are in a healthy state."""
         if self.recovering_cameras:
             current_time = time.time()
             min_recovery_timeout = self.min_camera_recovery_time_pv.get()
@@ -694,7 +736,9 @@ class VefbServer:
         ]
 
     def away_from_target(self) -> bool:
-        if (not self.enabled and not self.is_injecting()) or self.enabled_first_time:
+        if (
+            not self.loop_enabled and not self.is_injecting()
+        ) or self.enabled_first_time:
             target = self.vemit_target_pv.get()
             threshold = self.vemit_fb_start_err_max_pv.get()
             err = min(
@@ -704,10 +748,12 @@ class VefbServer:
                 return True
         return False
 
-    def set_enabled(self, value) -> None:
+    def set_loop_enabled(self, value) -> None:
+        """Called when SR-CS-VEFB-01:LOOP is updated. This switched vefb to run in loop
+        mode which requires some reconfiguration which is done in this function."""
         logger.info(f"LOOP ENABLE: {value}")
         enabled = value == 1
-        self.enabled = enabled
+        self.loop_enabled = enabled
         self.enabled_first_time = True
         self.error_or_recover_time = 0
         self.error_time = 0
@@ -735,6 +781,8 @@ class VefbServer:
     def do_calc(
         self, apply_calc, use_filter=True, check_limits=True
     ) -> Literal[8, 11, 7, 6, 9, 0]:
+        """Calculates the delta to apply and then calls self.apply_delta() which
+        applies the delta."""
         if not self.calc_parameters_ok():
             return VefbStatus.MISSING_CALC_PARAMETERS
 
@@ -805,6 +853,8 @@ class VefbServer:
         return self.apply_delta(delta, apply_calc, check_limits)
 
     def run_add_delta(self, delta) -> None:
+        """Rather than calculating a delta. This function just verifies a given delta
+        which is then applied by calling self.apply_delta()"""
         if self.check_status_on_delta_pv.get() == 0:
             status = VefbStatus.OK
         else:
@@ -818,6 +868,8 @@ class VefbServer:
     def apply_delta(
         self, delta, apply_calc=True, check_limits=False
     ) -> Literal[6, 9, 0]:
+        """Perform final validations before calling apply_correction which
+        outputs the correction to the skew quadrupoles."""
         # check delta within limits and raise error or scale
         delta_max = self.squad_delta_max_pv.get()
         if check_limits:
@@ -852,20 +904,23 @@ class VefbServer:
         return VefbStatus.OK
 
     def monitors(self) -> None:
+        """Setup camonitoring of key PVs"""
         self.vemit = PVMonitor("SR-DI-EMIT-01:VEMIT")
         self.vemit_mean = PVMonitor("SR-DI-EMIT-01:VEMIT_MEAN")
         self.beam_current = PVMonitor("SR-DI-DCCT-01:SIGNAL")
         self.emit_status = PVMonitor("SR-DI-EMIT-01:STATUS")
 
     def records(self) -> None:
+        """Setup pythonSoftIOC records hosted by this IOC. These provide a user
+        interface for controlling and monitoring vefb."""
         builder.SetDeviceName("SR-CS-VEFB-01")
 
-        self.enable_pv = builder.mbbOut(
+        self.enable_loop_pv = builder.mbbOut(
             "LOOP",
             ("OFF", "MINOR"),
             ("ON", "NO_ALARM"),
             initial_value=0,
-            on_update=self.set_enabled,
+            on_update=self.set_loop_enabled,
         )
 
         self.single_pv = builder.aOut(
