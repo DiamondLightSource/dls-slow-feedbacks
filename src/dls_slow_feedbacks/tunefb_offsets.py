@@ -21,6 +21,7 @@ OFFSET_INPUT = ":OFFSET1.INP"
 LOCAL_LINK = ":LOFFSET1 CPP MS"
 
 logger = logging.getLogger(name="dls_slow_Feedbacks")
+tunefb_app = typer.Typer()
 
 TUNE_QUAD_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
 
@@ -60,6 +61,7 @@ def all_forwarded(local_pvs, mag_pvs) -> bool:
     return inps == expected
 
 
+@tunefb_app.callback(invoke_without_command=True)
 def main(
     test: Annotated[
         bool, typer.Option(help="Write to log instead of executing Caput.")
@@ -116,11 +118,3 @@ def main(
     for inp, link in zip(inps, links, strict=True):
         caput_function(inp, link)
         cothread.Sleep(BEAM_DAMP_TIME * 10.0)
-
-
-def typer_main():
-    typer.run(main)
-
-
-if __name__ == "__main__":
-    typer_main()

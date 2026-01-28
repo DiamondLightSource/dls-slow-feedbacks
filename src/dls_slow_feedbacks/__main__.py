@@ -25,6 +25,7 @@ __all__ = ["main"]
 # Configure logging
 logconfig.setup_logging(application="dls_slow_feedbacks")
 logger = logging.getLogger(name="dls_slow_feedbacks")
+app = typer.Typer()
 
 
 # If running in testing mode log instead of executing caput.  We do this by
@@ -82,6 +83,7 @@ def start_servers(servers: tuple) -> None:
         server.start()
 
 
+@app.callback(invoke_without_command=True)
 def main(
     test: Annotated[
         bool, typer.Option(help="Write to log instead of executing Caput")
@@ -108,11 +110,3 @@ def main(
     start_servers(servers)
 
     softioc.interactive_ioc(globals())
-
-
-def typer_main():
-    typer.run(main)
-
-
-if __name__ == "__main__":
-    typer_main()
