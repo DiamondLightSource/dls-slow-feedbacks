@@ -361,7 +361,7 @@ class VefbServer:
     def start(self) -> None:
         cothread.Spawn(self.run)
 
-    def init_wait(self, wait_time: int) -> None:
+    def init_wait(self, wait_time: float) -> None:
         """Wait a few seconds to ensure all camonitor connections are connected. If
         connections fail then we continue anyway after the wait time has elapsed."""
         logger.info("Init wait")

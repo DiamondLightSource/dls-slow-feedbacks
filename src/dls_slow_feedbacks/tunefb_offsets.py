@@ -105,7 +105,7 @@ def main(
         # set INP to the remote PVs
         links = [pv + LOCAL_LINK for pv in mag_pvs]
     elif forwarded:
-        logger.info("mags forwarded = " + all_forwarded(local_pvs, mag_pvs))
+        logger.info(f"mags forwarded = {all_forwarded(local_pvs, mag_pvs)}")
         sys.exit()
     else:
         print(

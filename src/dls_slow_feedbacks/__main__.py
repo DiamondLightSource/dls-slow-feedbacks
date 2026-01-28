@@ -110,3 +110,7 @@ def main(
     start_servers(servers)
 
     softioc.interactive_ioc(globals())
+
+
+if __name__ == "__main__":
+    typer.run(main)
