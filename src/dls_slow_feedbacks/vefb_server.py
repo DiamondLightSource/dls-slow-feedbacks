@@ -336,7 +336,7 @@ class VefbServer:
         self.monitors()
         self.records()
 
-        ring_mode.add_listener(self.on_ringmode_change)
+        ring_mode.add_listener(self.set_data_dir)
 
     def start(self):
         cothread.Spawn(self.run)
@@ -457,7 +457,9 @@ class VefbServer:
 
         self.enabled_first_time = False
 
-    def on_ringmode_change(self, lattice):
+    def set_data_dir(self, lattice) -> None:
+        """This function is used to load the configuration for a different ringmode. It
+        is called when the ringmode PV is updated."""
         self.last = None
         self.IRM = None
         self.IRM_old = None

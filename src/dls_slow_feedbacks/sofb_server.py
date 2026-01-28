@@ -20,9 +20,9 @@ class SofbServer:
         self.power: int = 0  # ON=1/OFF=0
         self.sofb: sofb.Sofb = sofb.Sofb(ring_mode.lattice)
         self.create_records(ring_mode.lattice)
-        ring_mode.add_listener(self.set_datadir)
+        ring_mode.add_listener(self.set_data_dir)
 
-    def set_datadir(self, lattice: EpicsLattice) -> None:
+    def set_data_dir(self, lattice: EpicsLattice) -> None:
         """Load the BPM response matrix."""
         self.sofb.cache.clear()
         path = os.path.join(mode.DATAROOT, lattice.name)

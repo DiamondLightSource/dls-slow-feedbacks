@@ -62,7 +62,7 @@ def vefb(ring_mode, nsquads):
         v.skew_quads.set_pv_names = mock.MagicMock()
         v.skew_quads.apply_correction = mock.MagicMock()
         v.skew_quads.num = nsquads
-        v.on_ringmode_change(ring_mode.lattice)
+        v.set_data_dir(ring_mode.lattice)
         return v
 
 

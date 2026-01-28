@@ -119,8 +119,8 @@ class TunefbServer:
         # Load data from files (and on ringmode change)
         self.rm = None
         self.irm = None
-        if self.set_datadir not in ring_mode.listeners:
-            ring_mode.add_listener(self.set_datadir)
+        if self.set_data_dir not in ring_mode.listeners:
+            ring_mode.add_listener(self.set_data_dir)
 
         # fetch values from the PVs we will be mirroring, before
         # starting up.
@@ -138,7 +138,7 @@ class TunefbServer:
         # Initalise EPICS records
         self.records()
 
-    def set_datadir(self, lattice) -> None:
+    def set_data_dir(self, lattice) -> None:
         """Load required data from files in datadir."""
         # Load magnet PVs from Pytac
         self.mag_pvs = load_magnet_pvs(lattice)
