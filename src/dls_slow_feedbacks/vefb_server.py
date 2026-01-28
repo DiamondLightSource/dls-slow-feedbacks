@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from typing import Literal
 
 import cothread
 import numpy as np
@@ -135,7 +136,7 @@ class PVMonitor:
             name, self.on_update, format=FORMAT_TIME, notify_disconnect=True
         )
 
-    def on_update(self, value):
+    def on_update(self, value) -> None:
         self.ok = value.ok
         if value.ok:
             self.value = +value
@@ -144,7 +145,7 @@ class PVMonitor:
             self.value = None
             self.timestamp = time.time()
 
-    def close(self):
+    def close(self) -> None:
         self._sub.close()
 
 
@@ -159,7 +160,7 @@ class WFMonitor:
             names, self.on_update, format=FORMAT_TIME, notify_disconnect=True
         )
 
-    def on_update(self, value, index):
+    def on_update(self, value, index) -> None:
         self.oks[index] = value.ok
         if value.ok:
             self.values[index] = +value
@@ -169,7 +170,7 @@ class WFMonitor:
             self.timestamps[index] = time.time()
         self.ok = all(self.oks)
 
-    def close(self):
+    def close(self) -> None:
         for sub in self._subs:
             sub.close()
 
@@ -190,18 +191,18 @@ class SkewQuadrupoles:
         self.last_drvh_fail = None
 
     @property
-    def num(self):
+    def num(self) -> int:
         return len(self._pv_names)
 
-    def check_state(self):
+    def check_state(self) -> bool:
         return self.ok and self.drive_levels_ok()
 
     @property
-    def ok(self):
+    def ok(self) -> bool:
         pvs = [self.seti, self.seti_drvls, self.seti_drvls]
         return all([s.ok for s in pvs])  # noqa: C419
 
-    def drive_levels_ok(self):
+    def drive_levels_ok(self) -> bool:
         for a, b, c in zip(
             self.seti_drvls.values, self.seti_drvhs.values, self._pv_names, strict=True
         ):
@@ -213,17 +214,17 @@ class SkewQuadrupoles:
         self.last_levels_ok_fail = None
         return True
 
-    def make_setpoint(self):
+    def make_setpoint(self) -> None:
         if self.seti.ok:
             self.sp = +self.seti.values
             self.sum_delta = np.zeros(self.num)
 
-    def use_setpoint(self, use):
+    def use_setpoint(self, use) -> None:
         if use and (self.sp is None or not self._use_setpoint):
             self.make_setpoint()
         self._use_setpoint = use
 
-    def values_within_levels(self, values):
+    def values_within_levels(self, values) -> bool:
         drvhs = self.seti_drvhs.values
         drvls = self.seti_drvls.values
 
@@ -254,7 +255,7 @@ class SkewQuadrupoles:
 
         return True
 
-    def apply_correction(self, delta):
+    def apply_correction(self, delta) -> bool:
         if self._use_setpoint:
             if self.sp is None:
                 return False
@@ -279,7 +280,7 @@ class SkewQuadrupoles:
                 logger.error(f"{s}")
         return ok
 
-    def monitors(self):
+    def monitors(self) -> None:
         self.seti = WFMonitor(self._pv_names)
 
         squad_pv_drvhs = [f"{name}.DRVH" for name in self._pv_names]
@@ -291,7 +292,7 @@ class SkewQuadrupoles:
         self.drvhs = self.seti_drvhs.values
         self.drvls = self.seti_drvls.values
 
-    def set_pv_names(self, pv_names):
+    def set_pv_names(self, pv_names) -> None:
         self._pv_names = pv_names
 
         self.seti.close()
@@ -338,10 +339,10 @@ class VefbServer:
 
         ring_mode.add_listener(self.set_data_dir)
 
-    def start(self):
+    def start(self) -> None:
         cothread.Spawn(self.run)
 
-    def init_wait(self, wait_time):
+    def init_wait(self, wait_time) -> None:
         logger.info("Init wait")
         end_time = time.time() + wait_time
 
@@ -361,7 +362,7 @@ class VefbServer:
                 return
             cothread.Sleep(self.time_step)
 
-    def run(self):
+    def run(self) -> None:
         self.init_wait(3.0)
         while True:
             try:
@@ -372,7 +373,7 @@ class VefbServer:
                 logger.exception("Vemit FB raised unexpected exception")
                 self.handle_status(VefbStatus.UNKNOWN_ERROR, False)
 
-    def run_single(self, value):
+    def run_single(self, value) -> None:
         logger.info("Single correct pressed")
         if not self.enabled:
             try:
@@ -385,7 +386,7 @@ class VefbServer:
                 "Single correct disabled in loopback mode. Skipping correction."
             )
 
-    def add_single(self, value):
+    def add_single(self, value) -> None:
         if not self.enabled:
             try:
                 self.run_add_delta(self.vemit_single_delta.get())
@@ -397,7 +398,7 @@ class VefbServer:
                 "Add delta disabled in loopback mode. Skipping delta addition."
             )
 
-    def sub_single(self, value):
+    def sub_single(self, value) -> None:
         if not self.enabled:
             try:
                 self.run_add_delta(-self.vemit_single_delta.get())
@@ -409,7 +410,7 @@ class VefbServer:
                 "Subtract delta disabled in loopback mode. Skipping delta subtraction."
             )
 
-    def error_check(self):
+    def error_check(self) -> Literal[8, 4, 9, 10, 14, 1, 2, 0]:
         status = VefbStatus.OK
 
         self.check_camera_state()
@@ -437,7 +438,7 @@ class VefbServer:
 
         return status
 
-    def run_once(self, do_correction, single=False):
+    def run_once(self, do_correction, single=False) -> None:
         status = self.error_check()
 
         if single and status == VefbStatus.AWAY_FROM_TARGET:
@@ -512,12 +513,12 @@ class VefbServer:
         else:
             self.handle_status(VefbStatus.OK, True)
 
-    def on_method_change(self, value):
+    def on_method_change(self, value) -> None:
         if self.enabled:
             self.handle_status(VefbStatus.METHOD_CHANGE, True)
         self.update_calc_parameters()
 
-    def update_calc_parameters(self):
+    def update_calc_parameters(self) -> None:
         if self.method_pv.get() == 0:
             self.IRM = self.IRM_old
             self.skewhw = self.skewhw_old
@@ -527,7 +528,7 @@ class VefbServer:
         logger.info(f"IRM: {self.IRM}")
         logger.info(f"Skewhw: {self.skewhw}")
 
-    def handle_status(self, status, single):
+    def handle_status(self, status, single) -> None:
         do_correction = single or self.enabled
 
         status = self.persistent_error_check(status)
@@ -558,7 +559,7 @@ class VefbServer:
             ]:
                 self.enable_pv.set(0)
 
-    def persistent_error_check(self, status):
+    def persistent_error_check(self, status) -> int:
         current_time = time.time()
         diff = current_time - self.current_time
 
@@ -590,7 +591,7 @@ class VefbServer:
 
         return status
 
-    def no_effect_check(self, status):
+    def no_effect_check(self, status) -> int:
         if not self.enabled or status not in [VefbStatus.OK]:
             return status
 
@@ -622,7 +623,7 @@ class VefbServer:
 
         return status
 
-    def filter_errors(self, status, do_correction):
+    def filter_errors(self, status, do_correction) -> int:
         if status in [VefbStatus.NO_EMITTANCE_VALUE]:
             if self.last_calc_status not in [VefbStatus.NO_EMITTANCE_VALUE]:
                 self.no_value_start_time = self.current_time - VefbConstants.MAX_TS_AGE
@@ -642,7 +643,7 @@ class VefbServer:
 
         return status
 
-    def check_camera_state(self):
+    def check_camera_state(self) -> None:
         if self.recovering_cameras:
             current_time = time.time()
             min_recovery_timeout = self.min_camera_recovery_time_pv.get()
@@ -666,24 +667,24 @@ class VefbServer:
                 self.recovery_start_time = current_time
                 logger.info("Camera recovery started")
 
-    def camera_recovery_started(self):
+    def camera_recovery_started(self) -> int:
         emit_status = self.emit_status.value
         return emit_status == EmittanceStatus.RECOVERING
 
-    def camera_recovery_complete(self):
+    def camera_recovery_complete(self) -> int:
         emit_status = self.emit_status.value
         return emit_status == EmittanceStatus.OK
 
-    def have_stored_beam(self):
+    def have_stored_beam(self) -> bool:
         return (
             self.beam_current.ok
             and self.beam_current.value > self.dcct_threshold_pv.get()
         )
 
-    def is_injecting(self):
+    def is_injecting(self) -> bool:
         return self.emit_status.value == EmittanceStatus.INJECTING
 
-    def emittance_status_bad(self):
+    def emittance_status_bad(self) -> bool:
         if not self.emit_status.ok:
             return False
         return self.emit_status.value not in [
@@ -692,7 +693,7 @@ class VefbServer:
             EmittanceStatus.INJECTING,
         ]
 
-    def away_from_target(self):
+    def away_from_target(self) -> bool:
         if (not self.enabled and not self.is_injecting()) or self.enabled_first_time:
             target = self.vemit_target_pv.get()
             threshold = self.vemit_fb_start_err_max_pv.get()
@@ -703,7 +704,7 @@ class VefbServer:
                 return True
         return False
 
-    def set_enabled(self, value):
+    def set_enabled(self, value) -> None:
         logger.info(f"LOOP ENABLE: {value}")
         enabled = value == 1
         self.enabled = enabled
@@ -715,23 +716,25 @@ class VefbServer:
             self.sum_delta_oor = 0
         self.skew_quads.use_setpoint(enabled)
 
-    def loop_correct(self):
+    def loop_correct(self) -> Literal[8, 11, 7, 6, 9, 0]:
         return self.do_calc(True)
 
-    def single_correct(self):
+    def single_correct(self) -> Literal[8, 11, 7, 6, 9, 0]:
         return self.do_calc(True, False, False)
 
-    def calc_only(self):
+    def calc_only(self) -> Literal[8, 11, 7, 6, 9, 0]:
         return self.do_calc(False)
 
-    def calc_parameters_ok(self):
+    def calc_parameters_ok(self) -> bool:
         return (
             self.IRM is not None
             and self.skewhw is not None
             and len(self.skewhw) == self.skew_quads.num
         )
 
-    def do_calc(self, apply_calc, use_filter=True, check_limits=True):
+    def do_calc(
+        self, apply_calc, use_filter=True, check_limits=True
+    ) -> Literal[8, 11, 7, 6, 9, 0]:
         if not self.calc_parameters_ok():
             return VefbStatus.MISSING_CALC_PARAMETERS
 
@@ -801,7 +804,7 @@ class VefbServer:
 
         return self.apply_delta(delta, apply_calc, check_limits)
 
-    def run_add_delta(self, delta):
+    def run_add_delta(self, delta) -> None:
         if self.check_status_on_delta_pv.get() == 0:
             status = VefbStatus.OK
         else:
@@ -812,7 +815,9 @@ class VefbServer:
 
         self.handle_status(status, True)
 
-    def apply_delta(self, delta, apply_calc=True, check_limits=False):
+    def apply_delta(
+        self, delta, apply_calc=True, check_limits=False
+    ) -> Literal[6, 9, 0]:
         # check delta within limits and raise error or scale
         delta_max = self.squad_delta_max_pv.get()
         if check_limits:
@@ -846,13 +851,13 @@ class VefbServer:
 
         return VefbStatus.OK
 
-    def monitors(self):
+    def monitors(self) -> None:
         self.vemit = PVMonitor("SR-DI-EMIT-01:VEMIT")
         self.vemit_mean = PVMonitor("SR-DI-EMIT-01:VEMIT_MEAN")
         self.beam_current = PVMonitor("SR-DI-DCCT-01:SIGNAL")
         self.emit_status = PVMonitor("SR-DI-EMIT-01:STATUS")
 
-    def records(self):
+    def records(self) -> None:
         builder.SetDeviceName("SR-CS-VEFB-01")
 
         self.enable_pv = builder.mbbOut(
