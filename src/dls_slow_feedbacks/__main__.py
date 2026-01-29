@@ -22,9 +22,11 @@ from . import __version__
 
 __all__ = ["main"]
 
-# Configure logging
+
+# Setup logging for slow feedbacks
 logconfig.setup_logging(application="dls_slow_feedbacks")
 logger = logging.getLogger(name="dls_slow_feedbacks")
+
 app = typer.Typer()
 
 
@@ -38,11 +40,6 @@ def print_version(value: bool):
     if value:
         typer.echo(__version__)
         raise typer.Exit()
-
-
-def configure_logging() -> None:
-    """Set up logging"""
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 
 def create_servers(ring_mode: mode.RingMode) -> tuple:
@@ -90,7 +87,7 @@ def main(
     ] = False,
     version: bool = typer.Option(None, "--version", callback=print_version),
 ) -> None:
-    configure_logging()
+    """Entrypoint for running all slow feedbacks."""
 
     if test:
         cothread.catools.caput = mock_caput
