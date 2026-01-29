@@ -59,20 +59,21 @@ class RffbServer:
             if self.correction_period == 10 and self.tick != 0:
                 continue
 
-            try:
-                self.apply_correction()
+            if self.power:
+                try:
+                    self.apply_correction()
 
-            except ca_nothing as e:
-                # A caget or caput failed
-                logger.exception("Channel access exception. RFFB will be stopped.")
-                self.pv_error.set(e.name)
-                self.calc_error.set(1)
-                self.power_pv.set(0)
+                except ca_nothing as e:
+                    # A caget or caput failed
+                    logger.exception("Channel access exception. RFFB will be stopped.")
+                    self.pv_error.set(e.name)
+                    self.calc_error.set(1)
+                    self.power_pv.set(0)
 
-            except BaseException:
-                logger.exception("Feedback error occurred.")
-                self.calc_error.set(1)
-                self.power_pv.set(0)
+                except BaseException:
+                    logger.exception("Feedback error occurred.")
+                    self.calc_error.set(1)
+                    self.power_pv.set(0)
 
     def apply_correction(self) -> None:
         """Do final calculation and apply correction to PVs"""
@@ -107,8 +108,8 @@ class RffbServer:
         self.delta_pv.set(delta_rf_demand)
         self.target_pv.set(target)
 
-        # Only caput if feedback loop is on and there are no errors
-        if self.power and not self.check_for_errors(
+        # Only caput if there are no errors
+        if not self.check_for_errors(
             fbstat, ring_current, present_rf_freq, present_rf_demand
         ):
             caput("LI-RF-MOSC-01:FREQ_SET", target_limit)
