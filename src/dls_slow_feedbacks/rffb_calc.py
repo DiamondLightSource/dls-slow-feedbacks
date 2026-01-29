@@ -19,9 +19,11 @@ def get_disp_corr(
     # remove data for disabled bpms
     dispersion_matrix = dispersion_matrix[enabled_bpm]
     # rearrange numpy arrays to required format
-    rmx = bpm_response_matrix[np.ix_(enabled_bpm, enabled_cor)]
-    # calculate correction
-    dispersion_correction = np.dot(pinv(rmx), dispersion_matrix)
+    response_matrix_enabled = bpm_response_matrix[np.ix_(enabled_bpm, enabled_cor)]
+    # calculate correction and flatten the matrix into a 1D array, rather than (173, 1)
+    dispersion_correction = np.dot(
+        pinv(response_matrix_enabled), dispersion_matrix
+    ).flatten()
 
     cache.clear()
     cache[key] = dispersion_correction
@@ -42,6 +44,4 @@ def calc_rffb(
         enabled_bpms, enabled_correctors, bpm_response_matrix, dispersion_matrix
     )
     delta_rf = np.dot(hcm, dispersion_correction / sum(dispersion_correction**2))
-    # TODO: delta_rf should always be a float, but is sometimes a float in a numpy array
-    # which we have to get it out of, investigate the root cause of this
-    return delta_rf.item()
+    return delta_rf
