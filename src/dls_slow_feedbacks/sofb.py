@@ -17,7 +17,7 @@ class SingularValuePVs:
     """Stores references to PV objects that can be set to provide
     waveforms representing SVD Data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Requires injecting of fields from instantiating class
         self.s = None
         self.s_inv = None
@@ -40,7 +40,6 @@ def tkv_reg(m: np.ndarray, mu: float, singular_values: SingularValuePVs) -> np.n
 
 
 class CalculationError(Exception):
-    # TODO: This should probably do something?
     pass
 
 
@@ -119,6 +118,7 @@ class Sofb:
         error_indices: np.ndarray,
         error_description: str,
     ) -> None:
+        """Log corrector error and raise CalculationError exception"""
         error_pvs = array_of_pv_names[error_indices]
         # Message to be printed to the console can contain the whole
         # list and reason because not limited on space
@@ -132,6 +132,7 @@ class Sofb:
         raise CalculationError(exception_message)
 
     def apply_correction(self) -> None:
+        """Do final calculation and apply correction to PVs"""
         # Correction is scaled by this fraction <= 1
         afrac = caget("SR-CS-SOFB-01:AFRAC")
 

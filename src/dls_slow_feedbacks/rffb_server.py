@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import TypeAlias
 
 import cothread
 import numpy as np
@@ -13,12 +14,17 @@ from dls_slow_feedbacks import constants, mode, rffb_calc
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
+PVValueType: TypeAlias = int | float | np.ndarray | str
+
 # Allowable difference between RF (master oscillator) setpoint and rbv
 MAX_FREQ_DIFFERENCE_HZ = 100
 
 
 class RffbServer:
-    """IOC for RF Feedback"""
+    """IOC for RF Feedback
+
+    Monitor BPMs and adjust the RF frequency to account for orbit feeback corrections.
+    """
 
     def __init__(self, ring_mode: mode.RingMode) -> None:
         self.tick: int = 0
@@ -69,7 +75,8 @@ class RffbServer:
                 self.power_pv.set(0)
 
     def apply_correction(self) -> None:
-        """Adjust the RF frequency to relieve orbit feeback correction"""
+        """Do final calculation and apply correction to PVs"""
+
         fbstat = caget("CS-CS-MSTAT-01:FBSTAT")
         ring_current = caget("SR-DI-DCCT-01:SIGNAL")
         enabled_bpms = caget("SR-DI-EBPM-01:ENABLED") == 0
@@ -145,7 +152,7 @@ class RffbServer:
             self.pv_error.set("Current too low")
             return True
 
-        # HLA-349
+        # HLA-349: Discrepancy may indicate problem with master oscillator
         if not self.rf_near_setpoint(present_rf_freq, present_rf_demand):
             logger.critical(
                 "Discrepancy between RF frequency and setpoint. RFFB will be stopped."
@@ -281,14 +288,14 @@ class PVWithValidity:
 
     ALLOWED_INVALID_CAGETS: int = 10
 
-    def __init__(self, pv_name) -> None:
+    def __init__(self, pv_name: str) -> None:
         self.pv_name: str = pv_name
         self.consecutive_times_invalid: int = 0
         self.ok: bool = False
         self.last_caget_time = None
         self.severity = None
 
-    def get(self):
+    def get(self) -> PVValueType:
         """Do a caget, store the severity and ok status and return the result.
         Do not store the caget value to prevent stale data."""
 

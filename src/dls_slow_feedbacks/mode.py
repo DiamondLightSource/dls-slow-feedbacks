@@ -46,7 +46,7 @@ class RingMode:
         """Assign the ring mode to its associated PV."""
         self.mode.set(RING_MODES.index(self.name))
 
-    def set_mode(self, mode) -> None:
+    def set_mode(self, mode: int) -> None:
         """Set the ring mode and reload the lattice."""
         self.name = RING_MODES[mode]
         self.lattice = load_pml_lattice(self.name)
