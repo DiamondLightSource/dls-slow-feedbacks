@@ -26,12 +26,12 @@ IOC = "SR-CS-TFB-01"
 TUNE_PVS = ["SR23C-DI-TMBF-01:TUNE:TUNE", "SR23C-DI-TMBF-02:TUNE:TUNE"]
 CURRENT_PV = "SR-DI-DCCT-01:SIGNAL"
 
-# Constant
-BEAM_DAMP_TIME = 0.001
+# Constants
+BEAM_DAMP_TIME = 0.01  # seconds
 OFFSET_CURRENT_CHANGED = "Offset changed outside of TFB"
+
 # Default values
-DELTA_TUNE_TOLERANCE = 0.02
-MAX_CURRENT_OFFSET = 0.2
+MAX_CURRENT_OFFSET = 0.2  # Amps
 MAX_CONSECUTIVE_INVALIDS = 5
 
 
@@ -411,7 +411,7 @@ class TunefbServer:
             # Set our local PVs and currents to zero
             for pv in self.mirror_pvs:
                 pv.set(0)
-                cothread.Sleep(BEAM_DAMP_TIME * 10.0)
+                cothread.Sleep(BEAM_DAMP_TIME)
             logger.warning("All integrated currents were reset to zero")
             self._reset_state()
 
@@ -424,7 +424,7 @@ class TunefbServer:
                 pv = pv + ":SETI"
                 caput(pv, caget(pv) + self.integrated_current[i])
                 self.mirror_pvs[i].set(0)
-                cothread.Sleep(BEAM_DAMP_TIME * 10.0)
+                cothread.Sleep(BEAM_DAMP_TIME)
             logger.warning("Aggregated offsets into setpoints")
             self._reset_state()
 

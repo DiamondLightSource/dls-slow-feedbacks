@@ -17,7 +17,7 @@ logger = logging.getLogger(name="dls_slow_Feedbacks")
 tunefb_app = typer.Typer()
 
 # Constants
-BEAM_DAMP_TIME = 0.001
+BEAM_DAMP_TIME = 0.01  # seconds
 IOC = "SR-CS-TFB-01"
 CURRENT_LINK = ":I CPP MS"
 OFFSET_INPUT = ":OFFSET1.INP"
@@ -117,4 +117,4 @@ def main(
     inps = [pv + ":OFFSET1.INP" for pv in mag_pvs]
     for inp, link in zip(inps, links, strict=True):
         caput_function(inp, link)
-        cothread.Sleep(BEAM_DAMP_TIME * 10.0)
+        cothread.Sleep(BEAM_DAMP_TIME)

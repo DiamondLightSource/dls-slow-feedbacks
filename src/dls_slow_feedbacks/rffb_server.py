@@ -14,7 +14,7 @@ from dls_slow_feedbacks import constants, mode, rffb_calc
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
 # Allowable difference between RF (master oscillator) setpoint and rbv
-MAX_FREQ_DIFFERENCE = 100
+MAX_FREQ_DIFFERENCE_HZ = 100
 
 
 class RffbServer:
@@ -169,8 +169,8 @@ class RffbServer:
         """Return True if RF frequency and setpoint differ by
         less than a threshold.
         """
-        frequency_difference = abs(present_rf_freq - rf_setpoint)
-        return frequency_difference <= MAX_FREQ_DIFFERENCE
+        frequency_difference_hz = abs(present_rf_freq - rf_setpoint)
+        return frequency_difference_hz <= MAX_FREQ_DIFFERENCE_HZ
 
     def rf_pvs_valid(self) -> bool:
         """Check that RF FREQ and FREQ_SET PVs have both

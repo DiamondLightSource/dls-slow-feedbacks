@@ -7,7 +7,8 @@ from pytac.lattice import EpicsLattice
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-EPS = 1e-9
+# Used to stop from dividing by zero when calculating correction scaling
+MIN_SF_CORRECTION_STEP = 1e-9
 # PSC Enum constant
 PSC_STATE_ON = 2
 
@@ -242,11 +243,11 @@ class Sofb:
         """Calculate the scale factor <= 1.0 to be applied to all
         steps, so that all are within the limit for maximum step.
 
-        The factor scale factor calculated is the largest which satisfies:
+        The scale factor calculated is the largest which satisfies:
         max(abs(scale_factor * unscaled_steps)) < step_limit
         """
         largest_step = max(abs(unscaled_steps))
-        if largest_step > EPS:
+        if largest_step > MIN_SF_CORRECTION_STEP:
             scale_factor = min(1.0, self.step_limit / largest_step)
         else:
             scale_factor = 1.0
