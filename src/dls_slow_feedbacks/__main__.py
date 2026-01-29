@@ -1,6 +1,6 @@
-import logging
+"""Slow feedback IOC startup interface for ``python -m dls_slow_feedbacks``."""
 
-# Slow feedback IOC startup.
+import logging
 import os
 from typing import Annotated
 
