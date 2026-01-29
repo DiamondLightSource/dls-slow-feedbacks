@@ -33,19 +33,19 @@ default_config = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "level": "DEBUG",
+            "level": "INFO",
             "formatter": "simple",
             "stream": "ext://sys.stdout",
         },
         "stderr": {
             "class": "logging.StreamHandler",
-            "level": "DEBUG",
+            "level": "INFO",
             "formatter": "simple",
             "stream": "ext://sys.stderr",
         },
         "graylog_gelf": {
             "class": "pygelf.GelfTcpHandler",
-            "level": "INFO",
+            "level": "DEBUG",
             # A DLS-specific configuration: the graylog server address and port
             # Graylog2 cluster. Input: "Load-Balanced GELF TCP"
             "host": GELFLOG_SERVER,
@@ -56,6 +56,7 @@ default_config = {
             "username": getpass.getuser(),
             "pid": os.getpid(),
             "package": __package__,
+            "formatter": "json",
         },
     },
     "loggers": {
@@ -64,12 +65,12 @@ default_config = {
         "dls_slow_feedbacks": {
             # To enable debug during runtime, run this in the ioc console:
             # >>> logging.getLogger("dls_slow_feedbacks").setLevel(logging.DEBUG)
-            "level": "INFO",
+            "level": "DEBUG",
             "propagate": True,
             # As this is a continually running IOC, we dont have a
             # useful output (one that can be piped). Only user messages.
             # Hence, we default everything to stderr.
-            "handlers": ["stderr"],
+            "handlers": ["graylog_gelf"],
         },
     },
     "root": {
@@ -77,9 +78,8 @@ default_config = {
         # produced If you set a handler to level DEBUG you will need to set either this
         # level, or the level of one of the loggers above to DEBUG or you won't see any
         # DEBUG messages
-        "level": "INFO",
-        "handlers": ["graylog_gelf"],
-        # "handlers": ["console"],
+        "level": "DEBUG",
+        "handlers": ["stderr"],
     },
 }
 
