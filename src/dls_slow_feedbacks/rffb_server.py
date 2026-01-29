@@ -45,6 +45,7 @@ class RffbServer:
 
     def run(self) -> None:
         """Main feedback loop."""
+        logger.info("Rffb started")
         while True:
             cothread.Sleep(1.0)
             self.tick = (self.tick + 1) % 10
@@ -209,7 +210,7 @@ class RffbServer:
             self._validate_matrices(raw_bpm_resp, raw_disp)
 
             self.matrix_error.set(0)
-            logger.info(f"Loaded matrix {lattice.name}")
+            logger.info(f"Rffb loading {lattice.name}")
         except BaseException:
             logger.exception(f"Failed to load matrix data {lattice.name}")
             self.bpm_response_matrix = None

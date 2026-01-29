@@ -13,15 +13,15 @@ import typer
 from cothread.catools import DBR_STRING, caget, caput  # noqa
 from pytac import cothread_cs, load_csv
 
+logger = logging.getLogger(name="dls_slow_Feedbacks")
+tunefb_app = typer.Typer()
+
 # Constants
 BEAM_DAMP_TIME = 0.001
 IOC = "SR-CS-TFB-01"
 CURRENT_LINK = ":I CPP MS"
 OFFSET_INPUT = ":OFFSET1.INP"
 LOCAL_LINK = ":LOFFSET1 CPP MS"
-
-logger = logging.getLogger(name="dls_slow_Feedbacks")
-tunefb_app = typer.Typer()
 
 TUNE_QUAD_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
 

@@ -5,10 +5,11 @@ import pytac
 from cothread.catools import caget, caput
 from pytac.lattice import EpicsLattice
 
-EPS = 1e-9
-# PSC Enum constants
-PSC_STATE_ON = 2
 logger = logging.getLogger(name="dls_slow_feedbacks")
+
+EPS = 1e-9
+# PSC Enum constant
+PSC_STATE_ON = 2
 
 
 class SingularValuePVs:

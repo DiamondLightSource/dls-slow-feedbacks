@@ -12,7 +12,6 @@ from softioc import builder
 
 from dls_slow_feedbacks import mode
 
-# logging
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
 
@@ -364,7 +363,7 @@ class VefbServer:
     def init_wait(self, wait_time: float) -> None:
         """Wait a few seconds to ensure all camonitor connections are connected. If
         connections fail then we continue anyway after the wait time has elapsed."""
-        logger.info("Init wait")
+        logger.debug("Vefb init wait")
         end_time = time.time() + wait_time
 
         while True:
@@ -376,7 +375,7 @@ class VefbServer:
             ]
 
             if np.all([pv.ok for pv in monitors]):
-                logger.info("Initialised ok")
+                logger.debug("Vefb initialised ok")
                 return
             if time.time() > end_time:
                 logger.warning("Init timeout")
@@ -386,6 +385,7 @@ class VefbServer:
     def run(self) -> None:
         """Main runtime loop"""
         self.init_wait(3.0)
+        logger.info("Vefb started")
         while True:
             try:
                 cothread.Sleep(self.time_step)
@@ -504,35 +504,35 @@ class VefbServer:
 
         try:
             self.skewhw_old = np.ones(self.skew_quads.num)
-            logger.info(f"Skewhw_old: {self.skewhw_old}")
+            logger.debug(f"Skewhw_old: {self.skewhw_old}")
 
             rm_file = os.path.join(
                 mode.DATAROOT, lattice.name, "GoldenCouplingEmittance.mat"
             )
-            logger.info(f"LoadMatrix {lattice.name} {rm_file}")
-
+            logger.info(f"Vefb loading {lattice.name}")
+            logger.debug(f"Loading matrix {lattice.name} {rm_file}")
             load_rm = loadmat(rm_file)
             rm = load_rm["RM"]
-            logger.info(f"RM_old: {rm}")
+            logger.debug(f"RM_old: {rm}")
             self.IRM_old = 1 / rm[0][0]
-            logger.info(f"IRM_old: {self.IRM_old}")
+            logger.debug(f"IRM_old: {self.IRM_old}")
 
         except BaseException:
             logger.exception("Ringmode_change raised unexpected exception")
 
         try:
             rm_file = os.path.join(mode.DATAROOT, lattice.name, "GoldenSkewVector.mat")
-            logger.info(f"LoadSkewVector {lattice.name} {rm_file}")
+            logger.debug(f"LoadSkewVector {lattice.name} {rm_file}")
 
             load_rm = loadmat(rm_file)
             rm = load_rm["RM"]
-            logger.info(f"RM_new: {rm}")
+            logger.debug(f"RM_new: {rm}")
             skew = load_rm["skewhw"][0]
-            logger.info(f"Skew: {skew}")
+            logger.debug(f"Skew_new: {skew}")
             self.IRM_new = 1 / rm[0][0]
             self.skewhw_new = skew
-            logger.info(f"IRM_new: {self.IRM_new}")
-            logger.info(f"Skewhw_new: {self.skewhw_new}")
+            logger.debug(f"IRM_new: {self.IRM_new}")
+            logger.debug(f"Skewhw_new: {self.skewhw_new}")
 
         except BaseException:
             logger.exception("Ringmode_change raised unexpected exception")
@@ -559,8 +559,8 @@ class VefbServer:
         else:
             self.IRM = self.IRM_new
             self.skewhw = self.skewhw_new
-        logger.info(f"IRM: {self.IRM}")
-        logger.info(f"Skewhw: {self.skewhw}")
+        logger.debug(f"IRM: {self.IRM}")
+        logger.debug(f"Skewhw: {self.skewhw}")
 
     def handle_status(self, status: int, single: bool) -> None:
         """Handle any errors which occurred since the last check. Check for
@@ -646,7 +646,7 @@ class VefbServer:
                 self.no_effect_error_enable_pv.get() == 1
                 and abs(self.sum_delta_oor) > sum_delta_oor_threshold
             ):
-                logger.info(
+                logger.debug(
                     f"oor v:{self.vemit_filtered:.2f} "
                     f"t:{self.vemit_target_pv.get():.2f} "
                     f"me:{self.vemit_acceptable_error_pv.get():.2f}"

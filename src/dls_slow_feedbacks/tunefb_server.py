@@ -12,9 +12,8 @@ from softioc import alarm, builder
 from dls_slow_feedbacks import mode
 from dls_slow_feedbacks.tunefb_offsets import all_forwarded, load_magnet_pvs, rename_pvs
 
-np.set_printoptions(precision=4)
-
 logger = logging.getLogger(name="dls_slow_feedbacks")
+np.set_printoptions(precision=4)
 
 
 # Configuration file
@@ -144,8 +143,18 @@ class TunefbServer:
         self.mag_pvs = load_magnet_pvs(lattice)
         self.local_pvs = rename_pvs(self.mag_pvs)
 
+        # Load data from file
+        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
+        rm_path = os.path.join(mode_dir, "GoldenTuneResp.mat")
+        self.rm = self.load_tune_rm(rm_path)
+        logger.info(f"Tunefb loading {lattice.name}")
+        logger.debug(f"Loaded response matrix {lattice.name} from {rm_path}")
+        # Invert response matrix
+        self.irm = np.linalg.pinv(self.rm)
+
         # Load tune config file into environment
         env = {}
+        logger.debug(f"Reading tune setpoints from: {GOLDEN_TUNE_CONFIG}")
         with open(GOLDEN_TUNE_CONFIG) as f:
             exec(f.read(), env)
 
@@ -153,17 +162,12 @@ class TunefbServer:
         tune_h = env["X_tune_" + lattice.name]
         tune_v = env["Y_tune_" + lattice.name]
 
-        # Load data from file
-        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
-        self.rm = self.load_tune_rm(os.path.join(mode_dir, "GoldenTuneResp.mat"))
-
-        # Invert response matrix
-        self.irm = np.linalg.pinv(self.rm)
-
         # Update PV values.
         self.tune_h_pv.set(tune_h)
         self.tune_v_pv.set(tune_v)
+        logger.info(f"Tune targets set to: x={tune_h} y={tune_v}")
         self.update_max_i_pv()
+
         self.integrated_tunes = np.dot(self.rm, self.integrated_current)
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
@@ -192,6 +196,7 @@ class TunefbServer:
         a restart of the ioc is required. Therefore, it is appropriate
         to catch all exceptions.
         """
+        logger.info("Tunefb started")
         while True:
             cothread.Sleep(self.period)
             try:
@@ -259,10 +264,12 @@ class TunefbServer:
         if np.isnan(tune_array).any():
             logger.warning("Tune value NaN but PV not invalid.")
             raise TunefbInvalidError(Status.TUNE_VALIDITY)
-        logger.info(f"Tune delta before last correction {self.tune_deltas}")
-        logger.info(f"Tune change since last correction {str(tune_array - self.tunes)}")
+        logger.debug(f"Tune delta before last correction {self.tune_deltas}")
+        logger.debug(
+            f"Tune change since last correction {str(tune_array - self.tunes)}"
+        )
         self.tune_deltas = self.golden_tunes - tune_array
-        logger.info(f"Actual tune deltas {self.tune_deltas}")
+        logger.debug(f"Actual tune deltas {self.tune_deltas}")
 
     def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM) -> None:
         if any(tune.severity >= max_alarm for tune in self.tunes):
@@ -275,7 +282,7 @@ class TunefbServer:
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
             self.scaling = True
-            logger.info(f"Using clipping factor: {factor}")
+            logger.debug(f"Using clipping factor: {factor}")
         else:
             self.scaling = False
         return deltas
@@ -290,7 +297,7 @@ class TunefbServer:
     def apply_correction(self, deltas) -> None:
         """Do final calculations and apply corrections to PVs."""
         calc_tune_corr = np.dot(self.rm, deltas)
-        logger.info(f"Theoretical tune correction {str(calc_tune_corr)}")
+        logger.debug(f"Theoretical tune correction {str(calc_tune_corr)}")
         self.integrated_tunes += calc_tune_corr
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
@@ -306,7 +313,7 @@ class TunefbServer:
             raise TunefbError(Status.UNEXPECTED_ERROR)
         for pv, current in zip(self.mirror_pvs, self.integrated_current, strict=True):
             pv.set(current)
-        logger.info(f"Total tune change from feedback {str(self.integrated_tunes)}")
+        logger.debug(f"Total tune change from feedback {str(self.integrated_tunes)}")
 
     def checked_correction(self) -> None:
         """Calculate and then apply a correction, will throw an execption

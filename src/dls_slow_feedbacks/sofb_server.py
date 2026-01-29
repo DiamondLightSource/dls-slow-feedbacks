@@ -12,7 +12,8 @@ from softioc import builder
 from dls_slow_feedbacks import mode, sofb
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
-CURRENT_THRESHOLD = 2.0
+
+CURRENT_THRESHOLD = 2.0  # mA
 
 
 class SofbServer:
@@ -29,7 +30,8 @@ class SofbServer:
         self.sofb.set_lattice(lattice)
 
         try:
-            bpm_resp = loadmat(os.path.join(path, "GoldenBPMResp"))
+            rm_path = os.path.join(path, "GoldenBPMResp")
+            bpm_resp = loadmat(rm_path)
             if bpm_resp["Rmat"][0, 0]["Units"] != "Hardware":
                 raise ValueError("BPM response matrix is not set to hardware units")
 
@@ -37,6 +39,7 @@ class SofbServer:
             rm_y = bpm_resp["Rmat"][1, 1]["Data"]
             self.sofb.set_rm(rm_x, rm_y)
             self.matrix_error.set(0)
+            logger.info(f"Sofb loading {lattice.name}")
         except BaseException:
             logger.exception(f"Failed to load matrix data {lattice.name}")
             self.sofb.rm_x = None
@@ -49,6 +52,7 @@ class SofbServer:
 
     def run(self) -> None:
         """Main feedback loop."""
+        logger.info("Sofb started")
         while True:
             cothread.Sleep(1.0)
             try:
