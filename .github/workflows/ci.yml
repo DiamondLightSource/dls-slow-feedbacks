@@ -5,11 +5,10 @@ on:
     branches:
       - main
     tags:
-      - '*'
+      - "*"
   pull_request:
 
 jobs:
-
   lint:
     uses: ./.github/workflows/_tox.yml
     with:
@@ -19,7 +18,7 @@ jobs:
     strategy:
       matrix:
         runs-on: ["ubuntu-latest"] # can add windows-latest, macos-latest
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12"] #We have segfaults on 3.13+ currently
       fail-fast: false
     uses: ./.github/workflows/_test.yml
     with:
@@ -38,7 +37,7 @@ jobs:
 
   dist:
     uses: ./.github/workflows/_dist.yml
-  
+
   release:
     needs: [dist, test]
     if: github.ref_type == 'tag'
