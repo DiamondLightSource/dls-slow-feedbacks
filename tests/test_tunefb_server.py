@@ -23,7 +23,7 @@ LATTICE = pytac.load_csv.load(RING_MODE)
 
 
 TFB_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
-DATADIR = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
+DATADIR = os.path.join(os.getcwd(), "tests/test_data/")
 RESPONSE_MATRIX = os.path.join(DATADIR, RING_MODE, "GoldenTuneResp.mat")
 
 

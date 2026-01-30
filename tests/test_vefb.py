@@ -1,14 +1,18 @@
+import os
 import time
 from unittest import mock
 
 import pytac
 import pytest
 
-from dls_slow_feedbacks import vefb_server
+from dls_slow_feedbacks import mode, vefb_server
 from dls_slow_feedbacks.vefb_server import VefbServer, VefbStatus
+
+TEST_DATA = os.path.join(os.getcwd(), "tests/test_data/")
 
 
 def setup_module():
+    mode.DATAROOT = TEST_DATA
     vefb_server.SkewQuadrupoles = mock.MagicMock
     vefb_server.PVMonitor = mock.MagicMock
     time.original_time = time.time
