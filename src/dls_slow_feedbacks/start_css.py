@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from dls_slow_feedbacks._version_git import __version__
+from dls_slow_feedbacks._version import __version__
 
 
 def get_opi_dir():
