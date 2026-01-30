@@ -1,5 +1,5 @@
-[![CI](https://github.com/DiamondLightSource/dls_slow_feedbacks/actions/workflows/ci.yml/badge.svg)](https://github.com/DiamondLightSource/dls_slow_feedbacks/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/DiamondLightSource/dls_slow_feedbacks/branch/main/graph/badge.svg)](https://codecov.io/gh/DiamondLightSource/dls_slow_feedbacks)
+[![CI](https://github.com/DiamondLightSource/dls-slow-feedbacks/actions/workflows/ci.yml/badge.svg)](https://github.com/DiamondLightSource/dls-slow-feedbacks/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/DiamondLightSource/dls-slow-feedbacks/branch/main/graph/badge.svg)](https://codecov.io/gh/DiamondLightSource/dls-slow-feedbacks)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -7,10 +7,10 @@
 
 Slow feedback systems for the DLS storage ring
 
-Source          | <https://github.com/DiamondLightSource/dls_slow_feedbacks>
+Source          | <https://github.com/DiamondLightSource/dls-slow-feedbacks>
 :---:           | :---:
-Docker          | `docker run ghcr.io/diamondlightsource/dls_slow_feedbacks:latest`
-Releases        | <https://github.com/DiamondLightSource/dls_slow_feedbacks/releases>
+Docker          | `docker run ghcr.io/diamondlightsource/dls-slow-feedbacks:latest`
+Releases        | <https://github.com/DiamondLightSource/dls-slow-feedbacks/releases>
 
 Physics Applications IOC CS-DI-IOC-09
 =====================================

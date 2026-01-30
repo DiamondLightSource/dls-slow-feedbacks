@@ -72,5 +72,5 @@ ENV EPICS_CA_REPEATER_PORT=8065
 ENV EPICS_CAS_INTF_ADDR_LIST=host.containers.internal
 
 # change this entrypoint if it is not the same as the repo
-ENTRYPOINT ["dls_slow_feedbacks"]
+ENTRYPOINT ["dls-slow-feedbacks"]
 CMD ["--version"]

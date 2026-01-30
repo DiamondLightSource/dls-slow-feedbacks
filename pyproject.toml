@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dls_slow_feedbacks"
+name = "dls-slow-feedbacks"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
@@ -47,7 +47,7 @@ start-vefb-edm = "dls_slow_feedbacks.start_edm:vefb_gui"
 start-tunefb-edm = "dls_slow_feedbacks.start_edm:tunefb_gui"
 
 [project.urls]
-GitHub = "https://github.com/DiamondLightSource/dls_slow_feedbacks"
+GitHub = "https://github.com/DiamondLightSource/dls-slow-feedbacks"
 
 [[project.authors]] # Further authors may be added by duplicating this section
 email = "diamhighlvlapps@diamond.ac.uk"
