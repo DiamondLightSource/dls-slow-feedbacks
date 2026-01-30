@@ -1,19 +1,19 @@
 import unittest
+from unittest.mock import patch
 
-import cothread
-from mock import patch
+from cothread.dbr import ca_float
 
 from dls_slow_feedbacks import constants, rffb_server
 
 
-class MockPV(object):
+class MockPV:
     """Dummy class with the same interface as
     rffb_server.PvWithValidity but without channel access
     """
 
     def __init__(self, pv_name, value, severity=constants.SEVR_NO_ALARM, ok=True):
         self.pv_name = pv_name
-        self.value = cothread.dbr.ca_float(value)
+        self.value = ca_float(value)
         self.value.severity = severity
         self.value.ok = ok
 
@@ -26,7 +26,7 @@ class MockPV(object):
         return
 
 
-class MockRecord(object):
+class MockRecord:
     """Mock an iocbuilder record"""
 
     def __init__(
@@ -66,7 +66,7 @@ def lookup_caget_value(pv_name, *args, **kwargs):
 
 
 class TestMockPv(unittest.TestCase):
-    def test_creating_MockPV(self):
+    def test_creating_mock_pv(self):
         name = "MOCK-PV-01"
         value = 1.234
         pv = MockPV(name, value)
@@ -77,7 +77,7 @@ class TestMockPv(unittest.TestCase):
         self.assertEqual(got.severity, constants.SEVR_NO_ALARM)
         self.assertEqual(got.ok, True)
 
-    def test_creating_MockPV_with_severity(self):
+    def test_creating_mock_pv_with_severity(self):
         name = "MOCK-PV-02"
         value = 2.345
         pv = MockPV(name, value, severity=constants.SEVR_INVALID)
@@ -96,7 +96,7 @@ class PVWithValidityTests(unittest.TestCase):
         self.assertEqual(pv.get_name(), pv_name_set)
 
     @patch("cothread.catools.caget", side_effect=lookup_caget_value)
-    def test_creating_PVWithValidity(self, mock_caget):
+    def test_creating_pv_with_validity(self, mock_caget):
         pv = rffb_server.PVWithValidity("MOCK-PV-03")
         value_should_be = caget_value_dict["MOCK-PV-03"].get()
         self.assertEqual(pv.get(), value_should_be)
@@ -104,7 +104,6 @@ class PVWithValidityTests(unittest.TestCase):
 
     @patch("cothread.catools.caget", side_effect=lookup_caget_value)
     def test_invalid_cagets_over_threshold_return_not_healthy(self, mock_caget):
-
         for pv_name in ["MOCK-PV-INVALID", "MOCK-PV-MAJOR", "MOCK-PV-MINOR"]:
             # Create a mock PV
             pv = rffb_server.PVWithValidity(pv_name)
@@ -113,7 +112,6 @@ class PVWithValidityTests(unittest.TestCase):
             # Check that we tolerate the right number of invalid gets and then
             # complain
             for i in range(pv.ALLOWED_INVALID_CAGETS + 1):
-
                 self.assertEqual(pv.get(), value_should_be)
                 self.assertEqual(pv.severity, value_should_be.severity)
                 self.assertEqual(pv.consecutive_times_invalid, i + 1)
@@ -129,7 +127,7 @@ class PVWithValidityTests(unittest.TestCase):
                     self.assertFalse(pv.healthy())
 
     @patch("cothread.catools.caget", side_effect=lookup_caget_value)
-    def test_resetting_severity_makes_PV_healthy(self, mock_caget):
+    def test_resetting_severity_makes_pv_healthy(self, mock_caget):
         # Create a mock PV
         pv = rffb_server.PVWithValidity("MOCK-PV-05")
         value_should_be = caget_value_dict["MOCK-PV-05"].get()

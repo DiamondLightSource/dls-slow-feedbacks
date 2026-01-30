@@ -12,7 +12,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 description = "Slow feedback systems for the DLS storage ring"
-dependencies = ["pytac", "cothread", "epicscorelibs", "softioc", "pygelf"]
+dependencies = [
+    "pytac",
+    "cothread",
+    "epicscorelibs",
+    "softioc",
+    "pygelf",
+    "typer",
+]
 dynamic = ["version"]
 license.file = "LICENSE"
 readme = "README.md"
@@ -28,13 +35,13 @@ dev = [
     "ruff",
     "tox-uv",
     "types-mock",
+    "mock",
 ]
 
 [project.scripts]
-dls_slow_feedbacks = "dls_slow_feedbacks.__main__:main"
-start-ioc = "dls_slow_feedbacks.ioc:main"
+dls-slow-feedbacks = "dls_slow_feedbacks.__main__:app"
 start-css = "dls_slow_feedbacks.start_css:main"
-tune-feedback-offsets = "dls_slow_feedbacks.tunefb_offsets:main"
+tune-feedback-offsets = "dls_slow_feedbacks.tunefb_offsets:tunefb_app"
 start-sofb-edm = "dls_slow_feedbacks.start_edm:sofb_gui"
 start-vefb-edm = "dls_slow_feedbacks.start_edm:vefb_gui"
 start-tunefb-edm = "dls_slow_feedbacks.start_edm:tunefb_gui"
@@ -102,6 +109,7 @@ commands = [
         "mypy",
         "src",
         "tests",
+        "--exclude=src/dls_slow_feedbacks/opi",
         { replace = "posargs", default = [
         ], extend = true },
     ],
@@ -124,6 +132,9 @@ commands = [
 
 [tool.ruff]
 src = ["src", "tests"]
+# Dont format anything in opi directory
+extend-exclude = ["src/dls_slow_feedbacks/opi", "_version_git.py"]
+
 line-length = 88
 lint.select = [
     "B",   # flake8-bugbear - https://docs.astral.sh/ruff/rules/#flake8-bugbear-b

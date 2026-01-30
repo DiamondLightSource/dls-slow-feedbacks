@@ -1,7 +1,7 @@
 from dls_slow_feedbacks import mode, waveforms
 
 
-def get_bpm_and_corrector_feedback_disabled_pvs() -> list:
+def get_bpm_and_corrector_feedback_disabled_pvs() -> list[str]:
     """Return a list of the PVs created for 'BPMs and Correctors enabled' in feedbacks
 
     This can be used to generate a Burt request file for these PVs, should this be

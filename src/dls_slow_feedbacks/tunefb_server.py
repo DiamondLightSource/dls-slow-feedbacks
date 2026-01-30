@@ -1,10 +1,9 @@
 import logging
 import os
 import time
-import traceback
 
 import cothread
-import numpy
+import numpy as np
 import scipy
 import scipy.io
 from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
@@ -13,13 +12,30 @@ from softioc import alarm, builder
 from dls_slow_feedbacks import mode
 from dls_slow_feedbacks.tunefb_offsets import all_forwarded, load_magnet_pvs, rename_pvs
 
-numpy.set_printoptions(precision=4)
+logger = logging.getLogger(name="dls_slow_feedbacks")
+np.set_printoptions(precision=4)
 
+
+# Configuration file
+GOLDEN_TUNE_CONFIG = "/home/ops/diagnostics/config/MBF_tune.config"
+
+# Our IOC name
+IOC = "SR-CS-TFB-01"
+
+# PV names
+TUNE_PVS = ["SR23C-DI-TMBF-01:TUNE:TUNE", "SR23C-DI-TMBF-02:TUNE:TUNE"]
+CURRENT_PV = "SR-DI-DCCT-01:SIGNAL"
+
+# Constants
+BEAM_DAMP_TIME = 0.01  # seconds
 OFFSET_CURRENT_CHANGED = "Offset changed outside of TFB"
 
-logger = logging.getLogger(name="dls_slow_feedbacks")
+# Default values
+MAX_CURRENT_OFFSET = 0.2  # Amps
+MAX_CONSECUTIVE_INVALIDS = 5
 
-class Status(object):
+
+class Status:
     """Enum for tune feedback errors."""
 
     FEEDBACK_OFF = 0
@@ -51,44 +67,7 @@ class Status(object):
     }
 
 
-# PV names
-TUNE_PVS = ["SR23C-DI-TMBF-01:TUNE:TUNE", "SR23C-DI-TMBF-02:TUNE:TUNE"]
-CURRENT_PV = "SR-DI-DCCT-01:SIGNAL"
-
-
-# Configuration file
-GOLDEN_TUNE_CONFIG = "/home/ops/diagnostics/config/MBF_tune.config"
-
-
-# Our IOC name
-IOC = "SR-CS-TFB-01"
-
-
-# Constant
-BEAM_DAMP_TIME = 0.001
-# Default values
-DELTA_TUNE_TOLERANCE = 0.02
-MAX_CURRENT_OFFSET = 0.2
-MAX_CONSECUTIVE_INVALIDS = 5
-
-
-def load_tune_rm(mat_file):
-    """Load response matrix from the specific format found
-    in the specified file.
-    """
-    raw_rms = scipy.io.loadmat(mat_file)
-    # Construct complete response matrix.
-    rmx = []
-    rmy = []
-    for raw_rm in raw_rms["Rmat"][0]:
-        raw_rmx = raw_rm[0][0][0][0]
-        raw_rmy = raw_rm[0][0][0][1]
-        rmx.extend(raw_rmx)
-        rmy.extend(raw_rmy)
-    return numpy.array([rmx, rmy])
-
-
-class TunefbInvalid(Exception):
+class TunefbInvalidError(Exception):
     """Exception used to pause tune feedback."""
 
     def __init__(self, code):
@@ -104,7 +83,7 @@ class TunefbError(Exception):
         self.code = code
 
 
-class TunefbServer(object):
+class TunefbServer:
     """Server for tune feedback. Creates PVs, and monitors and then
     corrects tune towards a setpoint.
     """
@@ -121,10 +100,10 @@ class TunefbServer(object):
         # Whether the last correction was scaled
         self.scaling = False
         # Tune data - Golden tunes are set from ringmode
-        self.golden_tunes = numpy.array([0.0, 0.0])
+        self.golden_tunes = np.array([0.0, 0.0])
         self.mag_delta_max = 0.01
-        self.tunes = numpy.zeros(2)
-        self.tune_deltas = numpy.zeros(2)
+        self.tunes = np.zeros(2)
+        self.tune_deltas = np.zeros(2)
         # Count consecutive invalid exceptions to eventually trip
         self.invalid_counter = 0
 
@@ -139,8 +118,8 @@ class TunefbServer(object):
         # Load data from files (and on ringmode change)
         self.rm = None
         self.irm = None
-        if self.set_datadir not in ring_mode.listeners:
-            ring_mode.add_listener(self.set_datadir)
+        if self.set_data_dir not in ring_mode.listeners:
+            ring_mode.add_listener(self.set_data_dir)
 
         # fetch values from the PVs we will be mirroring, before
         # starting up.
@@ -152,20 +131,30 @@ class TunefbServer(object):
                 logger.warning(f"Unable to read {self.startup_currents[i].name}")
                 self.startup_currents[i] = 0
 
-        self.integrated_current = numpy.array(self.startup_currents)
-        self.integrated_tunes = numpy.zeros(2)
+        self.integrated_current = np.array(self.startup_currents)
+        self.integrated_tunes = np.zeros(2)
 
         # Initalise EPICS records
         self.records()
 
-    def set_datadir(self, lattice):
+    def set_data_dir(self, lattice) -> None:
         """Load required data from files in datadir."""
         # Load magnet PVs from Pytac
         self.mag_pvs = load_magnet_pvs(lattice)
         self.local_pvs = rename_pvs(self.mag_pvs)
 
+        # Load data from file
+        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
+        rm_path = os.path.join(mode_dir, "GoldenTuneResp.mat")
+        self.rm = self.load_tune_rm(rm_path)
+        logger.info(f"Tunefb loading {lattice.name}")
+        logger.debug(f"Loaded response matrix {lattice.name} from {rm_path}")
+        # Invert response matrix
+        self.irm = np.linalg.pinv(self.rm)
+
         # Load tune config file into environment
         env = {}
+        logger.debug(f"Reading tune setpoints from: {GOLDEN_TUNE_CONFIG}")
         with open(GOLDEN_TUNE_CONFIG) as f:
             exec(f.read(), env)
 
@@ -173,31 +162,41 @@ class TunefbServer(object):
         tune_h = env["X_tune_" + lattice.name]
         tune_v = env["Y_tune_" + lattice.name]
 
-        # Load data from file
-        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
-        self.rm = load_tune_rm(os.path.join(mode_dir, "GoldenTuneResp.mat"))
-
-        # Invert response matrix
-        self.irm = numpy.linalg.pinv(self.rm)
-
         # Update PV values.
         self.tune_h_pv.set(tune_h)
         self.tune_v_pv.set(tune_v)
+        logger.info(f"Tune targets set to: x={tune_h} y={tune_v}")
         self.update_max_i_pv()
-        self.integrated_tunes = numpy.dot(self.rm, self.integrated_current)
+
+        self.integrated_tunes = np.dot(self.rm, self.integrated_current)
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
 
-    def init(self):
-        """Spawn a new thread to run the main ioc loop."""
-        # Start the loop.
-        cothread.Spawn(self.tick)
+    def load_tune_rm(self, mat_file) -> np.ndarray:
+        """Load response matrix from the specific format found
+        in the specified file.
+        """
+        raw_rms = scipy.io.loadmat(mat_file)
+        # Construct complete response matrix.
+        rmx = []
+        rmy = []
+        for raw_rm in raw_rms["Rmat"][0]:
+            raw_rmx = raw_rm[0][0][0][0]
+            raw_rmy = raw_rm[0][0][0][1]
+            rmx.extend(raw_rmx)
+            rmy.extend(raw_rmy)
+        return np.array([rmx, rmy])
 
-    def tick(self):
+    def start(self) -> None:
+        """Spawn a new thread to run the main ioc loop."""
+        cothread.Spawn(self.run)
+
+    def run(self) -> None:
         """Top level loop in the ioc, if it terminates then
         a restart of the ioc is required. Therefore, it is appropriate
         to catch all exceptions.
         """
+        logger.info("Tunefb started")
         while True:
             cothread.Sleep(self.period)
             try:
@@ -208,7 +207,9 @@ class TunefbServer(object):
                 self.power_pv.set(False)
                 self.status_pv.set(Status.UNEXPECTED_ERROR)
 
-    def loop_correction(self):
+    def loop_correction(self) -> None:
+        """If key parameters are within expected ranges and power is true, attempts to
+        do a correction. This is run periodically"""
         self.update_max_i_pv()
         self.update_fwd_ok_pv()
         try:
@@ -225,7 +226,7 @@ class TunefbServer(object):
                     Status.FEEDBACK_SCALING,
                 ):
                     self.status_pv.set(Status.FEEDBACK_OFF)
-        except TunefbInvalid as e:
+        except TunefbInvalidError as e:
             # skip corrections for a while before tripping off
             self.invalid_counter += 1
             if self.invalid_counter >= MAX_CONSECUTIVE_INVALIDS:
@@ -236,97 +237,98 @@ class TunefbServer(object):
         except TunefbError as e:
             self.trip_feedback(e)
 
-    def trip_feedback(self, exception):
+    def trip_feedback(self, exception) -> None:
+        """Take the appropriate action when a trip occurs."""
         self.power_pv.set(False)
         self.status_pv.set(exception.code)
         logger.error(f"Feedback tripped: {str(exception)}")
 
-    def check_current(self):
+    def check_current(self) -> None:
         """Check if current is greater than a mininum current."""
         if caget(CURRENT_PV) < self.min_beam_current:
             raise TunefbError(Status.LOW_CURRENT)
 
-    def refresh_tune_deltas(self):
+    def refresh_tune_deltas(self) -> None:
         """Update values for tune deltas, checking if the values are
         reliable.
         """
         tunes = caget(TUNE_PVS, format=FORMAT_TIME)
         # Store tunes in cothread wrapper to allow severity checking
         self.tunes = tunes
-        tune_array = numpy.array(tunes)
+        tune_array = np.array(tunes)
         # This will succeed as long as the TMBF updates the tune PVs
         # more often than self.period
         last_check = time.time() - self.period
-        if any([tune.timestamp < last_check for tune in tunes]):
-            raise TunefbInvalid(Status.TUNE_UPDATE)
-        if numpy.isnan(tune_array).any():
+        if any([tune.timestamp < last_check for tune in tunes]):  # noqa: C419
+            raise TunefbInvalidError(Status.TUNE_UPDATE)
+        if np.isnan(tune_array).any():
             logger.warning("Tune value NaN but PV not invalid.")
-            raise TunefbInvalid(Status.TUNE_VALIDITY)
-        logger.info(f"Tune delta before last correction {self.tune_deltas}")
-        logger.info(
+            raise TunefbInvalidError(Status.TUNE_VALIDITY)
+        logger.debug(f"Tune delta before last correction {self.tune_deltas}")
+        logger.debug(
             f"Tune change since last correction {str(tune_array - self.tunes)}"
         )
         self.tune_deltas = self.golden_tunes - tune_array
-        logger.info(f"Actual tune deltas {self.tune_deltas}")
+        logger.debug(f"Actual tune deltas {self.tune_deltas}")
 
-    def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM):
+    def check_tune_alarms(self, max_alarm=alarm.MINOR_ALARM) -> None:
         if any(tune.severity >= max_alarm for tune in self.tunes):
-            raise TunefbInvalid(Status.TUNE_VALIDITY)
+            raise TunefbInvalidError(Status.TUNE_VALIDITY)
 
-    def scale_deltas(self, deltas):
+    def scale_deltas(self, deltas) -> None:
         """Put delta correction to magnets, clipping if neccassary."""
         # Scale values over the step current limit
         if any(abs(deltas) > self.mag_delta_max):
             factor = self.mag_delta_max / abs(deltas).max()
             deltas *= factor
             self.scaling = True
-            logger.info(f"Using clipping factor: {factor}")
+            logger.debug(f"Using clipping factor: {factor}")
         else:
             self.scaling = False
         return deltas
 
-    def check_mag_limits(self, currents):
+    def check_mag_limits(self, currents) -> None:
         max_i = max(abs(i) for i in currents)
         if max_i > self.max_current_range:
             logger.debug(f"Max current offset: {max_i}")
             logger.debug(f"Current offset limit: {self.max_current_range}")
             raise TunefbError(Status.MAGNET_CURRENT)
 
-    def apply_correction(self, deltas):
-        # Calculate and publish tune correction
-        calc_tune_corr = numpy.dot(self.rm, deltas)
-        logger.info(f"Theoretical tune correction {str(calc_tune_corr)}")
+    def apply_correction(self, deltas) -> None:
+        """Do final calculations and apply corrections to PVs."""
+        calc_tune_corr = np.dot(self.rm, deltas)
+        logger.debug(f"Theoretical tune correction {str(calc_tune_corr)}")
         self.integrated_tunes += calc_tune_corr
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
         logger.debug(f"Calculated current deltas:\n{str(deltas)}")
         # Refresh integrated currents so they match their PVs.
-        fetched_current = numpy.array([pv.get() for pv in self.mirror_pvs])
+        fetched_current = np.array([pv.get() for pv in self.mirror_pvs])
         if any(fetched_current - self.integrated_current):
             logger.warning(f"{OFFSET_CURRENT_CHANGED}")
 
         self.integrated_current = fetched_current + deltas
-        if numpy.isnan(self.integrated_current).any():
+        if np.isnan(self.integrated_current).any():
             logger.warning("Unexpected NaN in calculated current correction.")
             raise TunefbError(Status.UNEXPECTED_ERROR)
-        for pv, current in zip(self.mirror_pvs, self.integrated_current):
+        for pv, current in zip(self.mirror_pvs, self.integrated_current, strict=True):
             pv.set(current)
-        logger.info(f"Total tune change from feedback {str(self.integrated_tunes)}")
+        logger.debug(f"Total tune change from feedback {str(self.integrated_tunes)}")
 
-    def checked_correction(self):
+    def checked_correction(self) -> None:
         """Calculate and then apply a correction, will throw an execption
         in the event of an invalid or error state.
         """
         self.check_current()
         self.refresh_tune_deltas()
         self.check_tune_alarms(max_alarm=alarm.MINOR_ALARM)
-        mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
+        mag_deltas = self.afrac * np.dot(self.irm, self.tune_deltas)
         scaled_deltas = self.scale_deltas(mag_deltas)
         # Check if offset currents have been exceeded
         self.check_mag_limits(self.integrated_current)
         self.apply_correction(scaled_deltas)
 
-    def unchecked_correction(self, dummy):
+    def unchecked_correction(self, dummy) -> None:
         """Calculate and apply correction without checking beam current.
         Catches all invalid and error states.
         """
@@ -338,7 +340,7 @@ class TunefbServer(object):
             cothread.Sleep(0.3)
             self.refresh_tune_deltas()
             self.check_tune_alarms(max_alarm=alarm.INVALID_ALARM)
-            mag_deltas = self.afrac * numpy.dot(self.irm, self.tune_deltas)
+            mag_deltas = self.afrac * np.dot(self.irm, self.tune_deltas)
             scaled_deltas = self.scale_deltas(mag_deltas)
             self.apply_correction(scaled_deltas)
             self.corr_toggle_pv.set(1 - self.corr_toggle_pv.get())
@@ -349,7 +351,7 @@ class TunefbServer(object):
                 self.status_pv.set(Status.SINGLE_SCALED)
             else:
                 self.status_pv.set(Status.SINGLE_CORR)
-        except TunefbInvalid as e:
+        except TunefbInvalidError as e:
             logger.warning("" + str(e))
             self.status_pv.set(e.code)
         except TunefbError as e:
@@ -359,7 +361,7 @@ class TunefbServer(object):
             logger.error(f"Unexpected exception: {str(e)}")
             self.status_pv.set(Status.UNEXPECTED_ERROR)
 
-    def step_tune(self, dummy):
+    def step_tune(self, dummy) -> None:
         """Apply raw correction without checking beam current.
         Catches all invalid and error states.
         """
@@ -370,7 +372,7 @@ class TunefbServer(object):
             cothread.Sleep(0.3)
             # Apply tune change according to step PVs.
             deltas = (self.hstep_pv.get(), self.vstep_pv.get())
-            mag_deltas = numpy.dot(self.irm, deltas)
+            mag_deltas = np.dot(self.irm, deltas)
             self.apply_correction(mag_deltas)
             logger.info("Completed tune step")
             self.step_toggle_pv.set(1 - self.step_toggle_pv.get())
@@ -379,7 +381,7 @@ class TunefbServer(object):
             # in the GUI
             cothread.Sleep(0.2)
             self.status_pv.set(Status.TUNE_STEP)
-        except TunefbInvalid as e:
+        except TunefbInvalidError as e:
             logger.warning(f"{str(e)}")
             self.status_pv.set(e.code)
         except TunefbError as e:
@@ -389,31 +391,31 @@ class TunefbServer(object):
             logger.error(f"Unexpected exception: {str(e)}")
             self.status_pv.set(Status.UNEXPECTED_ERROR)
 
-    def reset_error(self, dummy):
+    def reset_error(self, dummy) -> None:
         """Reset the error pv."""
         self.status_pv.set(Status.FEEDBACK_OFF)
         self.reset_pv.set(0)
         self.invalid_counter = 0
 
-    def _reset_state(self):
+    def _reset_state(self) -> None:
         """Set internal current and tune state to zero."""
         self.tune_int_h_pv.set(0)
         self.tune_int_v_pv.set(0)
-        self.integrated_tunes = numpy.zeros(2)
-        self.integrated_current = numpy.zeros(self.integrated_current.shape)
+        self.integrated_tunes = np.zeros(2)
+        self.integrated_current = np.zeros(self.integrated_current.shape)
 
-    def reset_integrated_current(self, value):
+    def reset_integrated_current(self, value) -> None:
         """Set all integrated currents to zero."""
         if value:
             self.reset_integrated_current_pv.set(0)
             # Set our local PVs and currents to zero
             for pv in self.mirror_pvs:
                 pv.set(0)
-                cothread.Sleep(BEAM_DAMP_TIME * 10.0)
+                cothread.Sleep(BEAM_DAMP_TIME)
             logger.warning("All integrated currents were reset to zero")
             self._reset_state()
 
-    def aggregate_setpoints(self, value):
+    def aggregate_setpoints(self, value) -> None:
         """Move offsets from this ioc to the quadrupole setpoints."""
         if value:
             self.aggregate_pv.set(0)
@@ -422,11 +424,11 @@ class TunefbServer(object):
                 pv = pv + ":SETI"
                 caput(pv, caget(pv) + self.integrated_current[i])
                 self.mirror_pvs[i].set(0)
-                cothread.Sleep(BEAM_DAMP_TIME * 10.0)
+                cothread.Sleep(BEAM_DAMP_TIME)
             logger.warning("Aggregated offsets into setpoints")
             self._reset_state()
 
-    def update_max_i_pv(self):
+    def update_max_i_pv(self) -> None:
         """Update value and severity of IMAX PV."""
         value = max(abs(i) for i in self.integrated_current)
         if value > self.max_current_range:
@@ -437,7 +439,7 @@ class TunefbServer(object):
             sev = alarm.NO_ALARM
         self.max_i_pv.set(value, severity=sev)
 
-    def update_fwd_ok_pv(self):
+    def update_fwd_ok_pv(self) -> None:
         """Update value and severity of FWDOK PV."""
         try:
             if not all_forwarded(self.local_pvs, self.mag_pvs):
@@ -447,28 +449,28 @@ class TunefbServer(object):
         except ca_nothing:
             self.fwd_ok_pv.set(2)
 
-    def set_afrac(self, value):
+    def set_afrac(self, value) -> None:
         self.afrac = value
 
-    def set_max_current_range(self, value):
+    def set_max_current_range(self, value) -> None:
         self.max_current_range = value
 
-    def set_min_beam_current(self, value):
+    def set_min_beam_current(self, value) -> None:
         self.min_beam_current = value
 
-    def set_period(self, value):
+    def set_period(self, value) -> None:
         self.period = value
 
-    def set_tune_h(self, value):
+    def set_tune_h(self, value) -> None:
         self.golden_tunes[0] = value
 
-    def set_tune_v(self, value):
+    def set_tune_v(self, value) -> None:
         self.golden_tunes[1] = value
 
-    def set_mag_delta_max(self, value):
+    def set_mag_delta_max(self, value) -> None:
         self.mag_delta_max = value
 
-    def records(self):
+    def records(self) -> None:
         """Setup iocbuilder to create required records."""
         builder.SetDeviceName(IOC)
         self.power_pv = builder.boolOut("ONOFF", "OFF", "ON", initial_value=False)
@@ -547,7 +549,7 @@ class TunefbServer(object):
 
         # initialise each current PV to the value from the remote
         # PV from which it will be starting
-        for pv, value in zip(self.local_pvs, self.startup_currents):
+        for pv, value in zip(self.local_pvs, self.startup_currents, strict=True):
             self.mirror_pvs.append(
                 builder.aOut(pv.split(":")[1] + ":I", initial_value=value)
             )

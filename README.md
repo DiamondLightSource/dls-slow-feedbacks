@@ -15,6 +15,16 @@ Releases        | <https://github.com/DiamondLightSource/dls_slow_feedbacks/rele
 Physics Applications IOC CS-DI-IOC-09
 =====================================
 
+Glossary
+-------
+rffb - RF (Radio Frequency) FeedBack
+sofb - Slow Orbit FeedBack
+tfb - Tune FeedBack
+vefb - Vertical Emittance FeedBack
+bpm - Beam Position Monitor
+bpmx/bpmy - x and y position values for each BPM
+hcm/vcm - Horizontal Correction Matrix / Vertical Correction Matrix
+
 1) RINGMODE
 -------
 

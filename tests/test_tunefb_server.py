@@ -6,20 +6,24 @@
 import os
 import time
 import unittest
+from unittest.mock import MagicMock, patch
 
 import numpy
 import pytac
-from mock import MagicMock, patch
 
 from dls_slow_feedbacks import tunefb_server
-from dls_slow_feedbacks.tunefb_server import TunefbError, TunefbInvalid, TunefbServer
+from dls_slow_feedbacks.tunefb_server import (
+    TunefbError,
+    TunefbInvalidError,
+    TunefbServer,
+)
 
 RING_MODE = "DIAD"
 LATTICE = pytac.load_csv.load(RING_MODE)
 
 
 TFB_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
-DATADIR = "/dls_sw/work/common/matlab/mml/machine/diamondopsdata"
+DATADIR = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
 RESPONSE_MATRIX = os.path.join(DATADIR, RING_MODE, "GoldenTuneResp.mat")
 
 
@@ -49,7 +53,7 @@ class TestTunefb(unittest.TestCase):
         self.tfb.integrated_current = numpy.zeros(self.nquads)
 
     def test_load_tune_rm_dimensions(self):
-        rm = tunefb_server.load_tune_rm(RESPONSE_MATRIX)
+        rm = tunefb_server.TunefbServer.load_tune_rm(None, RESPONSE_MATRIX)
         self.assertEqual(rm.shape, (2, self.nquads))
 
     def test_magnet_pvs_match_pytac(self):
@@ -78,12 +82,12 @@ class TestTunefb(unittest.TestCase):
             mock_caget.return_value = (val1, val2)
             try:
                 self.tfb.refresh_tune_deltas()
-            except TunefbInvalid:
+            except TunefbInvalidError:
                 self.fail("Should not thrown an exception")
 
     def test_loop_correction_throws_error_on_mutiple_invalids(self):
         self.tfb.update_fwd_ok_pv = MagicMock()
-        self.tfb.checked_correction = MagicMock(side_effect=TunefbInvalid(7))
+        self.tfb.checked_correction = MagicMock(side_effect=TunefbInvalidError(7))
         self.tfb.power_pv = MagicMock()
         self.tfb.status_pv = MagicMock()
         # If we keep getting Invalids we should trip
@@ -101,7 +105,7 @@ class TestTunefb(unittest.TestCase):
             val2 = ca_float(numpy.nan)
             val2.timestamp = time.time()
             mock_caget.return_value = (val1, val2)
-            self.assertRaises(TunefbInvalid, self.tfb.refresh_tune_deltas)
+            self.assertRaises(TunefbInvalidError, self.tfb.refresh_tune_deltas)
 
     def test_refresh_tune_deltas_throws_exception_if_timestamp_old(self):
         with patch("dls_slow_feedbacks.tunefb_server.caget") as mock_caget:
@@ -110,7 +114,7 @@ class TestTunefb(unittest.TestCase):
             val2 = ca_float(numpy.nan)
             val2.timestamp = time.time()
             mock_caget.return_value = (val1, val2)
-            self.assertRaises(TunefbInvalid, self.tfb.refresh_tune_deltas)
+            self.assertRaises(TunefbInvalidError, self.tfb.refresh_tune_deltas)
 
     def test_scale_deltas_returns_deltas_if_none_smaller_than_max(self):
         self.tfb.mag_delta_max = 10
@@ -124,7 +128,7 @@ class TestTunefb(unittest.TestCase):
         deltas = numpy.array([1, 2, 3, 4], dtype=numpy.float64)
         correctly_scaled = numpy.array([0.25, 0.5, 0.75, 1.0])
         scaled_deltas = self.tfb.scale_deltas(deltas)
-        print("The scaled deltas are {}".format(scaled_deltas))
+        print(f"The scaled deltas are {scaled_deltas}")
         if not all(correctly_scaled == scaled_deltas):
             self.fail("Deltas should have been scaled.")
 
@@ -158,7 +162,7 @@ class TestTunefb(unittest.TestCase):
         self.tfb.tunes = [MagicMock(), MagicMock()]
         for tune in self.tfb.tunes:
             tune.severity = 1
-        self.assertRaises(TunefbInvalid, self.tfb.check_tune_alarms)
+        self.assertRaises(TunefbInvalidError, self.tfb.check_tune_alarms)
 
     def test_check_tune_alarms_completes_with_no_alarm_severity(self):
         self.tfb.tunes = [MagicMock(), MagicMock()]
@@ -166,7 +170,7 @@ class TestTunefb(unittest.TestCase):
             tune.severity = 0
         try:
             self.tfb.check_tune_alarms()
-        except TunefbInvalid:
+        except TunefbInvalidError:
             self.fail("Should not throw an exception.")
 
     @patch("dls_slow_feedbacks.tunefb_server.caput")
@@ -210,6 +214,6 @@ class TestTunefb(unittest.TestCase):
         numpy.testing.assert_array_equal(self.tfb.integrated_tunes, numpy.zeros(2))
 
 
-class ca_float(float):
+class ca_float(float):  # noqa: N801
     severity = 0
     timestamp = None
