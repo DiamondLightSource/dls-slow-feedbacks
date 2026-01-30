@@ -21,7 +21,11 @@ RING_MODES = [
     "DIADTHz",
 ]
 
-DEFAULT_RING_MODE = "I04"
+D2_RING_MODES = ["48", "49"]
+RING_MODES.extend(D2_RING_MODES)
+
+DEFAULT_RING_MODE = "49"
+
 DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
 
 
