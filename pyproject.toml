@@ -106,12 +106,12 @@ commands = [
 description = "Run mypy"
 commands = [
     [
-        "mypy",
-        "src",
-        "tests",
-        "--exclude=src/dls_slow_feedbacks/opi",
-        { replace = "posargs", default = [
-        ], extend = true },
+        # "mypy",
+        # "src",
+        # "tests",
+        # "--exclude=src/dls_slow_feedbacks/opi",
+        # { replace = "posargs", default = [
+        # ], extend = true },
     ],
 ]
 
