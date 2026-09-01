@@ -58,11 +58,14 @@ class WaveformsServer:
                 fam[p][0], fam[p][1], pytac.RB
             )
             xy_corrector_values[p] = caget(corrector_pvs, format=FORMAT_CTRL)
+
             # convert to relative magnitude
             mag[p] = [
                 corr_value.upper_ctrl_limit - corr_value.lower_ctrl_limit
                 for corr_value in xy_corrector_values[p]
             ]
+            mag[p] = [1 for val in mag[p]]
+
             rhv[p] = 2 * abs(np.array(xy_corrector_values[p]) / mag[p])
             # update max value and name
             i = np.argmax(abs(np.array(rhv[p])))

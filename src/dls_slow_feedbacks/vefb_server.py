@@ -501,22 +501,22 @@ class VefbServer:
         squad_pv_names = lattice.get_element_pv_names("SQUAD", "a1", pytac.SP)
         self.skew_quads.set_pv_names(squad_pv_names)
 
-        try:
-            self.skewhw_old = np.ones(self.skew_quads.num)
-            logger.debug(f"Skewhw_old: {self.skewhw_old}")
+        # try:
+        #     self.skewhw_old = np.ones(self.skew_quads.num)
+        #     logger.debug(f"Skewhw_old: {self.skewhw_old}")
 
-            rm_file = dataroot / lattice.name / "GoldenCouplingEmittance.mat"
+        #     rm_file = dataroot / lattice.name / "GoldenCouplingEmittance.mat"
 
-            logger.info(f"Vefb loading {lattice.name}")
-            logger.debug(f"Loading matrix {lattice.name} {rm_file}")
-            load_rm = loadmat(rm_file)
-            rm = load_rm["RM"]
-            logger.debug(f"RM_old: {rm}")
-            self.IRM_old = 1 / rm[0][0]
-            logger.debug(f"IRM_old: {self.IRM_old}")
+        #     logger.info(f"Vefb loading {lattice.name}")
+        #     logger.debug(f"Loading matrix {lattice.name} {rm_file}")
+        #     load_rm = loadmat(rm_file)
+        #     rm = load_rm["RM"]
+        #     logger.debug(f"RM_old: {rm}")
+        #     self.IRM_old = 1 / rm[0][0]
+        #     logger.debug(f"IRM_old: {self.IRM_old}")
 
-        except BaseException:
-            logger.exception("Ringmode_change raised unexpected exception")
+        # except BaseException:
+        #     logger.exception("Ringmode_change raised unexpected exception")
 
         try:
             rm_file = dataroot / lattice.name / "GoldenSkewVector.mat"
