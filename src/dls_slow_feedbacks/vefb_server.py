@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from pathlib import Path
 from typing import Literal
@@ -11,8 +10,6 @@ from cothread.catools import FORMAT_TIME, camonitor, caput
 from pytac.lattice import EpicsLattice
 from scipy.io import loadmat
 from softioc import builder
-
-from dls_slow_feedbacks import mode
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
