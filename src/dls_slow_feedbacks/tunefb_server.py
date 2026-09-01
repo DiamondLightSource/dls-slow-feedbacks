@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from pathlib import Path
 
@@ -11,7 +10,10 @@ from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
 from pytac.lattice import EpicsLattice
 from softioc import alarm, builder
 
+from dls_slow_feedbacks.mode import D2_RING_MODES
 from dls_slow_feedbacks.tunefb_offsets import (
+    TUNE_QUAD_FAMILIES,
+    TUNE_QUAD_FAMILIES_D2,
     all_forwarded,
     load_magnet_pvs,
     rename_pvs,
@@ -150,10 +152,8 @@ class TunefbServer:
 
         # Load data from file
         mode_dir = dataroot / lattice.name
-        rm_path = os.path.join(mode_dir, "GoldenTuneResp.mat")
-        self.rm = self.load_tune_rm(rm_path)
+        self.rm = self.load_tune_rm(lattice.name, mode_dir / "GoldenTuneResp.mat")
         logger.info(f"Tunefb loading {lattice.name}")
-        logger.debug(f"Loaded response matrix {lattice.name} from {rm_path}")
         # Invert response matrix
         self.irm = np.linalg.pinv(self.rm)
 
@@ -169,9 +169,6 @@ class TunefbServer:
         tune_h = 0.14
         tune_v = 0.2402
 
-        # Load data from file
-        self.rm = self.load_tune_rm(lattice.name, mode_dir / "GoldenTuneResp.mat")
-
         # Update PV values.
         self.tune_h_pv.set(tune_h)
         self.tune_v_pv.set(tune_v)
@@ -182,19 +179,38 @@ class TunefbServer:
         self.tune_int_h_pv.set(self.integrated_tunes[0])
         self.tune_int_v_pv.set(self.integrated_tunes[1])
 
-    def load_tune_rm(self, mat_file) -> np.ndarray:
+    def load_tune_rm(self, ringmode: str, mat_file: Path):
         """Load response matrix from the specific format found
         in the specified file.
         """
+        if ringmode in D2_RING_MODES:
+            families = TUNE_QUAD_FAMILIES_D2
+        else:
+            families = TUNE_QUAD_FAMILIES
+
         raw_rms = scipy.io.loadmat(mat_file)
+
         # Construct complete response matrix.
         rmx = []
         rmy = []
-        for raw_rm in raw_rms["Rmat"][0]:
+        rmats = []
+
+        # We build the response matrix out of the tune quad families, making sure
+        # that they are ordered in the same order as defined elsewhere.
+        for family in families:
+            for rmat in raw_rms["Rmat"][0]:
+                rmat_family = str(rmat["Actuator"][0][0][0][0][1][0])
+                if rmat_family == family:
+                    print(f"Adding family {family}")
+                    rmats.append(rmat)
+                    break
+
+        for raw_rm in rmats:
             raw_rmx = raw_rm[0][0][0][0]
             raw_rmy = raw_rm[0][0][0][1]
             rmx.extend(raw_rmx)
             rmy.extend(raw_rmy)
+
         return np.array([rmx, rmy])
 
     def start(self) -> None:
