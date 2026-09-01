@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from pathlib import Path
 
 from pytac import cothread_cs, load_csv
 from pytac.lattice import EpicsLattice
@@ -26,7 +27,8 @@ RING_MODES.extend(D2_RING_MODES)
 
 DEFAULT_RING_MODE = "49"
 
-DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
+DATAROOT = Path("/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata")
+DATAROOT_D2 = Path("/dls_sw/work/common/matlab/mml/machine-new/diamond2opsdata")
 
 
 def load_pml_lattice(ringmode: str) -> EpicsLattice:
@@ -44,6 +46,7 @@ class RingMode:
         self.create_records()
         self.listeners: list[Callable] = []
         self.name: str = DEFAULT_RING_MODE
+        self.dataroot: Path = DATAROOT_D2
         self.lattice: EpicsLattice = load_pml_lattice(self.name)
 
     def init(self) -> None:
@@ -53,9 +56,14 @@ class RingMode:
     def set_mode(self, mode: int) -> None:
         """Set the ring mode and reload the lattice."""
         self.name = RING_MODES[mode]
+        if self.name in D2_RING_MODES:
+            self.dataroot = DATAROOT_D2
+        else:
+            self.dataroot = DATAROOT
+
         self.lattice = load_pml_lattice(self.name)
         for listener in self.listeners:
-            listener(self.lattice)
+            listener(self.lattice, self.dataroot)
 
     def add_listener(self, listener: Callable) -> None:
         """Add a listener to respond to changes in the lattice."""
