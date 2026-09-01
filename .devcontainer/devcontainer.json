@@ -70,6 +70,11 @@
             "type": "bind"
         },
         {
+            "source": "/dls_sw/work/common/matlab/mml/machine-new/diamond2opsdata/",
+            "target": "/dls_sw/work/common/matlab/mml/machine-new/diamond2opsdata/",
+            "type": "bind"
+        },
+        {
             "source": "/home/ops/diagnostics/config/",
             "target": "/home/ops/diagnostics/config/",
             "type": "bind"
