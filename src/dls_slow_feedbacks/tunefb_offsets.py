@@ -13,6 +13,8 @@ import typer
 from cothread.catools import DBR_STRING, caget, caput  # noqa
 from pytac import cothread_cs, load_csv
 
+from dls_slow_feedbacks.mode import D2_RING_MODES
+
 logger = logging.getLogger(name="dls_slow_Feedbacks")
 tunefb_app = typer.Typer()
 
@@ -23,7 +25,9 @@ CURRENT_LINK = ":I CPP MS"
 OFFSET_INPUT = ":OFFSET1.INP"
 LOCAL_LINK = ":LOFFSET1 CPP MS"
 
+
 TUNE_QUAD_FAMILIES = ("Q1D", "Q2D", "Q3D", "Q3B", "Q2B", "Q1B")
+D2_TUNE_QUAD_FAMILIES = ("Q0L", "Q1L", "Q2L", "Q1N", "Q2N")
 
 
 # If running in testing mode log instead of executing caput.
@@ -36,8 +40,14 @@ def load_magnet_pvs(lattice) -> list[str]:
     Load corrector magnet PVs from the specific format
     in the file.
     """
+    families = []
     quad_names = []
-    for family in TUNE_QUAD_FAMILIES:
+    if lattice.name in D2_RING_MODES:
+        families = D2_TUNE_QUAD_FAMILIES
+    else:
+        families = TUNE_QUAD_FAMILIES
+
+    for family in families:
         device_names = lattice.get_element_device_names(family, "b1")
         quad_names.extend(device_names)
     return quad_names
