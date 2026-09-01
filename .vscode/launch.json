@@ -19,11 +19,9 @@
             "name": "Python Debugger: IOC",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/dls_slow_feedbacks/ioc.py",
+            "program": "${workspaceFolder}/src/dls_slow_feedbacks/__main__.py",
             "console": "integratedTerminal",
-            "args": [
-                "I04"
-            ],
+            "args": [],
             "justMyCode": true,
             "env": {
                 "EPICS_CA_SERVER_PORT": "8064",
