@@ -9,6 +9,7 @@ import typer
 from softioc import builder, softioc
 
 from dls_slow_feedbacks import (
+    __version__,
     logconfig,
     mode,
     rffb_server,
@@ -17,11 +18,6 @@ from dls_slow_feedbacks import (
     vefb_server,
     waveforms,
 )
-
-from . import __version__
-
-__all__ = ["main"]
-
 
 # Setup logging for slow feedbacks
 logconfig.setup_logging(application="dls_slow_feedbacks")
