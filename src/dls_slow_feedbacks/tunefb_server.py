@@ -1,15 +1,16 @@
 import logging
 import os
 import time
+from pathlib import Path
 
 import cothread
 import numpy as np
 import scipy
 import scipy.io
 from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
+from pytac.lattice import EpicsLattice
 from softioc import alarm, builder
 
-from dls_slow_feedbacks import mode
 from dls_slow_feedbacks.tunefb_offsets import (
     all_forwarded,
     load_magnet_pvs,
@@ -141,14 +142,14 @@ class TunefbServer:
         # Initalise EPICS records
         self.records()
 
-    def set_data_dir(self, lattice) -> None:
+    def set_data_dir(self, lattice: EpicsLattice, dataroot: Path) -> None:
         """Load required data from files in datadir."""
         # Load magnet PVs from Pytac
         self.mag_pvs = load_magnet_pvs(lattice)
         self.local_pvs = rename_pvs(self.mag_pvs)
 
         # Load data from file
-        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
+        mode_dir = dataroot / lattice.name
         rm_path = os.path.join(mode_dir, "GoldenTuneResp.mat")
         self.rm = self.load_tune_rm(rm_path)
         logger.info(f"Tunefb loading {lattice.name}")
@@ -169,10 +170,7 @@ class TunefbServer:
         tune_v = 0.2402
 
         # Load data from file
-        mode_dir = os.path.join(mode.DATAROOT, lattice.name)
-        self.rm = self.load_tune_rm(
-            lattice.name, os.path.join(mode_dir, "GoldenTuneResp.mat")
-        )
+        self.rm = self.load_tune_rm(lattice.name, mode_dir / "GoldenTuneResp.mat")
 
         # Invert response matrix
         self.irm = np.linalg.pinv(self.rm)
