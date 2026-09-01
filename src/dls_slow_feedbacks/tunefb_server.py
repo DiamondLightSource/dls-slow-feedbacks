@@ -128,27 +128,31 @@ class TunefbServer:
         if self.set_data_dir not in ring_mode.listeners:
             ring_mode.add_listener(self.set_data_dir)
 
-        # fetch values from the PVs we will be mirroring, before
-        # starting up.
-        self.startup_currents = caget(
-            [pv + ":OFFSET1" for pv in self.mag_pvs], throw=False
-        )
-        for i in range(len(self.startup_currents)):
-            if not self.startup_currents[i].ok:
-                logger.warning(f"Unable to read {self.startup_currents[i].name}")
-                self.startup_currents[i] = 0
-
+        self.startup_currents = self.setup_startup_currents()
         self.integrated_current = np.array(self.startup_currents)
         self.integrated_tunes = np.zeros(2)
 
         # Initalise EPICS records
         self.records()
 
+    def setup_startup_currents(self):
+        # fetch values from the PVs we will be mirroring, before
+        # starting up.
+        startup_currents = caget([pv + ":OFFSET1" for pv in self.mag_pvs], throw=False)
+        for i in range(len(startup_currents)):
+            if not startup_currents[i].ok:
+                logger.warning(f"Unable to read {startup_currents[i].name}")
+                startup_currents[i] = 0
+        return startup_currents
+
     def set_data_dir(self, lattice: EpicsLattice, dataroot: Path) -> None:
         """Load required data from files in datadir."""
         # Load magnet PVs from Pytac
         self.mag_pvs = load_magnet_pvs(lattice)
         self.local_pvs = rename_pvs(self.mag_pvs)
+        self.startup_currents = self.setup_startup_currents()
+        self.integrated_current = np.array(self.startup_currents)
+        self.integrated_tunes = np.zeros(2)
 
         # Load data from file
         mode_dir = dataroot / lattice.name
