@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from pathlib import Path
 
@@ -153,10 +152,8 @@ class TunefbServer:
 
         # Load data from file
         mode_dir = dataroot / lattice.name
-        rm_path = os.path.join(mode_dir, "GoldenTuneResp.mat")
-        self.rm = self.load_tune_rm(rm_path)
+        self.rm = self.load_tune_rm(lattice.name, mode_dir / "GoldenTuneResp.mat")
         logger.info(f"Tunefb loading {lattice.name}")
-        logger.debug(f"Loaded response matrix {lattice.name} from {rm_path}")
         # Invert response matrix
         self.irm = np.linalg.pinv(self.rm)
 
@@ -171,9 +168,6 @@ class TunefbServer:
         # tune_v = env["Y_tune_" + lattice.name]
         tune_h = 0.14
         tune_v = 0.2402
-
-        # Load data from file
-        self.rm = self.load_tune_rm(lattice.name, mode_dir / "GoldenTuneResp.mat")
 
         # Invert response matrix
         self.irm = np.linalg.pinv(self.rm)
