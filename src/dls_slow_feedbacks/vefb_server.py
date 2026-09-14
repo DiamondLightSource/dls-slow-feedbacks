@@ -286,7 +286,7 @@ class SkewQuadrupoles:
         if not self.values_within_levels(new_sqvals):
             return False
 
-        results = caput(self._squad_pv_names, new_sqvals, throw=False)
+        results = caput(self._squad_pv_names, new_sqvals, wait=True, throw=False)
         ok = np.all(map(bool, results))
         if not ok:
             logger.error("Caput error")
@@ -521,7 +521,6 @@ class VefbServer:
         try:
             rm_file = dataroot / lattice.name / "GoldenSkewVector.mat"
             logger.debug(f"LoadSkewVector {lattice.name} {rm_file}")
-
             load_rm = loadmat(rm_file)
             rm = load_rm["RM"]
             logger.debug(f"RM_new: {rm}")
@@ -787,10 +786,8 @@ class VefbServer:
         target = self.vemit_target_pv.get()
         vemit = self.vemit.value
         ts = self.vemit.timestamp
-
         current_time = time.time()
         age = current_time - ts
-
         # Timestamps ok?
         if age > VefbConstants.MAX_TS_AGE:
             return VefbStatus.NO_EMITTANCE_VALUE
@@ -847,7 +844,6 @@ class VefbServer:
         # calc skew quad delta
         fraction = self.afrac_pv.get()
         delta = -fraction * self.IRM * (vemit_used - target)
-
         return self.apply_delta(delta, apply_calc, check_limits)
 
     def run_add_delta(self, delta) -> None:
