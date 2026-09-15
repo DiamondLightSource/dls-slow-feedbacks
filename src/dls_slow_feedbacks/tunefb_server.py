@@ -167,11 +167,13 @@ class TunefbServer:
         with open(GOLDEN_TUNE_CONFIG) as f:
             exec(f.read(), env)
 
-        # Select correct tune based on ringmode
-        # tune_h = env["X_tune_" + lattice.name]
-        # tune_v = env["Y_tune_" + lattice.name]
-        tune_h = 0.14
-        tune_v = 0.2402
+        # Select correct tune based on ringmode, D2 values are currently hardcoded here
+        if lattice.name in D2_RING_MODES:
+            tune_h = 0.1400
+            tune_v = 0.2402
+        else:
+            tune_h = env["X_tune_" + lattice.name]
+            tune_v = env["Y_tune_" + lattice.name]
 
         # Update PV values.
         self.tune_h_pv.set(tune_h)
