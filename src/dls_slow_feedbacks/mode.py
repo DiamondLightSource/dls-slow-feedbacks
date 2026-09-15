@@ -25,7 +25,7 @@ RING_MODES = [
 D2_RING_MODES = ["48", "49"]
 RING_MODES.extend(D2_RING_MODES)
 
-DEFAULT_RING_MODE = "49"
+DEFAULT_RING_MODE = "I04"
 
 DATAROOT = Path("/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata")
 DATAROOT_D2 = Path("/dls_sw/work/common/matlab/mml/machine-new/diamond2opsdata")

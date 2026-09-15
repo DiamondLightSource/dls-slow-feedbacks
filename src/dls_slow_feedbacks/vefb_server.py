@@ -516,7 +516,7 @@ class VefbServer:
             logger.debug(f"IRM_old: {self.IRM_old}")
 
         except BaseException:
-            logger.exception("Ringmode_change raised unexpected exception")
+            logger.exception("Ringmode change raised unexpected exception")
 
         try:
             rm_file = dataroot / lattice.name / "GoldenSkewVector.mat"
@@ -532,7 +532,7 @@ class VefbServer:
             logger.debug(f"Skewhw_new: {self.skewhw_new}")
 
         except BaseException:
-            logger.exception("Ringmode_change raised unexpected exception")
+            logger.exception("Ringmode change raised unexpected exception")
 
         self.update_calc_parameters()
 

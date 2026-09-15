@@ -205,7 +205,6 @@ class TunefbServer:
             for rmat in raw_rms["Rmat"][0]:
                 rmat_family = str(rmat["Actuator"][0][0][0][0][1][0])
                 if rmat_family == family:
-                    print(f"Adding family {family}")
                     rmats.append(rmat)
                     break
 
