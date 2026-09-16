@@ -23,7 +23,7 @@ from dls_slow_feedbacks import (
 logconfig.setup_logging(application="dls_slow_feedbacks")
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-app = typer.Typer()
+app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
 
 # If running in testing mode log instead of executing caput.  We do this by
