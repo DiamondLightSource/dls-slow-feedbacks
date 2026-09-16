@@ -82,6 +82,7 @@ def main(
         bool, typer.Option(help="Write to log instead of executing Caput")
     ] = False,
     version: bool = typer.Option(None, "--version", callback=print_version),
+    diamond2: bool = typer.Option(False, "--d2", help="Launch in diamond 2 mode"),
 ) -> None:
     """Entrypoint for running all slow feedbacks."""
 
@@ -90,7 +91,7 @@ def main(
 
     # Used externally to select the operating ring mode, used to define appropriate
     # feedback parameters internally.
-    ring_mode = mode.RingMode()
+    ring_mode = mode.RingMode(diamond2)
     servers = create_servers(ring_mode)
 
     create_records()

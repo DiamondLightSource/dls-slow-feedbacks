@@ -10,7 +10,7 @@ from cothread.catools import FORMAT_TIME, ca_nothing, caget, caput
 from pytac.lattice import EpicsLattice
 from softioc import alarm, builder
 
-from dls_slow_feedbacks.mode import D2_RING_MODES
+from dls_slow_feedbacks.mode import RING_MODES_D2
 from dls_slow_feedbacks.tunefb_offsets import (
     TUNE_QUAD_FAMILIES,
     TUNE_QUAD_FAMILIES_D2,
@@ -168,7 +168,7 @@ class TunefbServer:
             exec(f.read(), env)
 
         # Select correct tune based on ringmode, D2 values are currently hardcoded here
-        if lattice.name in D2_RING_MODES:
+        if lattice.name in RING_MODES_D2:
             tune_h = 0.1400
             tune_v = 0.2402
         else:
@@ -189,7 +189,7 @@ class TunefbServer:
         """Load response matrix from the specific format found
         in the specified file.
         """
-        if ringmode in D2_RING_MODES:
+        if ringmode in RING_MODES_D2:
             families = TUNE_QUAD_FAMILIES_D2
         else:
             families = TUNE_QUAD_FAMILIES

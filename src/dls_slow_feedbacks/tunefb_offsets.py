@@ -13,7 +13,7 @@ import typer
 from cothread.catools import DBR_STRING, caget, caput  # noqa
 from pytac import cothread_cs, load_csv
 
-from dls_slow_feedbacks.mode import D2_RING_MODES
+from dls_slow_feedbacks.mode import RING_MODES_D2
 
 logger = logging.getLogger(name="dls_slow_Feedbacks")
 tunefb_app = typer.Typer()
@@ -42,7 +42,7 @@ def load_magnet_pvs(lattice) -> list[str]:
     """
     families = []
     quad_names = []
-    if lattice.name in D2_RING_MODES:
+    if lattice.name in RING_MODES_D2:
         families = TUNE_QUAD_FAMILIES_D2
     else:
         families = TUNE_QUAD_FAMILIES
