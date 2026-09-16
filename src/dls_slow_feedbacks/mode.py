@@ -44,7 +44,7 @@ def load_pml_lattice(ringmode: str) -> EpicsLattice:
 class RingMode:
     """Manage the ring mode and its associated lattice."""
 
-    def __init__(self, diamond2) -> None:
+    def __init__(self, diamond2: bool = False) -> None:
         self.create_records(diamond2)
         self.listeners: list[Callable] = []
         if diamond2:
@@ -77,7 +77,7 @@ class RingMode:
         """Add a listener to respond to changes in the lattice."""
         self.listeners.append(listener)
 
-    def create_records(self, diamond2) -> None:
+    def create_records(self, diamond2: bool = False) -> None:
         """Define a pv for the ring mode."""
         if diamond2:
             ringmodes = RING_MODES_D2
