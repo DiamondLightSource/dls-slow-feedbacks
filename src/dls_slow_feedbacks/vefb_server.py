@@ -286,7 +286,7 @@ class SkewQuadrupoles:
         if not self.values_within_levels(new_sqvals):
             return False
 
-        results = caput(self._squad_pv_names, new_sqvals, wait=True, throw=False)
+        results = caput(self._squad_pv_names, new_sqvals, throw=False)
         ok = np.all(map(bool, results))
         if not ok:
             logger.error("Caput error")
