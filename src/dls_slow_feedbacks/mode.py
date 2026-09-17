@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from pathlib import Path
 
 from pytac import cothread_cs, load_csv
 from pytac.lattice import EpicsLattice
@@ -21,8 +22,15 @@ RING_MODES = [
     "DIADTHz",
 ]
 
+RING_MODES_D2 = ["48", "49"]
+
+ALL_RING_MODES = RING_MODES + RING_MODES_D2
+
 DEFAULT_RING_MODE = "I04"
-DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
+DEFAULT_RING_MODE_D2 = "49"
+
+DATAROOT = Path("/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata")
+DATAROOT_D2 = Path("/dls_sw/work/common/matlab/mml/machine-new/diamond2opsdata")
 
 
 def load_pml_lattice(ringmode: str) -> EpicsLattice:
@@ -36,33 +44,50 @@ def load_pml_lattice(ringmode: str) -> EpicsLattice:
 class RingMode:
     """Manage the ring mode and its associated lattice."""
 
-    def __init__(self) -> None:
-        self.create_records()
+    def __init__(self, diamond2: bool = False) -> None:
+        self.create_records(diamond2)
         self.listeners: list[Callable] = []
-        self.name: str = DEFAULT_RING_MODE
+        if diamond2:
+            self.name: str = DEFAULT_RING_MODE_D2
+            self.dataroot: Path = DATAROOT_D2
+        else:
+            self.name: str = DEFAULT_RING_MODE
+            self.dataroot: Path = DATAROOT
         self.lattice: EpicsLattice = load_pml_lattice(self.name)
 
     def init(self) -> None:
         """Assign the ring mode to its associated PV."""
-        self.mode.set(RING_MODES.index(self.name))
+        if self.name in RING_MODES_D2:
+            self.mode.set(RING_MODES_D2.index(self.name))
+        else:
+            self.mode.set(RING_MODES.index(self.name))
 
     def set_mode(self, mode: int) -> None:
         """Set the ring mode and reload the lattice."""
-        self.name = RING_MODES[mode]
+        if self.name in RING_MODES_D2:
+            self.name = RING_MODES_D2[mode]
+        else:
+            self.name = RING_MODES[mode]
+
         self.lattice = load_pml_lattice(self.name)
         for listener in self.listeners:
-            listener(self.lattice)
+            listener(self.lattice, self.dataroot)
 
     def add_listener(self, listener: Callable) -> None:
         """Add a listener to respond to changes in the lattice."""
         self.listeners.append(listener)
 
-    def create_records(self) -> None:
+    def create_records(self, diamond2: bool = False) -> None:
         """Define a pv for the ring mode."""
+        if diamond2:
+            ringmodes = RING_MODES_D2
+        else:
+            ringmodes = RING_MODES
+
         builder.SetDeviceName("SR-CS-RING-01")
         self.mode = builder.mbbOut(
             "MODE",
-            *RING_MODES,
+            *ringmodes,
             on_update=self.set_mode,
             always_update=True,
             ONSV="MAJOR",

@@ -1,5 +1,5 @@
 import logging
-import os
+from pathlib import Path
 from typing import TypeAlias
 
 import cothread
@@ -38,7 +38,6 @@ class RffbServer:
         )
 
         self.create_records()
-        self.set_data_dir(ring_mode.lattice)
 
         self.rf_freq_set_pv = PVWithValidity("LI-RF-MOSC-01:FREQ_SET")
         self.rf_freq_rbv_pv = PVWithValidity("LI-RF-MOSC-01:FREQ")
@@ -202,16 +201,16 @@ class RffbServer:
     def set_period(self, period: int) -> None:
         self.correction_period = period
 
-    def set_data_dir(self, lattice: EpicsLattice) -> None:
+    def set_data_dir(self, lattice: EpicsLattice, dataroot: Path) -> None:
         """Load the BPM response and dispersion matrices."""
         rffb_calc.cache.clear()
-        path = os.path.join(mode.DATAROOT, lattice.name)
+        path = dataroot / lattice.name
         self.correctors = np.array(
             lattice.get_element_pv_names("HSTR", "x_kick", pytac.RB)
         )
         try:
-            raw_bpm_resp = loadmat(os.path.join(path, "GoldenBPMResp"))
-            raw_disp = loadmat(os.path.join(path, "GoldenDisp"))
+            raw_bpm_resp = loadmat(path / "GoldenBPMResp.mat")
+            raw_disp = loadmat(path / "GoldenDisp.mat")
             self.bpm_response_matrix = raw_bpm_resp["Rmat"][0, 0]["Data"]
             self.dispersion_matrix = raw_disp["BPMxDisp"]["Data"][0, 0]
 

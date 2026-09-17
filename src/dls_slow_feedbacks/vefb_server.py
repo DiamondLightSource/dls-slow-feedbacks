@@ -1,16 +1,15 @@
 import logging
-import os
 import time
+from pathlib import Path
 from typing import Literal
 
 import cothread
 import numpy as np
 import pytac
 from cothread.catools import FORMAT_TIME, camonitor, caput
+from pytac.lattice import EpicsLattice
 from scipy.io import loadmat
 from softioc import builder
-
-from dls_slow_feedbacks import mode
 
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
@@ -489,7 +488,7 @@ class VefbServer:
 
         self.enabled_first_time = False
 
-    def set_data_dir(self, lattice) -> None:
+    def set_data_dir(self, lattice: EpicsLattice, dataroot: Path) -> None:
         """This function is used to load the configuration for a different ringmode. It
         is called when the ringmode PV is updated."""
         self.last = None
@@ -506,9 +505,8 @@ class VefbServer:
             self.skewhw_old = np.ones(self.skew_quads.num)
             logger.debug(f"Skewhw_old: {self.skewhw_old}")
 
-            rm_file = os.path.join(
-                mode.DATAROOT, lattice.name, "GoldenCouplingEmittance.mat"
-            )
+            rm_file = dataroot / lattice.name / "GoldenCouplingEmittance.mat"
+
             logger.info(f"Vefb loading {lattice.name}")
             logger.debug(f"Loading matrix {lattice.name} {rm_file}")
             load_rm = loadmat(rm_file)
@@ -518,12 +516,11 @@ class VefbServer:
             logger.debug(f"IRM_old: {self.IRM_old}")
 
         except BaseException:
-            logger.exception("Ringmode_change raised unexpected exception")
+            logger.exception("Ringmode change raised unexpected exception")
 
         try:
-            rm_file = os.path.join(mode.DATAROOT, lattice.name, "GoldenSkewVector.mat")
+            rm_file = dataroot / lattice.name / "GoldenSkewVector.mat"
             logger.debug(f"LoadSkewVector {lattice.name} {rm_file}")
-
             load_rm = loadmat(rm_file)
             rm = load_rm["RM"]
             logger.debug(f"RM_new: {rm}")
@@ -535,7 +532,7 @@ class VefbServer:
             logger.debug(f"Skewhw_new: {self.skewhw_new}")
 
         except BaseException:
-            logger.exception("Ringmode_change raised unexpected exception")
+            logger.exception("Ringmode change raised unexpected exception")
 
         self.update_calc_parameters()
 
@@ -789,10 +786,8 @@ class VefbServer:
         target = self.vemit_target_pv.get()
         vemit = self.vemit.value
         ts = self.vemit.timestamp
-
         current_time = time.time()
         age = current_time - ts
-
         # Timestamps ok?
         if age > VefbConstants.MAX_TS_AGE:
             return VefbStatus.NO_EMITTANCE_VALUE
@@ -849,7 +844,6 @@ class VefbServer:
         # calc skew quad delta
         fraction = self.afrac_pv.get()
         delta = -fraction * self.IRM * (vemit_used - target)
-
         return self.apply_delta(delta, apply_calc, check_limits)
 
     def run_add_delta(self, delta) -> None:

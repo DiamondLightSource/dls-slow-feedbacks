@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 from unittest import mock
 
 import pytac
@@ -36,7 +37,7 @@ def nsquads(ring):
 @pytest.fixture
 def ring_mode(ring):
     ring_mode = mock.MagicMock(lattice=ring)
-    ring_mode.DATAROOT = "/dls_sw/work/common/matlab/mml/machine-new/diamondopsdata"
+    ring_mode.DATAROOT = Path(TEST_DATA)
     return ring_mode
 
 
@@ -66,7 +67,7 @@ def vefb(ring_mode, nsquads):
         v.skew_quads.set_pv_names = mock.MagicMock()
         v.skew_quads.apply_correction = mock.MagicMock()
         v.skew_quads.num = nsquads
-        v.set_data_dir(ring_mode.lattice)
+        v.set_data_dir(ring_mode.lattice, ring_mode.DATAROOT)
         return v
 
 

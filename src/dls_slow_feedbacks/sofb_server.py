@@ -1,6 +1,6 @@
 import logging
-import os
 import traceback
+from pathlib import Path
 
 import cothread
 import numpy as np
@@ -23,14 +23,14 @@ class SofbServer:
         self.create_records(ring_mode.lattice)
         ring_mode.add_listener(self.set_data_dir)
 
-    def set_data_dir(self, lattice: EpicsLattice) -> None:
+    def set_data_dir(self, lattice: EpicsLattice, dataroot: Path) -> None:
         """Load the BPM response matrix."""
         self.sofb.cache.clear()
-        path = os.path.join(mode.DATAROOT, lattice.name)
+        path = dataroot / lattice.name
         self.sofb.set_lattice(lattice)
 
         try:
-            rm_path = os.path.join(path, "GoldenBPMResp")
+            rm_path = path / "GoldenBPMResp.mat"
             bpm_resp = loadmat(rm_path)
             if bpm_resp["Rmat"][0, 0]["Units"] != "Hardware":
                 raise ValueError("BPM response matrix is not set to hardware units")

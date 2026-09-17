@@ -9,6 +9,7 @@ import typer
 from softioc import builder, softioc
 
 from dls_slow_feedbacks import (
+    __version__,
     logconfig,
     mode,
     rffb_server,
@@ -18,16 +19,11 @@ from dls_slow_feedbacks import (
     waveforms,
 )
 
-from . import __version__
-
-__all__ = ["main"]
-
-
 # Setup logging for slow feedbacks
 logconfig.setup_logging(application="dls_slow_feedbacks")
 logger = logging.getLogger(name="dls_slow_feedbacks")
 
-app = typer.Typer()
+app = typer.Typer(context_settings={"help_option_names": ["-h", "--help"]})
 
 
 # If running in testing mode log instead of executing caput.  We do this by
@@ -86,6 +82,7 @@ def main(
         bool, typer.Option(help="Write to log instead of executing Caput")
     ] = False,
     version: bool = typer.Option(None, "--version", callback=print_version),
+    diamond2: bool = typer.Option(False, "--d2", help="Launch in diamond 2 mode"),
 ) -> None:
     """Entrypoint for running all slow feedbacks."""
 
@@ -94,7 +91,7 @@ def main(
 
     # Used externally to select the operating ring mode, used to define appropriate
     # feedback parameters internally.
-    ring_mode = mode.RingMode()
+    ring_mode = mode.RingMode(diamond2)
     servers = create_servers(ring_mode)
 
     create_records()

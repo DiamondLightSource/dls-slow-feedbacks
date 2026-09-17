@@ -1,1 +1,3 @@
-from dls_slow_feedbacks._version import __version__  # noqa
+from ._version import __version__
+
+__all__ = ["__version__"]
