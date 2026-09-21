@@ -40,6 +40,8 @@ OFFSET_CURRENT_CHANGED = "Offset changed outside of TFB"
 # Default values
 MAX_CURRENT_OFFSET = 0.2  # Amps
 MAX_CONSECUTIVE_INVALIDS = 5
+TUNE_H_D2 = 0.1400
+TUNE_V_D2 = 0.2402
 
 
 class Status:
@@ -169,8 +171,8 @@ class TunefbServer:
 
         # Select correct tune based on ringmode, D2 values are currently hardcoded here
         if lattice.name in RING_MODES_D2:
-            tune_h = 0.1400
-            tune_v = 0.2402
+            tune_h = TUNE_H_D2
+            tune_v = TUNE_V_D2
         else:
             tune_h = env["X_tune_" + lattice.name]
             tune_v = env["Y_tune_" + lattice.name]
