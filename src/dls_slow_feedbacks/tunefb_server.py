@@ -203,8 +203,9 @@ class TunefbServer:
         rmy = []
         rmats = []
 
-        # We build the response matrix out of the tune quad families, making sure
-        # that they are ordered in the same order as defined elsewhere.
+        # Response matrix data comes as a list of datasets, one for each tune quad
+        # family. We rearrange the order of this list to ensure that the data is in the
+        # order expected by the tunefb algorithm.
         for family in families:
             for rmat in raw_rms["Rmat"][0]:
                 rmat_family = str(rmat["Actuator"][0][0][0][0][1][0])
