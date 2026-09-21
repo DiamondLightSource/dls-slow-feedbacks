@@ -137,7 +137,7 @@ class TunefbServer:
         # Initalise EPICS records
         self.records()
 
-    def setup_startup_currents(self):
+    def setup_startup_currents(self) -> list[float]:
         # fetch values from the PVs we will be mirroring, before
         # starting up.
         startup_currents = caget([pv + ":OFFSET1" for pv in self.mag_pvs], throw=False)
