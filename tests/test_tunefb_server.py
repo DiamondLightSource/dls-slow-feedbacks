@@ -53,7 +53,11 @@ class TestTunefb(unittest.TestCase):
         self.tfb.integrated_current = numpy.zeros(self.nquads)
 
     def test_load_tune_rm_dimensions(self):
-        rm = tunefb_server.TunefbServer.load_tune_rm(None, RESPONSE_MATRIX)
+        rm = tunefb_server.TunefbServer.load_tune_rm(
+            None,
+            RESPONSE_MATRIX,
+            os.path.join(DATADIR, RING_MODE, "GoldenTuneResp.mat"),
+        )
         self.assertEqual(rm.shape, (2, self.nquads))
 
     def test_magnet_pvs_match_pytac(self):
