@@ -7,8 +7,16 @@
 
 Slow feedback systems for the DLS storage ring
 
+<<<<<<< before updating
 Source          | <https://github.com/DiamondLightSource/dls-slow-feedbacks>
+=======
+This is where you should write a short paragraph that describes what your module does,
+how it does it, and why people should use it.
+
+What            | Where
+>>>>>>> after updating
 :---:           | :---:
+Source          | <https://github.com/DiamondLightSource/dls-slow-feedbacks>
 Docker          | `docker run ghcr.io/diamondlightsource/dls-slow-feedbacks:latest`
 Releases        | <https://github.com/DiamondLightSource/dls-slow-feedbacks/releases>
 
